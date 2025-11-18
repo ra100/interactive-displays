@@ -1,0 +1,1 @@
+System provides customizable interfaces supporting touch screen and interactivity, while keeping the interface sleek and tidy. System supports themes of different looking UI elements and color styles to fit various sci-fi aesthetics.
