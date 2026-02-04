@@ -1,1 +1,0 @@
-Building a client-server application to provide interactive mock sci-fi interface to be used in video productions. The system needs to support multiple clients connecting to a central server, with real-time updates and customizable UI elements with great variety.
