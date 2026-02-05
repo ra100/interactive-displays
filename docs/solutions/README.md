@@ -114,10 +114,14 @@ git commit -m "📚 Convert todo XXX to learning"
 ### Performance
 - [001-react-context-memoization](performance/001-react-context-memoization.md) - useMemo, useRef, React.memo
 - [002-cache-frequently-accessed-data](performance/002-cache-frequently-accessed-data.md) - In-memory caching
+- [003-stable-callbacks-in-lists](performance/003-stable-callbacks-in-lists.md) - Avoiding inline callbacks in map()
 
 ### Architecture
 - [001-shared-types-package](architecture/001-shared-types-package.md) - Monorepo type sharing
 - [002-yagni-cleanup-patterns](architecture/002-yagni-cleanup-patterns.md) - Removing unused code
+- [003-dry-utility-extraction](architecture/003-dry-utility-extraction.md) - Extracting shared utilities
 
 ### Reliability
 - [001-error-handling-patterns](reliability/001-error-handling-patterns.md) - File and socket error handling
+- [002-usereducer-for-undo-redo](reliability/002-usereducer-for-undo-redo.md) - Atomic state management
+- [003-client-input-validation](reliability/003-client-input-validation.md) - NaN checks, connection errors
