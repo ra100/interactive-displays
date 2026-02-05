@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import type { ElbowDirection, BarOrientation, VideoFit, CornerStyle } from "@interactive-displays/shared";
+import type { LayoutElement, ElbowDirection, BarOrientation, VideoFit, CornerStyle } from "@interactive-displays/shared";
 import { useBuilder } from "./BuilderContext";
 import "./PropertyPanel.css";
 
@@ -53,72 +53,29 @@ export function PropertyPanel() {
     useBuilder();
 
   const element = selectedElement;
-
-  const handleColorChange = useCallback(
-    (color: string) => {
-      if (selectedElementId) {
-        updateElement(selectedElementId, { color });
-      }
-    },
-    [selectedElementId, updateElement]
-  );
-
-  const handleNumberChange = useCallback(
-    (field: "col" | "row" | "colSpan" | "rowSpan", value: number) => {
-      if (selectedElementId && !Number.isNaN(value)) {
-        updateElement(selectedElementId, { [field]: value });
-      }
-    },
-    [selectedElementId, updateElement]
-  );
-
-  const handleLabelChange = useCallback(
-    (label: string) => {
-      if (selectedElementId) {
-        updateElement(selectedElementId, { label });
-      }
-    },
-    [selectedElementId, updateElement]
-  );
-
-  const handleCornerChange = useCallback(
-    (field: "leftCorner" | "rightCorner", value: CornerStyle) => {
-      if (selectedElementId) {
-        updateElement(selectedElementId, { [field]: value });
-      }
-    },
-    [selectedElementId, updateElement]
-  );
-
-  const handleDirectionChange = useCallback(
-    (direction: ElbowDirection) => {
-      if (selectedElementId) {
-        updateElement(selectedElementId, { direction });
-      }
-    },
-    [selectedElementId, updateElement]
-  );
-
-  const handleElbowWidthChange = useCallback(
-    (field: "verticalWidth" | "horizontalWidth", value: number) => {
-      if (selectedElementId && !Number.isNaN(value) && value >= 1) {
-        updateElement(selectedElementId, { [field]: value });
-      }
-    },
-    [selectedElementId, updateElement]
-  );
-
-  const handleOrientationChange = useCallback(
-    (orientation: BarOrientation) => {
-      if (selectedElementId) {
-        updateElement(selectedElementId, { orientation });
-      }
-    },
-    [selectedElementId, updateElement]
-  );
-
   const [srcError, setSrcError] = useState<string | null>(null);
 
+  // Generic field update handler - works for string, enum, and boolean fields
+  const updateField = useCallback(
+    <K extends keyof LayoutElement>(field: K, value: LayoutElement[K]) => {
+      if (selectedElementId) {
+        updateElement(selectedElementId, { [field]: value } as Partial<LayoutElement>);
+      }
+    },
+    [selectedElementId, updateElement]
+  );
+
+  // Numeric field handler with validation
+  const updateNumericField = useCallback(
+    (field: keyof LayoutElement, value: number, min = 0) => {
+      if (selectedElementId && !Number.isNaN(value) && value >= min) {
+        updateElement(selectedElementId, { [field]: value } as Partial<LayoutElement>);
+      }
+    },
+    [selectedElementId, updateElement]
+  );
+
+  // Video URL handler with protocol validation
   const handleSrcChange = useCallback(
     (src: string) => {
       if (selectedElementId) {
@@ -128,24 +85,6 @@ export function PropertyPanel() {
         } else {
           setSrcError("URL must use http, https, or blob protocol");
         }
-      }
-    },
-    [selectedElementId, updateElement]
-  );
-
-  const handleFitChange = useCallback(
-    (fit: VideoFit) => {
-      if (selectedElementId) {
-        updateElement(selectedElementId, { fit });
-      }
-    },
-    [selectedElementId, updateElement]
-  );
-
-  const handleBooleanChange = useCallback(
-    (field: "autoplay" | "loop" | "muted", value: boolean) => {
-      if (selectedElementId) {
-        updateElement(selectedElementId, { [field]: value });
       }
     },
     [selectedElementId, updateElement]
@@ -184,7 +123,7 @@ export function PropertyPanel() {
               type="button"
               className={`color-swatch ${element.color === color.value ? "color-swatch--selected" : ""}`}
               style={{ backgroundColor: color.value }}
-              onClick={() => handleColorChange(color.value)}
+              onClick={() => updateField("color", color.value)}
               title={color.name}
             />
           ))}
@@ -201,9 +140,7 @@ export function PropertyPanel() {
               min={0}
               max={11}
               value={element.col}
-              onChange={(e) =>
-                handleNumberChange("col", parseInt(e.target.value, 10))
-              }
+              onChange={(e) => updateNumericField("col", parseInt(e.target.value, 10))}
               className="property-input"
             />
           </div>
@@ -214,9 +151,7 @@ export function PropertyPanel() {
               min={0}
               max={9}
               value={element.row}
-              onChange={(e) =>
-                handleNumberChange("row", parseInt(e.target.value, 10))
-              }
+              onChange={(e) => updateNumericField("row", parseInt(e.target.value, 10))}
               className="property-input"
             />
           </div>
@@ -233,9 +168,7 @@ export function PropertyPanel() {
               min={1}
               max={12}
               value={element.colSpan}
-              onChange={(e) =>
-                handleNumberChange("colSpan", parseInt(e.target.value, 10))
-              }
+              onChange={(e) => updateNumericField("colSpan", parseInt(e.target.value, 10), 1)}
               className="property-input"
             />
           </div>
@@ -246,9 +179,7 @@ export function PropertyPanel() {
               min={1}
               max={10}
               value={element.rowSpan}
-              onChange={(e) =>
-                handleNumberChange("rowSpan", parseInt(e.target.value, 10))
-              }
+              onChange={(e) => updateNumericField("rowSpan", parseInt(e.target.value, 10), 1)}
               className="property-input"
             />
           </div>
@@ -261,9 +192,7 @@ export function PropertyPanel() {
             <label className="property-group-label">Direction</label>
             <select
               value={element.direction ?? "TL"}
-              onChange={(e) =>
-                handleDirectionChange(e.target.value as ElbowDirection)
-              }
+              onChange={(e) => updateField("direction", e.target.value as ElbowDirection)}
               className="property-select"
             >
               {ELBOW_DIRECTIONS.map((dir) => (
@@ -284,12 +213,7 @@ export function PropertyPanel() {
                   min={1}
                   max={element.colSpan}
                   value={element.verticalWidth ?? 1}
-                  onChange={(e) =>
-                    handleElbowWidthChange(
-                      "verticalWidth",
-                      parseInt(e.target.value, 10)
-                    )
-                  }
+                  onChange={(e) => updateNumericField("verticalWidth", parseInt(e.target.value, 10), 1)}
                   className="property-input"
                 />
               </div>
@@ -300,12 +224,7 @@ export function PropertyPanel() {
                   min={1}
                   max={element.rowSpan}
                   value={element.horizontalWidth ?? 1}
-                  onChange={(e) =>
-                    handleElbowWidthChange(
-                      "horizontalWidth",
-                      parseInt(e.target.value, 10)
-                    )
-                  }
+                  onChange={(e) => updateNumericField("horizontalWidth", parseInt(e.target.value, 10), 1)}
                   className="property-input"
                 />
               </div>
@@ -319,9 +238,7 @@ export function PropertyPanel() {
           <label className="property-group-label">Orientation</label>
           <select
             value={element.orientation ?? "horizontal"}
-            onChange={(e) =>
-              handleOrientationChange(e.target.value as BarOrientation)
-            }
+            onChange={(e) => updateField("orientation", e.target.value as BarOrientation)}
             className="property-select"
           >
             {BAR_ORIENTATIONS.map((orient) => (
@@ -339,7 +256,7 @@ export function PropertyPanel() {
           <input
             type="text"
             value={element.label ?? ""}
-            onChange={(e) => handleLabelChange(e.target.value)}
+            onChange={(e) => updateField("label", e.target.value)}
             className="property-input property-input--text"
             placeholder="Enter label..."
           />
@@ -354,9 +271,7 @@ export function PropertyPanel() {
               <span className="property-field-label">Left</span>
               <select
                 value={element.leftCorner ?? "round"}
-                onChange={(e) =>
-                  handleCornerChange("leftCorner", e.target.value as CornerStyle)
-                }
+                onChange={(e) => updateField("leftCorner", e.target.value as CornerStyle)}
                 className="property-select"
               >
                 {CORNER_STYLES.map((style) => (
@@ -370,9 +285,7 @@ export function PropertyPanel() {
               <span className="property-field-label">Right</span>
               <select
                 value={element.rightCorner ?? "round"}
-                onChange={(e) =>
-                  handleCornerChange("rightCorner", e.target.value as CornerStyle)
-                }
+                onChange={(e) => updateField("rightCorner", e.target.value as CornerStyle)}
                 className="property-select"
               >
                 {CORNER_STYLES.map((style) => (
@@ -404,7 +317,7 @@ export function PropertyPanel() {
             <label className="property-group-label">Fit</label>
             <select
               value={element.fit ?? "contain"}
-              onChange={(e) => handleFitChange(e.target.value as VideoFit)}
+              onChange={(e) => updateField("fit", e.target.value as VideoFit)}
               className="property-select"
             >
               {VIDEO_FITS.map((fit) => (
@@ -422,7 +335,7 @@ export function PropertyPanel() {
                 <input
                   type="checkbox"
                   checked={element.muted ?? true}
-                  onChange={(e) => handleBooleanChange("muted", e.target.checked)}
+                  onChange={(e) => updateField("muted", e.target.checked)}
                 />
                 Muted
               </label>
@@ -430,7 +343,7 @@ export function PropertyPanel() {
                 <input
                   type="checkbox"
                   checked={element.loop ?? false}
-                  onChange={(e) => handleBooleanChange("loop", e.target.checked)}
+                  onChange={(e) => updateField("loop", e.target.checked)}
                 />
                 Loop
               </label>
@@ -438,7 +351,7 @@ export function PropertyPanel() {
                 <input
                   type="checkbox"
                   checked={element.autoplay ?? false}
-                  onChange={(e) => handleBooleanChange("autoplay", e.target.checked)}
+                  onChange={(e) => updateField("autoplay", e.target.checked)}
                 />
                 Autoplay
               </label>
