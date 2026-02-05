@@ -22,3 +22,7 @@ dist/
 
 # Data
 data/layouts/*.tmp
+
+# Playwright
+playwright-report/
+test-results/
