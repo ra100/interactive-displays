@@ -246,14 +246,14 @@ lcars/
 
 **Tasks:**
 
-- [ ] **2.1 Theme Styling**
+- [x] **2.1 Theme Styling**
   - CSS custom properties for colors
   - Theme font (Antonio for LCARS theme)
   - State-based color classes
 
   Files: `packages/app/src/theme.css`
 
-- [ ] **2.2 Components** (5 total)
+- [x] **2.2 Components** (5 total)
   - **Elbow** - Curved corner (TL, TR, BL, BR)
   - **Bar** - Horizontal/vertical rounded bar
   - **Frame** - Rectangular border
@@ -262,7 +262,7 @@ lcars/
 
   Files: `packages/app/src/components/Elbow.tsx`, `Bar.tsx`, `Frame.tsx`, `Button.tsx`, `Text.tsx`
 
-- [ ] **2.3 Layout Renderer**
+- [x] **2.3 Layout Renderer**
   - Render layout JSON to component tree
   - Grid positioning (12 columns)
 

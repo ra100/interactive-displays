@@ -5,7 +5,8 @@
       "ignore": ["src/validation.ts"]
     },
     "packages/app": {
-      "entry": ["src/main.tsx"]
+      "entry": ["src/main.tsx"],
+      "ignore": ["src/components/index.ts"]
     },
     "packages/shared": {}
   },
@@ -16,5 +17,6 @@
   ],
   "ignoreDependencies": [
     "@dnd-kit/core"
-  ]
+  ],
+  "ignoreExportsUsedInFile": true
 }
