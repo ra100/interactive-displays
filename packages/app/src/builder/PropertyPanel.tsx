@@ -1,6 +1,7 @@
-import { useCallback, useState } from "react";
-import type { LayoutElement, ElbowDirection, BarOrientation, VideoFit, CornerStyle } from "@interactive-displays/shared";
+import { useCallback, useState, useEffect } from "react";
+import type { LayoutElement, ElbowDirection, BarOrientation, VideoFit, CornerStyle, VideoState } from "@interactive-displays/shared";
 import { useBuilder } from "./BuilderContext";
+import { useDisplay } from "../context/DisplayContext";
 import "./PropertyPanel.css";
 
 // URL validation - only allow safe protocols to prevent XSS
@@ -51,9 +52,36 @@ const CORNER_STYLES: { label: string; value: CornerStyle }[] = [
 export function PropertyPanel() {
   const { selectedElement, updateElement, deleteElement, selectedElementId } =
     useBuilder();
+  const { sendVideoCommand, subscribeToVideoCommands } = useDisplay();
 
   const element = selectedElement;
   const [srcError, setSrcError] = useState<string | null>(null);
+  const [videoState, setVideoState] = useState<VideoState>("paused");
+
+  // Subscribe to video commands to track playback state
+  useEffect(() => {
+    if (!selectedElementId || element?.type !== "video") return;
+
+    const unsubscribe = subscribeToVideoCommands((command) => {
+      if (command.elementId !== selectedElementId) return;
+      if (command.command === "play") setVideoState("playing");
+      if (command.command === "pause") setVideoState("paused");
+    });
+
+    return unsubscribe;
+  }, [selectedElementId, element?.type, subscribeToVideoCommands]);
+
+  // Reset video state when element changes
+  useEffect(() => {
+    setVideoState("paused");
+  }, [selectedElementId]);
+
+  const handlePlayPause = useCallback(() => {
+    if (!selectedElementId || element?.type !== "video") return;
+    const command = videoState === "playing" ? "pause" : "play";
+    sendVideoCommand({ elementId: selectedElementId, command });
+    setVideoState(command === "play" ? "playing" : "paused");
+  }, [selectedElementId, element?.type, videoState, sendVideoCommand]);
 
   // Generic field update handler - works for string, enum, and boolean fields
   const updateField = useCallback(
@@ -357,6 +385,19 @@ export function PropertyPanel() {
               </label>
             </div>
           </div>
+
+          {element.src && (
+            <div className="property-group">
+              <label className="property-group-label">Playback</label>
+              <button
+                type="button"
+                className={`playback-button ${videoState === "playing" ? "playback-button--playing" : ""}`}
+                onClick={handlePlayPause}
+              >
+                {videoState === "playing" ? "PAUSE" : "PLAY"}
+              </button>
+            </div>
+          )}
         </>
       )}
 

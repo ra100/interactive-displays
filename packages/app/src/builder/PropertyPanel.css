@@ -156,6 +156,32 @@
   cursor: pointer;
 }
 
+.playback-button {
+  background-color: #006600;
+  border: none;
+  border-radius: 4px;
+  color: #66ff66;
+  font-family: "Antonio", sans-serif;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  padding: 12px;
+  cursor: pointer;
+  transition: background-color 0.1s ease-out;
+}
+
+.playback-button:hover {
+  background-color: #008800;
+}
+
+.playback-button--playing {
+  background-color: #664400;
+  color: #ffcc66;
+}
+
+.playback-button--playing:hover {
+  background-color: #886600;
+}
+
 .delete-button {
   background-color: #660000;
   border: none;
