@@ -1,0 +1,16 @@
+{
+  "id": "default",
+  "name": "Default Layout",
+  "elements": [
+    {
+      "id": "welcome-text",
+      "type": "text",
+      "col": 4,
+      "row": 5,
+      "colSpan": 4,
+      "rowSpan": 1,
+      "color": "#ff9900",
+      "label": "INTERACTIVE DISPLAY SYSTEM"
+    }
+  ]
+}
