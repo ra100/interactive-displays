@@ -1,5 +1,6 @@
 import { memo, useMemo, type CSSProperties } from "react";
 import type { ElbowDirection, GlobalState } from "@interactive-displays/shared";
+import { getStateClass } from "../utils/getStateClass";
 
 export interface ElbowProps {
   direction: ElbowDirection;
@@ -95,14 +96,7 @@ export const Elbow = memo(function Elbow({
     [col, colSpan, row, rowSpan, color, direction]
   );
 
-  const stateClass =
-    globalState === "alert"
-      ? "state--alert"
-      : globalState === "damaged"
-        ? "state--damaged"
-        : globalState === "active"
-          ? "state--active"
-          : "";
+  const stateClass = getStateClass(globalState);
 
   return (
     <div

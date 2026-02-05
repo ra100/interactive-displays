@@ -20,7 +20,7 @@ interface DraggableElementProps {
   element: LayoutElement;
   globalState: GlobalState;
   isSelected: boolean;
-  onSelect: () => void;
+  onSelect: (id: string) => void;
 }
 
 function DraggableElement({
@@ -54,9 +54,9 @@ function DraggableElement({
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      onSelect();
+      onSelect(element.id);
     },
-    [onSelect]
+    [onSelect, element.id]
   );
 
   const renderElement = () => {
@@ -164,7 +164,7 @@ export function Canvas({ globalState }: CanvasProps) {
             element={element}
             globalState={globalState}
             isSelected={selectedElementId === element.id}
-            onSelect={() => selectElement(element.id)}
+            onSelect={selectElement}
           />
         ))}
       </div>

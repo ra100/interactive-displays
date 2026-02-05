@@ -1,5 +1,6 @@
 import { memo, useMemo, type CSSProperties } from "react";
 import type { BarOrientation, GlobalState } from "@interactive-displays/shared";
+import { getStateClass } from "../utils/getStateClass";
 
 export interface BarProps {
   orientation: BarOrientation;
@@ -43,14 +44,7 @@ export const Bar = memo(function Bar({
     return baseStyle;
   }, [col, colSpan, row, rowSpan, color, orientation]);
 
-  const stateClass =
-    globalState === "alert"
-      ? "state--alert"
-      : globalState === "damaged"
-        ? "state--damaged"
-        : globalState === "active"
-          ? "state--active"
-          : "";
+  const stateClass = getStateClass(globalState);
 
   return (
     <div

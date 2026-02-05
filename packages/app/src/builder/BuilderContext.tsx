@@ -1,7 +1,7 @@
 import {
   createContext,
   useContext,
-  useState,
+  useReducer,
   useCallback,
   useMemo,
   type ReactNode,
@@ -23,7 +23,7 @@ interface BuilderContextValue {
   undo: () => void;
   redo: () => void;
   setLayout: (layout: Layout) => void;
-  getSelectedElement: () => LayoutElement | null;
+  selectedElement: LayoutElement | null;
 }
 
 const BuilderContext = createContext<BuilderContextValue | null>(null);
@@ -47,130 +47,181 @@ const DEFAULT_LAYOUT: Layout = {
   elements: [],
 };
 
+// State managed by reducer
+interface BuilderState {
+  layout: Layout;
+  selectedElementId: string | null;
+  // History contains past states (before current)
+  past: Layout[];
+  // Future contains states after current (for redo)
+  future: Layout[];
+}
+
+type BuilderAction =
+  | { type: "SELECT_ELEMENT"; id: string | null }
+  | { type: "ADD_ELEMENT"; element: LayoutElement }
+  | { type: "UPDATE_ELEMENT"; id: string; updates: Partial<LayoutElement> }
+  | { type: "DELETE_ELEMENT"; id: string }
+  | { type: "MOVE_ELEMENT"; id: string; col: number; row: number }
+  | { type: "SET_LAYOUT"; layout: Layout }
+  | { type: "UNDO" }
+  | { type: "REDO" };
+
+function builderReducer(state: BuilderState, action: BuilderAction): BuilderState {
+  switch (action.type) {
+    case "SELECT_ELEMENT":
+      return { ...state, selectedElementId: action.id };
+
+    case "ADD_ELEMENT": {
+      const newLayout = {
+        ...state.layout,
+        elements: [...state.layout.elements, action.element],
+      };
+      return {
+        ...state,
+        layout: newLayout,
+        selectedElementId: action.element.id,
+        past: [...state.past, state.layout].slice(-MAX_HISTORY),
+        future: [], // Clear redo stack on new action
+      };
+    }
+
+    case "UPDATE_ELEMENT": {
+      const newLayout = {
+        ...state.layout,
+        elements: state.layout.elements.map((el) =>
+          el.id === action.id ? { ...el, ...action.updates } : el
+        ),
+      };
+      return {
+        ...state,
+        layout: newLayout,
+        past: [...state.past, state.layout].slice(-MAX_HISTORY),
+        future: [],
+      };
+    }
+
+    case "DELETE_ELEMENT": {
+      const newLayout = {
+        ...state.layout,
+        elements: state.layout.elements.filter((el) => el.id !== action.id),
+      };
+      return {
+        ...state,
+        layout: newLayout,
+        selectedElementId: state.selectedElementId === action.id ? null : state.selectedElementId,
+        past: [...state.past, state.layout].slice(-MAX_HISTORY),
+        future: [],
+      };
+    }
+
+    case "MOVE_ELEMENT": {
+      const newLayout = {
+        ...state.layout,
+        elements: state.layout.elements.map((el) =>
+          el.id === action.id ? { ...el, col: action.col, row: action.row } : el
+        ),
+      };
+      return {
+        ...state,
+        layout: newLayout,
+        past: [...state.past, state.layout].slice(-MAX_HISTORY),
+        future: [],
+      };
+    }
+
+    case "SET_LAYOUT":
+      return {
+        ...state,
+        layout: action.layout,
+        selectedElementId: null,
+        past: [...state.past, state.layout].slice(-MAX_HISTORY),
+        future: [],
+      };
+
+    case "UNDO": {
+      if (state.past.length === 0) return state;
+      const previous = state.past[state.past.length - 1]!;
+      return {
+        ...state,
+        layout: previous,
+        past: state.past.slice(0, -1),
+        future: [state.layout, ...state.future].slice(0, MAX_HISTORY),
+      };
+    }
+
+    case "REDO": {
+      if (state.future.length === 0) return state;
+      const next = state.future[0]!;
+      return {
+        ...state,
+        layout: next,
+        past: [...state.past, state.layout].slice(-MAX_HISTORY),
+        future: state.future.slice(1),
+      };
+    }
+
+    default:
+      return state;
+  }
+}
+
 export function BuilderProvider({
   children,
   initialLayout,
 }: BuilderProviderProps) {
-  const [layout, setLayoutState] = useState<Layout>(
-    initialLayout ?? DEFAULT_LAYOUT
-  );
-  const [selectedElementId, setSelectedElementId] = useState<string | null>(
-    null
-  );
-  const [history, setHistory] = useState<Layout[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
-
-  const pushHistory = useCallback((newLayout: Layout) => {
-    setHistory((h) => {
-      const newHistory = [...h.slice(0, historyIndex + 1), newLayout].slice(
-        -MAX_HISTORY
-      );
-      return newHistory;
-    });
-    setHistoryIndex((i) => Math.min(i + 1, MAX_HISTORY - 1));
-  }, [historyIndex]);
+  const [state, dispatch] = useReducer(builderReducer, {
+    layout: initialLayout ?? DEFAULT_LAYOUT,
+    selectedElementId: null,
+    past: [],
+    future: [],
+  });
 
   const selectElement = useCallback((id: string | null) => {
-    setSelectedElementId(id);
+    dispatch({ type: "SELECT_ELEMENT", id });
   }, []);
 
-  const addElement = useCallback(
-    (element: LayoutElement) => {
-      const newLayout = {
-        ...layout,
-        elements: [...layout.elements, element],
-      };
-      pushHistory(layout);
-      setLayoutState(newLayout);
-      setSelectedElementId(element.id);
-    },
-    [layout, pushHistory]
-  );
+  const addElement = useCallback((element: LayoutElement) => {
+    dispatch({ type: "ADD_ELEMENT", element });
+  }, []);
 
-  const updateElement = useCallback(
-    (id: string, updates: Partial<LayoutElement>) => {
-      const newLayout = {
-        ...layout,
-        elements: layout.elements.map((el) =>
-          el.id === id ? { ...el, ...updates } : el
-        ),
-      };
-      pushHistory(layout);
-      setLayoutState(newLayout);
-    },
-    [layout, pushHistory]
-  );
+  const updateElement = useCallback((id: string, updates: Partial<LayoutElement>) => {
+    dispatch({ type: "UPDATE_ELEMENT", id, updates });
+  }, []);
 
-  const deleteElement = useCallback(
-    (id: string) => {
-      const newLayout = {
-        ...layout,
-        elements: layout.elements.filter((el) => el.id !== id),
-      };
-      pushHistory(layout);
-      setLayoutState(newLayout);
-      if (selectedElementId === id) {
-        setSelectedElementId(null);
-      }
-    },
-    [layout, pushHistory, selectedElementId]
-  );
+  const deleteElement = useCallback((id: string) => {
+    dispatch({ type: "DELETE_ELEMENT", id });
+  }, []);
 
-  const moveElement = useCallback(
-    (id: string, col: number, row: number) => {
-      const newLayout = {
-        ...layout,
-        elements: layout.elements.map((el) =>
-          el.id === id ? { ...el, col, row } : el
-        ),
-      };
-      pushHistory(layout);
-      setLayoutState(newLayout);
-    },
-    [layout, pushHistory]
-  );
+  const moveElement = useCallback((id: string, col: number, row: number) => {
+    dispatch({ type: "MOVE_ELEMENT", id, col, row });
+  }, []);
+
+  const setLayout = useCallback((layout: Layout) => {
+    dispatch({ type: "SET_LAYOUT", layout });
+  }, []);
 
   const undo = useCallback(() => {
-    if (historyIndex >= 0) {
-      const previousLayout = history[historyIndex];
-      if (previousLayout) {
-        setLayoutState(previousLayout);
-        setHistoryIndex((i) => i - 1);
-      }
-    }
-  }, [history, historyIndex]);
+    dispatch({ type: "UNDO" });
+  }, []);
 
   const redo = useCallback(() => {
-    if (historyIndex < history.length - 1) {
-      const nextLayout = history[historyIndex + 1];
-      if (nextLayout) {
-        setLayoutState(nextLayout);
-        setHistoryIndex((i) => i + 1);
-      }
-    }
-  }, [history, historyIndex]);
+    dispatch({ type: "REDO" });
+  }, []);
 
-  const setLayout = useCallback(
-    (newLayout: Layout) => {
-      pushHistory(layout);
-      setLayoutState(newLayout);
-      setSelectedElementId(null);
-    },
-    [layout, pushHistory]
-  );
+  // Compute selected element directly instead of returning a function
+  const selectedElement = useMemo(() => {
+    if (!state.selectedElementId) return null;
+    return state.layout.elements.find((el) => el.id === state.selectedElementId) ?? null;
+  }, [state.layout.elements, state.selectedElementId]);
 
-  const getSelectedElement = useCallback((): LayoutElement | null => {
-    if (!selectedElementId) return null;
-    return layout.elements.find((el) => el.id === selectedElementId) ?? null;
-  }, [layout.elements, selectedElementId]);
-
-  const canUndo = historyIndex >= 0;
-  const canRedo = historyIndex < history.length - 1;
+  const canUndo = state.past.length > 0;
+  const canRedo = state.future.length > 0;
 
   const value = useMemo<BuilderContextValue>(
     () => ({
-      layout,
-      selectedElementId,
+      layout: state.layout,
+      selectedElementId: state.selectedElementId,
       canUndo,
       canRedo,
       selectElement,
@@ -181,11 +232,11 @@ export function BuilderProvider({
       undo,
       redo,
       setLayout,
-      getSelectedElement,
+      selectedElement,
     }),
     [
-      layout,
-      selectedElementId,
+      state.layout,
+      state.selectedElementId,
       canUndo,
       canRedo,
       selectElement,
@@ -196,7 +247,7 @@ export function BuilderProvider({
       undo,
       redo,
       setLayout,
-      getSelectedElement,
+      selectedElement,
     ]
   );
 

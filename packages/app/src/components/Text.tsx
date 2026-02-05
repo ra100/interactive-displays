@@ -1,5 +1,6 @@
 import { memo, useMemo, type CSSProperties } from "react";
 import type { GlobalState } from "@interactive-displays/shared";
+import { getStateClass } from "../utils/getStateClass";
 
 export interface TextProps {
   label: string;
@@ -40,14 +41,7 @@ export const Text = memo(function Text({
     [col, colSpan, row, rowSpan, color]
   );
 
-  const stateClass =
-    globalState === "alert"
-      ? "state--alert"
-      : globalState === "damaged"
-        ? "state--damaged"
-        : globalState === "active"
-          ? "state--active"
-          : "";
+  const stateClass = getStateClass(globalState);
 
   return (
     <div className={`lcars-element lcars-text ${stateClass}`} style={style}>

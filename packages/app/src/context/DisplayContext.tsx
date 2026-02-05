@@ -66,6 +66,10 @@ export function DisplayProvider({ children }: DisplayProviderProps) {
       setIsConnected(false);
     });
 
+    newSocket.on("connect_error", (error) => {
+      console.error("Socket connection error:", error.message);
+    });
+
     newSocket.on("state", (state) => {
       setGlobalStateLocal(state);
     });

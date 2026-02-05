@@ -1,5 +1,6 @@
 import { memo, useMemo, useCallback, type CSSProperties } from "react";
 import type { GlobalState } from "@interactive-displays/shared";
+import { getStateClass } from "../utils/getStateClass";
 
 export interface ButtonProps {
   label: string;
@@ -57,14 +58,7 @@ export const Button = memo(function Button({
     [onClick]
   );
 
-  const stateClass =
-    globalState === "alert"
-      ? "state--alert"
-      : globalState === "damaged"
-        ? "state--damaged"
-        : globalState === "active"
-          ? "state--active"
-          : "";
+  const stateClass = getStateClass(globalState);
 
   return (
     <button

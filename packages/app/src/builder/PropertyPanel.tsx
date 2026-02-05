@@ -27,10 +27,10 @@ const BAR_ORIENTATIONS: { label: string; value: BarOrientation }[] = [
 ];
 
 export function PropertyPanel() {
-  const { getSelectedElement, updateElement, deleteElement, selectedElementId } =
+  const { selectedElement, updateElement, deleteElement, selectedElementId } =
     useBuilder();
 
-  const element = getSelectedElement();
+  const element = selectedElement;
 
   const handleColorChange = useCallback(
     (color: string) => {
@@ -43,7 +43,7 @@ export function PropertyPanel() {
 
   const handleNumberChange = useCallback(
     (field: "col" | "row" | "colSpan" | "rowSpan", value: number) => {
-      if (selectedElementId) {
+      if (selectedElementId && !Number.isNaN(value)) {
         updateElement(selectedElementId, { [field]: value });
       }
     },

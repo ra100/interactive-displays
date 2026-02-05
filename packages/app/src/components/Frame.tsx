@@ -1,5 +1,6 @@
 import { memo, useMemo, type CSSProperties, type ReactNode } from "react";
 import type { GlobalState } from "@interactive-displays/shared";
+import { getStateClass } from "../utils/getStateClass";
 
 export interface FrameProps {
   color: string;
@@ -38,14 +39,7 @@ export const Frame = memo(function Frame({
     [col, colSpan, row, rowSpan, color]
   );
 
-  const stateClass =
-    globalState === "alert"
-      ? "state--alert"
-      : globalState === "damaged"
-        ? "state--damaged"
-        : globalState === "active"
-          ? "state--active"
-          : "";
+  const stateClass = getStateClass(globalState);
 
   return (
     <div className={`lcars-element lcars-frame ${stateClass}`} style={style}>

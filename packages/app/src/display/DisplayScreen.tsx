@@ -29,10 +29,8 @@ export function DisplayScreen() {
     []
   );
 
-  const handleButtonClick = useCallback((elementId: string) => {
-    // Button clicks can be handled here in the future
-    // For now, just log for debugging during development
-    console.log(`Button clicked: ${elementId}`);
+  const handleButtonClick = useCallback((_elementId: string) => {
+    // Button click handling will be implemented when needed
   }, []);
 
   const statusClassName = `display-status ${
