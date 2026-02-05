@@ -10,6 +10,7 @@ import { Bar } from "../components/Bar";
 import { Frame } from "../components/Frame";
 import { Button } from "../components/Button";
 import { Text } from "../components/Text";
+import { VideoElement } from "../components/VideoElement";
 import { GRID_COLUMNS, GRID_ROWS, CELL_SIZE, CELL_WITH_GAP } from "../constants/grid";
 import "./Canvas.css";
 
@@ -79,6 +80,18 @@ function DraggableElement({
         return <Button {...baseProps} label={element.label ?? "BUTTON"} />;
       case "text":
         return <Text {...baseProps} label={element.label ?? ""} />;
+      case "video":
+        return (
+          <VideoElement
+            {...baseProps}
+            id={element.id}
+            src={element.src ?? ""}
+            fit={element.fit ?? "contain"}
+            muted={element.muted ?? true}
+            loop={element.loop ?? false}
+            autoplay={element.autoplay ?? false}
+          />
+        );
       default:
         return null;
     }
