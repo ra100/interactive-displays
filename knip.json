@@ -15,8 +15,5 @@
     "**/*.config.js",
     ".history/**"
   ],
-  "ignoreDependencies": [
-    "@dnd-kit/core"
-  ],
-  "ignoreExportsUsedInFile": true
+    "ignoreExportsUsedInFile": true
 }

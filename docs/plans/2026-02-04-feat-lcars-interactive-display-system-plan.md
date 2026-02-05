@@ -306,31 +306,31 @@ lcars/
 
 **Tasks:**
 
-- [ ] **3.1 Builder Route**
+- [x] **3.1 Builder Route**
   - `/builder` route in app
   - Canvas, palette, property panel layout
 
   Files: `packages/app/src/builder/BuilderPage.tsx`
 
-- [ ] **3.2 Drag-Drop with @dnd-kit**
+- [x] **3.2 Drag-Drop with @dnd-kit**
   - Palette of 5 elements
   - Drop to canvas, snap to 12-column grid
   - Click to select, drag to move
 
   Files: `packages/app/src/builder/Canvas.tsx`, `packages/app/src/builder/Palette.tsx`
 
-- [ ] **3.3 Property Panel**
+- [x] **3.3 Property Panel**
   - Edit selected element (color, size, label)
   - Simple form inputs
 
   Files: `packages/app/src/builder/PropertyPanel.tsx`
 
-- [ ] **3.4 Save/Load**
+- [x] **3.4 Save/Load**
   - Save layout to server (POST /api/layouts)
   - Load layout list
   - Simple undo (10-level array)
 
-- [ ] **3.5 Operator Panel** (sidebar in builder)
+- [x] **3.5 Operator Panel** (sidebar in builder)
   - 4 large buttons: NORMAL, RED ALERT, ACTIVE, DAMAGED
   - Current state indicator
   - List of connected screens
