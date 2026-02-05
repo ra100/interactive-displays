@@ -9,9 +9,14 @@
     "knip": "knip",
     "dev": "pnpm -r --parallel run dev",
     "build": "pnpm -r run build",
+    "test": "pnpm -r run test",
+    "test:unit": "pnpm -r run test",
+    "test:e2e": "playwright test",
+    "test:watch": "pnpm -r --parallel run test:watch",
     "prepare": "husky"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.1",
     "husky": "^9.1.7",
     "knip": "^5.43.3",
     "lint-staged": "^15.3.0",
