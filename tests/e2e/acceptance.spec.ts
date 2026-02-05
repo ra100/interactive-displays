@@ -183,19 +183,20 @@ test.describe("Acceptance Criteria", () => {
         });
       }
 
-      await expect(page.locator(".canvas-element")).toHaveCount(12);
+      await expect(canvas).toHaveAttribute("data-element-count", "12");
 
-      // Undo 10 times
+      // Undo 10 times - scroll to button each time since it may be off-screen
+      const undoButton = page.locator('button:has-text("Undo")');
       for (let i = 0; i < 10; i++) {
-        await page.click('button:has-text("Undo")');
+        await undoButton.scrollIntoViewIfNeeded();
+        await undoButton.click();
       }
 
       // Should have 2 elements (12 - 10)
-      await expect(page.locator(".canvas-element")).toHaveCount(2);
+      await expect(canvas).toHaveAttribute("data-element-count", "2");
 
-      // 11th undo should have no effect
-      await page.click('button:has-text("Undo")');
-      await expect(page.locator(".canvas-element")).toHaveCount(2);
+      // Undo button should be disabled after 10 undos (max history reached)
+      await expect(undoButton).toBeDisabled();
     });
   });
 

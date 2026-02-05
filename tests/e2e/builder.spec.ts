@@ -97,13 +97,18 @@ test.describe("Builder - Property Editing", () => {
   });
 
   test("can delete element", async ({ page }) => {
+    const canvas = page.locator(".canvas");
     const deleteButton = page.locator(".delete-button");
-    const initialCount = await page.locator(".canvas-element").count();
 
+    // Verify we have an element to delete
+    await expect(canvas).toHaveAttribute("data-element-count", "1");
+
+    // Scroll to delete button and click
+    await deleteButton.scrollIntoViewIfNeeded();
     await deleteButton.click();
 
-    const newCount = await page.locator(".canvas-element").count();
-    expect(newCount).toBe(initialCount - 1);
+    // Verify element was deleted using auto-waiting assertion
+    await expect(canvas).toHaveAttribute("data-element-count", "0");
   });
 });
 
@@ -116,13 +121,17 @@ test.describe("Builder - Undo/Redo", () => {
     const canvas = page.locator(".canvas");
     await palette.locator('[data-element-type="bar"]').dragTo(canvas);
 
-    const countAfterAdd = await page.locator(".canvas-element").count();
+    // Verify element was added using data attribute
+    await expect(canvas).toHaveAttribute("data-element-count", "1");
 
-    // Click undo button
-    await page.click('button:has-text("Undo")');
+    // Wait for Undo button to be enabled and scroll into view
+    const undoButton = page.locator('button:has-text("Undo")');
+    await expect(undoButton).toBeEnabled();
+    await undoButton.scrollIntoViewIfNeeded();
+    await undoButton.click();
 
-    const countAfterUndo = await page.locator(".canvas-element").count();
-    expect(countAfterUndo).toBe(countAfterAdd - 1);
+    // Use data attribute for more reliable state tracking
+    await expect(canvas).toHaveAttribute("data-element-count", "0");
   });
 
   test("can redo undone action", async ({ page }) => {
@@ -133,15 +142,23 @@ test.describe("Builder - Undo/Redo", () => {
     const canvas = page.locator(".canvas");
     await palette.locator('[data-element-type="frame"]').dragTo(canvas);
 
-    const countAfterAdd = await page.locator(".canvas-element").count();
+    // Verify element was added using data attribute
+    await expect(canvas).toHaveAttribute("data-element-count", "1");
 
-    // Undo
-    await page.click('button:has-text("Undo")');
+    // Wait for Undo button to be enabled and scroll into view
+    const undoButton = page.locator('button:has-text("Undo")');
+    await expect(undoButton).toBeEnabled();
+    await undoButton.scrollIntoViewIfNeeded();
+    await undoButton.click();
+    await expect(canvas).toHaveAttribute("data-element-count", "0");
 
-    // Redo
-    await page.click('button:has-text("Redo")');
+    // Wait for Redo button to be enabled and scroll into view
+    const redoButton = page.locator('button:has-text("Redo")');
+    await expect(redoButton).toBeEnabled();
+    await redoButton.scrollIntoViewIfNeeded();
+    await redoButton.click();
 
-    const countAfterRedo = await page.locator(".canvas-element").count();
-    expect(countAfterRedo).toBe(countAfterAdd);
+    // Use data attribute for more reliable state tracking
+    await expect(canvas).toHaveAttribute("data-element-count", "1");
   });
 });

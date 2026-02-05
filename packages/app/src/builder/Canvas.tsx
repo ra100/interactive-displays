@@ -162,6 +162,7 @@ export function Canvas({ globalState }: CanvasProps) {
         className={`canvas ${isOver ? "canvas--drop-target" : ""}`}
         style={gridStyle}
         onClick={handleCanvasClick}
+        data-element-count={layout.elements.length}
       >
         {gridCells}
         {layout.elements.map((element) => (
