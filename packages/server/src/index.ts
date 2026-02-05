@@ -158,6 +158,6 @@ const start = async () => {
 };
 
 start().catch((err) => {
-  fastify.log.error("Server failed to start:", err);
+  fastify.log.error({ err }, "Server failed to start");
   process.exit(1);
 });

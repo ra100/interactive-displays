@@ -1,10 +1,14 @@
 import { readFile, writeFile, mkdir, rename } from "node:fs/promises";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
 import type { Layout } from "./types.js";
 import { validateLayoutId, validateLayout } from "./validation.js";
 
-const DATA_DIR = join(process.cwd(), "data", "layouts");
+// Resolve data directory relative to this file (works regardless of cwd)
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const PROJECT_ROOT = join(__dirname, "..", "..", "..");
+const DATA_DIR = join(PROJECT_ROOT, "data", "layouts");
 
 async function ensureDataDir(): Promise<void> {
   await mkdir(DATA_DIR, { recursive: true });
