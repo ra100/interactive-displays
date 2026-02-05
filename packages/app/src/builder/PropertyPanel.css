@@ -32,7 +32,8 @@
   gap: 8px;
 }
 
-.property-label {
+.property-label,
+.property-group-label {
   color: #999;
   font-size: 0.75rem;
   text-transform: uppercase;

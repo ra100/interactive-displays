@@ -12,13 +12,13 @@ interface StateButtonProps {
   onClick: () => void;
 }
 
-function StateButton({
+const StateButton = ({
   label,
   state,
   color,
   currentState,
   onClick,
-}: StateButtonProps) {
+}: StateButtonProps) => {
   const isActive = currentState === state;
 
   return (
@@ -32,7 +32,7 @@ function StateButton({
       {isActive && <span className="state-button-indicator" />}
     </button>
   );
-}
+};
 
 export function OperatorPanel() {
   const { globalState, setGlobalState, saveLayout, isConnected } = useDisplay();
@@ -48,30 +48,31 @@ export function OperatorPanel() {
 
       <div className="operator-section">
         <span className="operator-section-label">Global State</span>
+        <div className="operator-state-indicator">{globalState.toUpperCase()}</div>
         <div className="state-buttons">
           <StateButton
-            label="Normal"
+            label="NORMAL"
             state="normal"
             color="#ffcc99"
             currentState={globalState}
             onClick={() => setGlobalState("normal")}
           />
           <StateButton
-            label="Red Alert"
+            label="ALERT"
             state="alert"
             color="#ff0000"
             currentState={globalState}
             onClick={() => setGlobalState("alert")}
           />
           <StateButton
-            label="Active"
+            label="ACTIVE"
             state="active"
             color="#00ff00"
             currentState={globalState}
             onClick={() => setGlobalState("active")}
           />
           <StateButton
-            label="Damaged"
+            label="DAMAGED"
             state="damaged"
             color="#666666"
             currentState={globalState}

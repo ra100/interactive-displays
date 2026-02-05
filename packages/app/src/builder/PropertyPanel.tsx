@@ -102,7 +102,7 @@ export function PropertyPanel() {
       </div>
 
       <div className="property-group">
-        <label className="property-label">Color</label>
+        <label className="property-group-label">Color</label>
         <div className="color-picker">
           {LCARS_COLORS.map((color) => (
             <button
@@ -118,7 +118,7 @@ export function PropertyPanel() {
       </div>
 
       <div className="property-group">
-        <label className="property-label">Position</label>
+        <label className="property-group-label">Position</label>
         <div className="property-row">
           <div className="property-field">
             <span className="property-field-label">Col</span>
@@ -150,7 +150,7 @@ export function PropertyPanel() {
       </div>
 
       <div className="property-group">
-        <label className="property-label">Size</label>
+        <label className="property-group-label">Size</label>
         <div className="property-row">
           <div className="property-field">
             <span className="property-field-label">Width</span>
@@ -183,7 +183,7 @@ export function PropertyPanel() {
 
       {element.type === "elbow" && (
         <div className="property-group">
-          <label className="property-label">Direction</label>
+          <label className="property-group-label">Direction</label>
           <select
             value={element.direction ?? "TL"}
             onChange={(e) =>
@@ -202,7 +202,7 @@ export function PropertyPanel() {
 
       {element.type === "bar" && (
         <div className="property-group">
-          <label className="property-label">Orientation</label>
+          <label className="property-group-label">Orientation</label>
           <select
             value={element.orientation ?? "horizontal"}
             onChange={(e) =>
@@ -221,7 +221,7 @@ export function PropertyPanel() {
 
       {(element.type === "button" || element.type === "text") && (
         <div className="property-group">
-          <label className="property-label">Label</label>
+          <label className="property-group-label">Label</label>
           <input
             type="text"
             value={element.label ?? ""}

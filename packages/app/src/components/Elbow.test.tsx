@@ -15,9 +15,7 @@ describe("Elbow", () => {
 
   it("renders with lcars-elbow class", () => {
     render(<Elbow {...defaultProps} />);
-    const elbow = screen.getByTestId ?
-      document.querySelector(".lcars-elbow") :
-      document.querySelector(".lcars-elbow");
+    const elbow = document.querySelector(".lcars-elbow");
     expect(elbow).toBeInTheDocument();
   });
 

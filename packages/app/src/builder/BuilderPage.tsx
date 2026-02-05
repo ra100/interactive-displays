@@ -1,11 +1,13 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState, useRef } from "react";
 import {
   DndContext,
+  DragOverlay,
   MouseSensor,
   TouchSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragStartEvent,
 } from "@dnd-kit/core";
 import type { ElementType, LayoutElement } from "@interactive-displays/shared";
 import { useDisplay } from "../context/DisplayContext";
@@ -33,20 +35,26 @@ const DEFAULT_COLORS: Record<ElementType, string> = {
   text: "#ff9900",
 };
 
+const PALETTE_ITEMS: Array<{ type: ElementType; label: string; color: string }> = [
+  { type: "elbow", label: "Elbow", color: "#ff9900" },
+  { type: "bar", label: "Bar", color: "#ffcc99" },
+  { type: "frame", label: "Frame", color: "#9999ff" },
+  { type: "button", label: "Button", color: "#cc99cc" },
+  { type: "text", label: "Text", color: "#ff9999" },
+];
+
 function BuilderContent() {
   const { globalState, layout: serverLayout } = useDisplay();
-  const { addElement, moveElement, setLayout } = useBuilder();
+  const { addElement, moveElement } = useBuilder();
+  const [activeId, setActiveId] = useState<string | null>(null);
 
-  // Load layout from server when available
-  useEffect(() => {
-    if (serverLayout) {
-      setLayout(serverLayout);
-    }
-  }, [serverLayout, setLayout]);
+  // In builder mode, we don't automatically sync from server
+  // The builder starts fresh and only saves TO the server, never loads from it
+  // This prevents race conditions with layout broadcasts messing up local state
 
   const mouseSensor = useSensor(MouseSensor, {
     activationConstraint: {
-      distance: 5,
+      distance: 10,
     },
   });
 
@@ -59,9 +67,24 @@ function BuilderContent() {
 
   const sensors = useSensors(mouseSensor, touchSensor);
 
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+    // Add class immediately to palette via DOM to avoid React timing issues
+    document.querySelector(".palette")?.classList.add("palette--dragging");
+  }, []);
+
+  const handleDragCancel = useCallback(() => {
+    setActiveId(null);
+    document.querySelector(".palette")?.classList.remove("palette--dragging");
+  }, []);
+
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over, delta } = event;
+
+      setActiveId(null);
+      // Remove class via DOM
+      document.querySelector(".palette")?.classList.remove("palette--dragging");
 
       if (!over || over.id !== "canvas") return;
 
@@ -84,10 +107,12 @@ function BuilderContent() {
         const position = pixelsToGrid(dropX, dropY, rect);
 
         const size = DEFAULT_ELEMENT_SIZE[data.type];
+        // Ensure new elements aren't placed at col 0 to avoid overlap with palette
+        const col = Math.max(1, position.col);
         const newElement: LayoutElement = {
           id: generateElementId(data.type),
           type: data.type,
-          col: position.col,
+          col,
           row: position.row,
           colSpan: size.colSpan,
           rowSpan: size.rowSpan,
@@ -111,8 +136,13 @@ function BuilderContent() {
     [addElement, moveElement]
   );
 
+  // Get the active palette item for DragOverlay
+  const activePaletteItem = activeId?.startsWith("palette-")
+    ? PALETTE_ITEMS.find((p) => `palette-${p.type}` === activeId)
+    : null;
+
   return (
-    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
       <div className="builder-page">
         <Palette />
         <Canvas globalState={globalState} />
@@ -121,6 +151,30 @@ function BuilderContent() {
           <OperatorPanel />
         </div>
       </div>
+      <DragOverlay dropAnimation={null}>
+        {activePaletteItem && (
+          <div
+            style={{
+              backgroundColor: activePaletteItem.color,
+              padding: "12px 16px",
+              borderRadius: "8px",
+              cursor: "grabbing",
+            }}
+          >
+            <span
+              style={{
+                color: "#000",
+                fontFamily: "Antonio, sans-serif",
+                fontSize: "1rem",
+                fontWeight: 700,
+                textTransform: "uppercase",
+              }}
+            >
+              {activePaletteItem.label}
+            </span>
+          </div>
+        )}
+      </DragOverlay>
     </DndContext>
   );
 }
