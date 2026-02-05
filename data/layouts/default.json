@@ -1,0 +1,155 @@
+{
+  "id": "default",
+  "name": "Default Layout",
+  "elements": [
+    {
+      "id": "elbow-tl",
+      "type": "elbow",
+      "col": 0,
+      "row": 0,
+      "colSpan": 2,
+      "rowSpan": 2,
+      "color": "#ff9900",
+      "direction": "TL"
+    },
+    {
+      "id": "bar-top",
+      "type": "bar",
+      "col": 2,
+      "row": 0,
+      "colSpan": 8,
+      "rowSpan": 1,
+      "color": "#ffcc99",
+      "orientation": "horizontal"
+    },
+    {
+      "id": "elbow-tr",
+      "type": "elbow",
+      "col": 10,
+      "row": 0,
+      "colSpan": 2,
+      "rowSpan": 2,
+      "color": "#cc99cc",
+      "direction": "TR"
+    },
+    {
+      "id": "bar-left",
+      "type": "bar",
+      "col": 0,
+      "row": 2,
+      "colSpan": 1,
+      "rowSpan": 4,
+      "color": "#ff9900",
+      "orientation": "vertical"
+    },
+    {
+      "id": "title-text",
+      "type": "text",
+      "col": 2,
+      "row": 1,
+      "colSpan": 8,
+      "rowSpan": 1,
+      "color": "#ff9900",
+      "label": "LCARS INTERACTIVE DISPLAY SYSTEM"
+    },
+    {
+      "id": "frame-main",
+      "type": "frame",
+      "col": 2,
+      "row": 2,
+      "colSpan": 8,
+      "rowSpan": 3,
+      "color": "#9999ff"
+    },
+    {
+      "id": "bar-right",
+      "type": "bar",
+      "col": 11,
+      "row": 2,
+      "colSpan": 1,
+      "rowSpan": 4,
+      "color": "#cc99cc",
+      "orientation": "vertical"
+    },
+    {
+      "id": "status-text",
+      "type": "text",
+      "col": 3,
+      "row": 3,
+      "colSpan": 6,
+      "rowSpan": 1,
+      "color": "#ffcc99",
+      "label": "SYSTEM STATUS: OPERATIONAL"
+    },
+    {
+      "id": "elbow-bl",
+      "type": "elbow",
+      "col": 0,
+      "row": 6,
+      "colSpan": 2,
+      "rowSpan": 2,
+      "color": "#ff9900",
+      "direction": "BL"
+    },
+    {
+      "id": "btn-normal",
+      "type": "button",
+      "col": 2,
+      "row": 6,
+      "colSpan": 2,
+      "rowSpan": 1,
+      "color": "#ffcc99",
+      "label": "NORMAL"
+    },
+    {
+      "id": "btn-alert",
+      "type": "button",
+      "col": 4,
+      "row": 6,
+      "colSpan": 2,
+      "rowSpan": 1,
+      "color": "#ff6666",
+      "label": "ALERT"
+    },
+    {
+      "id": "btn-active",
+      "type": "button",
+      "col": 6,
+      "row": 6,
+      "colSpan": 2,
+      "rowSpan": 1,
+      "color": "#66ff66",
+      "label": "ACTIVE"
+    },
+    {
+      "id": "btn-damaged",
+      "type": "button",
+      "col": 8,
+      "row": 6,
+      "colSpan": 2,
+      "rowSpan": 1,
+      "color": "#999999",
+      "label": "DAMAGED"
+    },
+    {
+      "id": "elbow-br",
+      "type": "elbow",
+      "col": 10,
+      "row": 6,
+      "colSpan": 2,
+      "rowSpan": 2,
+      "color": "#cc99cc",
+      "direction": "BR"
+    },
+    {
+      "id": "bar-bottom",
+      "type": "bar",
+      "col": 2,
+      "row": 7,
+      "colSpan": 8,
+      "rowSpan": 1,
+      "color": "#9999ff",
+      "orientation": "horizontal"
+    }
+  ]
+}
