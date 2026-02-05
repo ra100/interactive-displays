@@ -2,8 +2,10 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   useCallback,
+  useMemo,
   type ReactNode,
 } from "react";
 import { io, type Socket } from "socket.io-client";
@@ -12,7 +14,7 @@ import type {
   Layout,
   ServerToClientEvents,
   ClientToServerEvents,
-} from "../../../server/src/types.js";
+} from "@interactive-displays/shared";
 
 const SERVER_URL =
   (import.meta.env["VITE_SERVER_URL"] as string | undefined) ||
@@ -21,7 +23,6 @@ const SERVER_URL =
 interface DisplayContextValue {
   globalState: GlobalState;
   layout: Layout | null;
-  connectedScreens: string[];
   isConnected: boolean;
   setGlobalState: (state: GlobalState) => void;
   saveLayout: (layout: Layout) => void;
@@ -43,14 +44,13 @@ interface DisplayProviderProps {
 }
 
 export function DisplayProvider({ children }: DisplayProviderProps) {
-  const [socket, setSocket] = useState<Socket<
+  const socketRef = useRef<Socket<
     ServerToClientEvents,
     ClientToServerEvents
   > | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [globalState, setGlobalStateLocal] = useState<GlobalState>("normal");
   const [layout, setLayout] = useState<Layout | null>(null);
-  const [connectedScreens, setConnectedScreens] = useState<string[]>([]);
 
   // Initialize socket connection
   useEffect(() => {
@@ -59,66 +59,51 @@ export function DisplayProvider({ children }: DisplayProviderProps) {
     );
 
     newSocket.on("connect", () => {
-      console.log("Connected to server");
       setIsConnected(true);
     });
 
     newSocket.on("disconnect", () => {
-      console.log("Disconnected from server");
       setIsConnected(false);
     });
 
     newSocket.on("state", (state) => {
-      console.log("State updated:", state);
       setGlobalStateLocal(state);
     });
 
     newSocket.on("layout", (newLayout) => {
-      console.log("Layout received:", newLayout.name);
       setLayout(newLayout);
     });
 
-    newSocket.on("connectedScreens", (screens) => {
-      setConnectedScreens(screens);
-    });
-
-    setSocket(newSocket);
+    socketRef.current = newSocket;
 
     return () => {
       newSocket.close();
     };
   }, []);
 
-  const setGlobalState = useCallback(
-    (state: GlobalState) => {
-      socket?.emit("stateChange", state);
-    },
-    [socket]
-  );
+  const setGlobalState = useCallback((state: GlobalState) => {
+    socketRef.current?.emit("stateChange", state);
+  }, []);
 
-  const saveLayout = useCallback(
-    (layoutToSave: Layout) => {
-      socket?.emit("saveLayout", layoutToSave);
-    },
-    [socket]
-  );
+  const saveLayout = useCallback((layoutToSave: Layout) => {
+    socketRef.current?.emit("saveLayout", layoutToSave);
+  }, []);
 
-  const identify = useCallback(
-    (screenId: string) => {
-      socket?.emit("identify", screenId);
-    },
-    [socket]
-  );
+  const identify = useCallback((screenId: string) => {
+    socketRef.current?.emit("identify", screenId);
+  }, []);
 
-  const value: DisplayContextValue = {
-    globalState,
-    layout,
-    connectedScreens,
-    isConnected,
-    setGlobalState,
-    saveLayout,
-    identify,
-  };
+  const value = useMemo<DisplayContextValue>(
+    () => ({
+      globalState,
+      layout,
+      isConnected,
+      setGlobalState,
+      saveLayout,
+      identify,
+    }),
+    [globalState, layout, isConnected, setGlobalState, saveLayout, identify]
+  );
 
   return (
     <DisplayContext.Provider value={value}>{children}</DisplayContext.Provider>
