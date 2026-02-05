@@ -29,6 +29,9 @@ importers:
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@interactive-displays/shared':
+        specifier: workspace:*
+        version: link:../shared
       react:
         specifier: ^19.0.0
         version: 19.2.4
@@ -60,6 +63,9 @@ importers:
       '@fastify/cors':
         specifier: ^11.0.1
         version: 11.2.0
+      '@interactive-displays/shared':
+        specifier: workspace:*
+        version: link:../shared
       fastify:
         specifier: ^5.2.1
         version: 5.7.4
@@ -76,6 +82,8 @@ importers:
       tsx:
         specifier: ^4.19.2
         version: 4.21.0
+
+  packages/shared: {}
 
 packages:
 
