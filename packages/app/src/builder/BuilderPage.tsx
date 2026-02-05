@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState, useRef } from "react";
+import { useCallback, useState } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -16,6 +16,7 @@ import { Palette } from "./Palette";
 import { Canvas, pixelsToGrid } from "./Canvas";
 import { PropertyPanel } from "./PropertyPanel";
 import { OperatorPanel } from "./OperatorPanel";
+import { CELL_WITH_GAP, GRID_COLUMNS, GRID_ROWS } from "../constants/grid";
 import "../theme.css";
 import "./BuilderPage.css";
 
@@ -137,11 +138,10 @@ function BuilderContent() {
         addElement(newElement);
       } else {
         // Moving existing element - calculate new position from delta
-        const cellSize = 64; // CELL_SIZE (60) + gap (4)
-        const deltaCol = Math.round(delta.x / cellSize);
-        const deltaRow = Math.round(delta.y / cellSize);
-        const newCol = Math.max(0, Math.min(11, data.element.col + deltaCol));
-        const newRow = Math.max(0, Math.min(9, data.element.row + deltaRow));
+        const deltaCol = Math.round(delta.x / CELL_WITH_GAP);
+        const deltaRow = Math.round(delta.y / CELL_WITH_GAP);
+        const newCol = Math.max(0, Math.min(GRID_COLUMNS - 1, data.element.col + deltaCol));
+        const newRow = Math.max(0, Math.min(GRID_ROWS - 1, data.element.row + deltaRow));
         moveElement(data.element.id, newCol, newRow);
       }
     },

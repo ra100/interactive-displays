@@ -1,6 +1,7 @@
 import { memo, useMemo, useCallback, type CSSProperties } from "react";
 import type { GlobalState, CornerStyle } from "@interactive-displays/shared";
 import { getStateClass } from "../utils/getStateClass";
+import { CELL_WITH_GAP, GAP } from "../constants/grid";
 
 export interface ButtonProps {
   label: string;
@@ -14,10 +15,6 @@ export interface ButtonProps {
   rightCorner?: CornerStyle;
   onClick?: () => void;
 }
-
-const CELL_SIZE = 60;
-const GAP = 4;
-const CELL_WITH_GAP = CELL_SIZE + GAP;
 
 function getCornerRadius(
   corner: CornerStyle,

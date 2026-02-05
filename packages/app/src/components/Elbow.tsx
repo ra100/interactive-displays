@@ -1,6 +1,7 @@
 import { memo, useMemo, type CSSProperties } from "react";
 import type { ElbowDirection, GlobalState } from "@interactive-displays/shared";
 import { getStateClass } from "../utils/getStateClass";
+import { CELL_WITH_GAP, GAP } from "../constants/grid";
 
 export interface ElbowProps {
   direction: ElbowDirection;
@@ -14,9 +15,6 @@ export interface ElbowProps {
   horizontalWidth?: number; // rows for horizontal arm (default: 1)
 }
 
-const CELL_SIZE = 60;
-const GAP = 4;
-const CELL_WITH_GAP = CELL_SIZE + GAP;
 const MIN_RADIUS = 5;
 
 interface PathParams {

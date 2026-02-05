@@ -1,6 +1,7 @@
 import { memo, useMemo, type CSSProperties } from "react";
 import type { BarOrientation, GlobalState } from "@interactive-displays/shared";
 import { getStateClass } from "../utils/getStateClass";
+import { CELL_SIZE } from "../constants/grid";
 
 export interface BarProps {
   orientation: BarOrientation;
@@ -12,7 +13,6 @@ export interface BarProps {
   globalState: GlobalState;
 }
 
-const CELL_SIZE = 60;
 const RADIUS = 30;
 
 export const Bar = memo(function Bar({

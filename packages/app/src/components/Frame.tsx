@@ -1,6 +1,7 @@
 import { memo, useMemo, type CSSProperties, type ReactNode } from "react";
 import type { GlobalState } from "@interactive-displays/shared";
 import { getStateClass } from "../utils/getStateClass";
+import { CELL_SIZE } from "../constants/grid";
 
 export interface FrameProps {
   color: string;
@@ -12,7 +13,6 @@ export interface FrameProps {
   children?: ReactNode;
 }
 
-const CELL_SIZE = 60;
 const RADIUS = 15;
 const BORDER_WIDTH = 4;
 

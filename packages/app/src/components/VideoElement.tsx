@@ -1,7 +1,8 @@
 import { memo, useRef, useCallback, useEffect, useMemo, type CSSProperties } from "react";
-import type { GlobalState, VideoFit, VideoCommand } from "@interactive-displays/shared";
+import type { GlobalState, VideoFit, VideoCommand, VideoState } from "@interactive-displays/shared";
 import { useDisplay } from "../context/DisplayContext";
 import { getStateClass } from "../utils/getStateClass";
+import { CELL_SIZE } from "../constants/grid";
 
 export interface VideoElementProps {
   id: string;
@@ -17,8 +18,6 @@ export interface VideoElementProps {
   muted?: boolean;
   fit?: VideoFit;
 }
-
-const CELL_SIZE = 60;
 
 type InternalCommand =
   | { type: "play" }
@@ -44,7 +43,7 @@ export const VideoElement = memo(function VideoElement({
   const commandQueueRef = useRef<InternalCommand[]>([]);
   const processingRef = useRef(false);
   const disposedRef = useRef(false); // Guard against operations after unmount
-  const { socket } = useDisplay();
+  const { subscribeToVideoCommands, sendVideoState } = useDisplay();
 
   const style = useMemo<CSSProperties>(
     () => ({
@@ -117,10 +116,8 @@ export const VideoElement = memo(function VideoElement({
     }
   }, []);
 
-  // Listen for WebSocket commands
+  // Listen for WebSocket commands via context abstraction
   useEffect(() => {
-    if (!socket) return;
-
     function handleCommand(data: VideoCommand) {
       if (data.elementId !== id) return;
 
@@ -140,13 +137,13 @@ export const VideoElement = memo(function VideoElement({
       processQueue();
     }
 
-    socket.on("videoCommand", handleCommand);
+    const unsubscribe = subscribeToVideoCommands(handleCommand);
     return () => {
       disposedRef.current = true;
       commandQueueRef.current = []; // Clear queue on unmount
-      socket.off("videoCommand", handleCommand);
+      unsubscribe();
     };
-  }, [socket, id, processQueue]);
+  }, [subscribeToVideoCommands, id, processQueue]);
 
   // Clear queue when src becomes empty
   useEffect(() => {
@@ -155,20 +152,19 @@ export const VideoElement = memo(function VideoElement({
     }
   }, [src]);
 
-  // Report state changes back to server
+  // Report state changes back to server via context abstraction
   const reportState = useCallback(
-    (state: "playing" | "paused" | "ended") => {
-      if (!socket) return;
+    (state: VideoState) => {
       const video = videoRef.current;
       if (!video) return;
 
-      socket.emit("videoState", {
+      sendVideoState({
         elementId: id,
         state,
         currentTime: video.currentTime,
       });
     },
-    [socket, id]
+    [sendVideoState, id]
   );
 
   const stateClass = getStateClass(globalState);

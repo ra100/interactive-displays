@@ -10,11 +10,8 @@ import { Bar } from "../components/Bar";
 import { Frame } from "../components/Frame";
 import { Button } from "../components/Button";
 import { Text } from "../components/Text";
+import { GRID_COLUMNS, GRID_ROWS, CELL_SIZE, CELL_WITH_GAP } from "../constants/grid";
 import "./Canvas.css";
-
-const GRID_COLUMNS = 12;
-const GRID_ROWS = 10;
-const CELL_SIZE = 60;
 
 interface DraggableElementProps {
   element: LayoutElement;
@@ -125,8 +122,8 @@ export function Canvas({ globalState }: CanvasProps) {
     () => ({
       gridTemplateColumns: `repeat(${GRID_COLUMNS}, ${CELL_SIZE}px)`,
       gridTemplateRows: `repeat(${GRID_ROWS}, ${CELL_SIZE}px)`,
-      width: `${GRID_COLUMNS * CELL_SIZE + (GRID_COLUMNS - 1) * 4}px`,
-      height: `${GRID_ROWS * CELL_SIZE + (GRID_ROWS - 1) * 4}px`,
+      width: `${GRID_COLUMNS * CELL_WITH_GAP - (CELL_WITH_GAP - CELL_SIZE)}px`,
+      height: `${GRID_ROWS * CELL_WITH_GAP - (CELL_WITH_GAP - CELL_SIZE)}px`,
     }),
     []
   );
@@ -187,8 +184,8 @@ export function pixelsToGrid(
 ): { col: number; row: number } {
   const relativeX = x - canvasRect.left;
   const relativeY = y - canvasRect.top;
-  const col = Math.floor(relativeX / (CELL_SIZE + 4));
-  const row = Math.floor(relativeY / (CELL_SIZE + 4));
+  const col = Math.floor(relativeX / CELL_WITH_GAP);
+  const row = Math.floor(relativeY / CELL_WITH_GAP);
   return {
     col: Math.max(0, Math.min(col, GRID_COLUMNS - 1)),
     row: Math.max(0, Math.min(row, GRID_ROWS - 1)),

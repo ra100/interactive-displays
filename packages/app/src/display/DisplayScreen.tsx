@@ -2,11 +2,9 @@ import { useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDisplay } from "../context/DisplayContext";
 import { LayoutRenderer } from "./LayoutRenderer";
+import { GRID_COLUMNS, CELL_SIZE } from "../constants/grid";
 import "../theme.css";
 import "./DisplayScreen.css";
-
-const GRID_COLUMNS = 12;
-const CELL_SIZE = 60; // pixels
 
 export function DisplayScreen() {
   const [searchParams] = useSearchParams();

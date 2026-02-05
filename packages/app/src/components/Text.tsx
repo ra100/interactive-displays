@@ -1,6 +1,7 @@
 import { memo, useMemo, type CSSProperties } from "react";
 import type { GlobalState } from "@interactive-displays/shared";
 import { getStateClass } from "../utils/getStateClass";
+import { CELL_SIZE } from "../constants/grid";
 
 export interface TextProps {
   label: string;
@@ -11,8 +12,6 @@ export interface TextProps {
   rowSpan: number;
   globalState: GlobalState;
 }
-
-const CELL_SIZE = 60;
 
 export const Text = memo(function Text({
   label,
