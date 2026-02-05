@@ -12,6 +12,16 @@
       "skipFiles": ["<node_internals>/**"]
     },
     {
+      "name": "App Dev Server",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@interactive-displays/app", "dev"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
       "name": "App (Chrome)",
       "type": "chrome",
       "request": "launch",
@@ -32,7 +42,12 @@
   "compounds": [
     {
       "name": "Full Stack",
-      "configurations": ["Server", "App (Chrome)"],
+      "configurations": ["Server", "App Dev Server"],
+      "stopAll": true
+    },
+    {
+      "name": "Full Stack + Chrome",
+      "configurations": ["Server", "App Dev Server", "App (Chrome)"],
       "stopAll": true
     }
   ]
