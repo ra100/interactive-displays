@@ -4,4 +4,6 @@ export type {
   Layout,
   ServerToClientEvents,
   ClientToServerEvents,
+  VideoCommand,
+  VideoStateUpdate,
 } from "@interactive-displays/shared";

@@ -124,6 +124,28 @@
   border-color: #fff;
 }
 
+.property-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.property-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ccc;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.property-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #ff9900;
+  cursor: pointer;
+}
+
 .delete-button {
   background-color: #660000;
   border: none;

@@ -1,5 +1,5 @@
 import { memo, useMemo, useCallback, type CSSProperties } from "react";
-import type { GlobalState } from "@interactive-displays/shared";
+import type { GlobalState, CornerStyle } from "@interactive-displays/shared";
 import { getStateClass } from "../utils/getStateClass";
 
 export interface ButtonProps {
@@ -10,11 +10,22 @@ export interface ButtonProps {
   colSpan: number;
   rowSpan: number;
   globalState: GlobalState;
+  leftCorner?: CornerStyle;
+  rightCorner?: CornerStyle;
   onClick?: () => void;
 }
 
 const CELL_SIZE = 60;
-const RADIUS = 30;
+const GAP = 4;
+const CELL_WITH_GAP = CELL_SIZE + GAP;
+
+function getCornerRadius(
+  corner: CornerStyle,
+  height: number
+): string {
+  // For pill-shaped buttons, use half the height for round corners
+  return corner === "round" ? `${height / 2}px` : "0";
+}
 
 export const Button = memo(function Button({
   label,
@@ -24,15 +35,24 @@ export const Button = memo(function Button({
   colSpan,
   rowSpan,
   globalState,
+  leftCorner = "round",
+  rightCorner = "round",
   onClick,
 }: ButtonProps) {
-  const style = useMemo<CSSProperties>(
-    () => ({
+  const height = rowSpan * CELL_WITH_GAP - GAP;
+
+  const style = useMemo<CSSProperties>(() => {
+    const left = getCornerRadius(leftCorner, height);
+    const right = getCornerRadius(rightCorner, height);
+    // CSS border-radius order: TL TR BR BL
+    const borderRadius = `${left} ${right} ${right} ${left}`;
+
+    return {
       gridColumn: `${col + 1} / span ${colSpan}`,
       gridRow: `${row + 1} / span ${rowSpan}`,
       backgroundColor: color,
-      borderRadius: `${RADIUS}px`,
-      minHeight: `${rowSpan * CELL_SIZE}px`,
+      borderRadius,
+      minHeight: `${height}px`,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
@@ -40,9 +60,8 @@ export const Button = memo(function Button({
       fontSize: "1.25rem",
       fontWeight: 700,
       letterSpacing: "0.05em",
-    }),
-    [col, colSpan, row, rowSpan, color]
-  );
+    };
+  }, [col, colSpan, row, rowSpan, color, leftCorner, rightCorner, height]);
 
   const handleClick = useCallback(() => {
     onClick?.();

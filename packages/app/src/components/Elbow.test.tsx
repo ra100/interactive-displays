@@ -19,10 +19,10 @@ describe("Elbow", () => {
     expect(elbow).toBeInTheDocument();
   });
 
-  it("applies background color", () => {
+  it("applies fill color to SVG path", () => {
     render(<Elbow {...defaultProps} color="#cc99cc" />);
-    const elbow = document.querySelector(".lcars-elbow");
-    expect(elbow).toHaveStyle({ backgroundColor: "#cc99cc" });
+    const path = document.querySelector(".lcars-elbow svg path");
+    expect(path).toHaveAttribute("fill", "#cc99cc");
   });
 
   it("applies grid positioning", () => {
@@ -54,4 +54,35 @@ describe("Elbow", () => {
       expect(elbow).toHaveAttribute("data-direction", direction);
     }
   );
+
+  describe("asymmetric widths", () => {
+    it("renders SVG with default widths", () => {
+      render(<Elbow {...defaultProps} />);
+      const svg = document.querySelector(".lcars-elbow svg");
+      expect(svg).toBeInTheDocument();
+    });
+
+    it("accepts verticalWidth prop", () => {
+      render(<Elbow {...defaultProps} verticalWidth={2} />);
+      const svg = document.querySelector(".lcars-elbow svg");
+      expect(svg).toBeInTheDocument();
+    });
+
+    it("accepts horizontalWidth prop", () => {
+      render(<Elbow {...defaultProps} horizontalWidth={2} />);
+      const svg = document.querySelector(".lcars-elbow svg");
+      expect(svg).toBeInTheDocument();
+    });
+
+    it("renders different path for asymmetric widths", () => {
+      const { rerender } = render(<Elbow {...defaultProps} verticalWidth={1} horizontalWidth={1} />);
+      const path1 = document.querySelector(".lcars-elbow svg path")?.getAttribute("d");
+
+      rerender(<Elbow {...defaultProps} verticalWidth={2} horizontalWidth={1} />);
+      const path2 = document.querySelector(".lcars-elbow svg path")?.getAttribute("d");
+
+      // Paths should be different when widths change
+      expect(path1).not.toBe(path2);
+    });
+  });
 });

@@ -47,6 +47,7 @@ const PALETTE_ITEMS: PaletteItemProps[] = [
   { type: "frame", label: "Frame", color: "#9999ff" },
   { type: "button", label: "Button", color: "#cc99cc" },
   { type: "text", label: "Text", color: "#ff9999" },
+  { type: "video", label: "Video", color: "#666666" },
 ];
 
 export const Palette = () => {

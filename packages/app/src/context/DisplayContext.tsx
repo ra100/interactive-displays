@@ -20,10 +20,13 @@ const SERVER_URL =
   (import.meta.env["VITE_SERVER_URL"] as string | undefined) ||
   "http://localhost:3010";
 
+type AppSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
+
 interface DisplayContextValue {
   globalState: GlobalState;
   layout: Layout | null;
   isConnected: boolean;
+  socket: AppSocket | null;
   setGlobalState: (state: GlobalState) => void;
   saveLayout: (layout: Layout) => void;
   identify: (screenId: string) => void;
@@ -102,6 +105,7 @@ export function DisplayProvider({ children }: DisplayProviderProps) {
       globalState,
       layout,
       isConnected,
+      socket: socketRef.current,
       setGlobalState,
       saveLayout,
       identify,

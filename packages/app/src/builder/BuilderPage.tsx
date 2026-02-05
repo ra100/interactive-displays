@@ -19,12 +19,13 @@ import { OperatorPanel } from "./OperatorPanel";
 import "../theme.css";
 import "./BuilderPage.css";
 
-const DEFAULT_ELEMENT_SIZE = {
+const DEFAULT_ELEMENT_SIZE: Record<ElementType, { colSpan: number; rowSpan: number }> = {
   elbow: { colSpan: 2, rowSpan: 2 },
   bar: { colSpan: 4, rowSpan: 1 },
   frame: { colSpan: 3, rowSpan: 2 },
   button: { colSpan: 2, rowSpan: 1 },
   text: { colSpan: 4, rowSpan: 1 },
+  video: { colSpan: 4, rowSpan: 3 },
 };
 
 const DEFAULT_COLORS: Record<ElementType, string> = {
@@ -33,6 +34,7 @@ const DEFAULT_COLORS: Record<ElementType, string> = {
   frame: "#9999ff",
   button: "#cc99cc",
   text: "#ff9900",
+  video: "#333333",
 };
 
 const PALETTE_ITEMS: Array<{ type: ElementType; label: string; color: string }> = [
@@ -41,6 +43,7 @@ const PALETTE_ITEMS: Array<{ type: ElementType; label: string; color: string }> 
   { type: "frame", label: "Frame", color: "#9999ff" },
   { type: "button", label: "Button", color: "#cc99cc" },
   { type: "text", label: "Text", color: "#ff9999" },
+  { type: "video", label: "Video", color: "#666666" },
 ];
 
 function BuilderContent() {
@@ -117,10 +120,19 @@ function BuilderContent() {
           colSpan: size.colSpan,
           rowSpan: size.rowSpan,
           color: DEFAULT_COLORS[data.type],
-          ...(data.type === "elbow" && { direction: "TL" as const }),
+          ...(data.type === "elbow" && {
+            direction: "TL" as const,
+            verticalWidth: 1,
+            horizontalWidth: 1,
+          }),
           ...(data.type === "bar" && { orientation: "horizontal" as const }),
-          ...(data.type === "button" && { label: "BUTTON" }),
+          ...(data.type === "button" && {
+            label: "BUTTON",
+            leftCorner: "round" as const,
+            rightCorner: "round" as const,
+          }),
           ...(data.type === "text" && { label: "TEXT" }),
+          ...(data.type === "video" && { src: "", muted: true, loop: true, fit: "contain" as const }),
         };
         addElement(newElement);
       } else {

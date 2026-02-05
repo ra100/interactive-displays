@@ -9,6 +9,7 @@ import { Bar } from "../components/Bar";
 import { Frame } from "../components/Frame";
 import { Button } from "../components/Button";
 import { Text } from "../components/Text";
+import { VideoElement } from "../components/VideoElement";
 
 interface LayoutRendererProps {
   layout: Layout;
@@ -43,6 +44,8 @@ const ElementRenderer = memo(function ElementRenderer({
           key={element.id}
           {...baseProps}
           direction={element.direction ?? "TL"}
+          verticalWidth={element.verticalWidth ?? 1}
+          horizontalWidth={element.horizontalWidth ?? 1}
         />
       );
 
@@ -64,6 +67,8 @@ const ElementRenderer = memo(function ElementRenderer({
           key={element.id}
           {...baseProps}
           label={element.label ?? "BUTTON"}
+          leftCorner={element.leftCorner ?? "round"}
+          rightCorner={element.rightCorner ?? "round"}
           onClick={() => onButtonClick?.(element.id)}
         />
       );
@@ -71,6 +76,20 @@ const ElementRenderer = memo(function ElementRenderer({
     case "text":
       return (
         <Text key={element.id} {...baseProps} label={element.label ?? ""} />
+      );
+
+    case "video":
+      return (
+        <VideoElement
+          key={element.id}
+          id={element.id}
+          {...baseProps}
+          src={element.src ?? ""}
+          autoplay={element.autoplay ?? false}
+          loop={element.loop ?? false}
+          muted={element.muted ?? true}
+          fit={element.fit ?? "contain"}
+        />
       );
 
     default:

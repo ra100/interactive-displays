@@ -70,4 +70,36 @@ describe("Button", () => {
     render(<Button {...defaultProps} />);
     expect(screen.getByRole("button")).toHaveClass("lcars-touchable");
   });
+
+  describe("corner styles", () => {
+    it("applies round corners by default", () => {
+      render(<Button {...defaultProps} />);
+      const button = screen.getByRole("button");
+      // Default is round on both sides - borderRadius should contain non-zero values
+      const style = window.getComputedStyle(button);
+      expect(style.borderRadius).not.toBe("0px");
+      expect(style.borderRadius).not.toContain("0 0 0 0");
+    });
+
+    it("applies square left corner when leftCorner is square", () => {
+      render(<Button {...defaultProps} leftCorner="square" rightCorner="round" />);
+      const button = screen.getByRole("button");
+      // Check inline style which should have format like "0 30px 30px 0"
+      expect(button.style.borderRadius).toMatch(/^0\s/); // starts with 0
+    });
+
+    it("applies square right corner when rightCorner is square", () => {
+      render(<Button {...defaultProps} leftCorner="round" rightCorner="square" />);
+      const button = screen.getByRole("button");
+      // Should have format like "30px 0 0 30px"
+      expect(button.style.borderRadius).toMatch(/0\s+0\s/); // has "0 0" in middle
+    });
+
+    it("applies all square corners when both are square", () => {
+      render(<Button {...defaultProps} leftCorner="square" rightCorner="square" />);
+      const button = screen.getByRole("button");
+      // Should be "0 0 0 0"
+      expect(button.style.borderRadius).toBe("0 0 0 0");
+    });
+  });
 });

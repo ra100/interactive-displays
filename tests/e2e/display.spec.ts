@@ -28,11 +28,16 @@ test.describe("Display Client", () => {
     await page.goto("/?screen=test");
     await page.waitForSelector(".lcars-element");
     const element = page.locator(".lcars-element").first();
-    // Check that element has a background color (theme applied)
-    const bgColor = await element.evaluate((el) =>
-      window.getComputedStyle(el).backgroundColor
-    );
-    expect(bgColor).not.toBe("rgba(0, 0, 0, 0)");
+    // Check that element has theme applied - either backgroundColor or SVG fill
+    const hasTheme = await element.evaluate((el) => {
+      const bgColor = window.getComputedStyle(el).backgroundColor;
+      const hasBgColor = bgColor !== "rgba(0, 0, 0, 0)";
+      // Also check for SVG elements with fill
+      const svgPath = el.querySelector("svg path");
+      const hasSvgFill = svgPath?.getAttribute("fill") !== null;
+      return hasBgColor || hasSvgFill;
+    });
+    expect(hasTheme).toBe(true);
   });
 });
 

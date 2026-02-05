@@ -6,6 +6,8 @@ import type {
   Layout,
   ServerToClientEvents,
   ClientToServerEvents,
+  VideoCommand,
+  VideoStateUpdate,
 } from "./types.js";
 import { getLayout, saveLayout } from "./layouts.js";
 import {
@@ -134,6 +136,23 @@ io.on("connection", (socket) => {
       fastify.log.error(`Error handling saveLayout: ${error}`);
       socket.emit("error", "SAVE_LAYOUT_FAILED", "Failed to save layout");
     }
+  });
+
+  // Video control - operator sends command, broadcast to all displays
+  socket.on("videoCommand", (command: VideoCommand) => {
+    fastify.log.info(
+      `Video command: ${command.command} for element ${command.elementId}`
+    );
+    // Broadcast to all clients (including sender for consistency)
+    io.emit("videoCommand", command);
+  });
+
+  // Video state updates - displays report their video state
+  socket.on("videoState", (state: VideoStateUpdate) => {
+    fastify.log.debug(
+      `Video state: ${state.state} for element ${state.elementId} at ${state.currentTime}s`
+    );
+    // Could track state here for synchronization, but for MVP just log
   });
 
   socket.on("disconnect", () => {
