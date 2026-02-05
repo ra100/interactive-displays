@@ -1,0 +1,19 @@
+.builder-page {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  background-color: #0a0a0a;
+  overflow: hidden;
+}
+
+.builder-sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 440px;
+  flex-shrink: 0;
+}
+
+.builder-sidebar > * {
+  flex: 1;
+  min-height: 0;
+}

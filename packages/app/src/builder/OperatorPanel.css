@@ -1,0 +1,173 @@
+.operator-panel {
+  width: 200px;
+  background-color: #1a1a1a;
+  border-left: 1px solid #333;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.operator-panel-title {
+  color: #ff9900;
+  font-family: "Antonio", sans-serif;
+  font-size: 1.25rem;
+  text-transform: uppercase;
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #333;
+}
+
+.operator-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.operator-section-label {
+  color: #999;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.state-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.state-button {
+  border: none;
+  border-radius: 8px;
+  color: #000;
+  font-family: "Antonio", sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 16px;
+  cursor: pointer;
+  transition: transform 0.1s ease-out, filter 0.1s ease-out;
+  position: relative;
+  min-height: 60px;
+}
+
+.state-button:hover {
+  filter: brightness(1.1);
+}
+
+.state-button:active {
+  transform: scale(0.98);
+}
+
+.state-button--active {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+.state-button-indicator {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 12px;
+  height: 12px;
+  background-color: #fff;
+  border-radius: 50%;
+  animation: indicator-pulse 1s ease-in-out infinite;
+}
+
+@keyframes indicator-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.history-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.history-button {
+  flex: 1;
+  background-color: #333;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  font-family: "Antonio", sans-serif;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  padding: 10px;
+  cursor: pointer;
+  transition: background-color 0.1s ease-out;
+}
+
+.history-button:hover:not(:disabled) {
+  background-color: #444;
+}
+
+.history-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.layout-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.layout-name {
+  color: #fff;
+  font-family: "Antonio", sans-serif;
+  font-size: 1rem;
+}
+
+.layout-id {
+  color: #666;
+  font-family: monospace;
+  font-size: 0.75rem;
+}
+
+.save-button {
+  background-color: #ff9900;
+  border: none;
+  border-radius: 4px;
+  color: #000;
+  font-family: "Antonio", sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 12px;
+  cursor: pointer;
+  transition: filter 0.1s ease-out;
+}
+
+.save-button:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.save-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.connection-status {
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.connection-status--connected {
+  background-color: #003300;
+  color: #00ff00;
+}
+
+.connection-status--disconnected {
+  background-color: #330000;
+  color: #ff0000;
+}
