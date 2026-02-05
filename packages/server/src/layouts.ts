@@ -1,4 +1,4 @@
-import { readFile, writeFile, readdir, mkdir, rename } from "node:fs/promises";
+import { readFile, writeFile, mkdir, rename } from "node:fs/promises";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import type { Layout } from "./types.js";
@@ -30,39 +30,16 @@ export async function getLayout(id: string): Promise<Layout | null> {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       return null;
     }
-    // Invalid ID format - treat as not found
+    // Invalid ID format - let ZodError propagate
     if ((error as Error).name === "ZodError") {
-      console.warn(`Invalid layout ID requested: ${id}`);
-      return null;
+      throw error;
     }
-    // Log and re-throw unexpected errors
-    console.error(`Failed to read layout ${id}:`, error);
+    // JSON parse error
+    if (error instanceof SyntaxError) {
+      throw new Error(`Corrupted layout file for ${id}: ${error.message}`);
+    }
+    // Re-throw unexpected errors
     throw error;
-  }
-}
-
-export async function listLayouts(): Promise<Layout[]> {
-  await ensureDataDir();
-  try {
-    const files = await readdir(DATA_DIR);
-    const layouts: Layout[] = [];
-
-    for (const file of files) {
-      if (file.endsWith(".json") && !file.endsWith(".tmp")) {
-        try {
-          const content = await readFile(join(DATA_DIR, file), "utf-8");
-          layouts.push(JSON.parse(content) as Layout);
-        } catch (error) {
-          console.warn(`Failed to read layout file ${file}:`, error);
-          // Skip corrupted files
-        }
-      }
-    }
-
-    return layouts;
-  } catch (error) {
-    console.error("Failed to list layouts:", error);
-    return [];
   }
 }
 
@@ -90,27 +67,4 @@ export async function saveLayout(layout: unknown): Promise<Layout> {
   await rename(tempPath, finalPath);
 
   return layoutToSave;
-}
-
-// Create a default layout if none exist
-export async function ensureDefaultLayout(): Promise<void> {
-  const layouts = await listLayouts();
-  if (layouts.length === 0) {
-    await saveLayout({
-      id: "default",
-      name: "Default Layout",
-      elements: [
-        {
-          id: "welcome-text",
-          type: "text",
-          col: 4,
-          row: 5,
-          colSpan: 4,
-          rowSpan: 1,
-          color: "#ff9900",
-          label: "INTERACTIVE DISPLAY SYSTEM",
-        },
-      ],
-    });
-  }
 }
