@@ -2,11 +2,34 @@
 title: "feat: LCARS Interactive Display System"
 type: feat
 date: 2026-02-04
-deepened: 2026-02-04
+deepened: 2026-02-05
 reviewed: 2026-02-04
 ---
 
 # LCARS Interactive Display System
+
+## Enhancement Summary (Phase 4)
+
+**Deepened on:** 2026-02-05
+**Research agents used:** 13 parallel agents (SVG geometry, CSS patterns, React 19, TypeScript architecture, performance, simplicity, race conditions)
+
+### Key Improvements from Research
+
+1. **SVG Path Generation** - Use dynamic SVG paths for asymmetric elbows instead of CSS (enables true L-shaped geometry)
+2. **CSS Transform Animations** - GPU-accelerated animations for number displays and status indicators
+3. **Command Queuing** - Video element uses queue pattern to prevent race conditions
+4. **Discriminated Unions** - TypeScript element types use discriminated unions for type safety
+5. **Memoization Strategy** - Apply project learnings on React Context memoization
+
+### Implementation Priorities (Recommended by Simplicity Review)
+
+**Phase 4 Lite** - Ship Video element first (highest value), defer other enhancements:
+1. Video element with WebSocket control (new capability)
+2. Asymmetric elbows (most requested styling)
+3. Button corner styles (quick win, CSS-only)
+4. Defer: Number, StatusIndicator, BarGraph (add when actually needed)
+
+---
 
 ## Post-Review Simplification Summary
 
@@ -385,6 +408,65 @@ function undo() {
   }
   ```
 
+  **Research Insights - SVG Path Approach (Recommended):**
+
+  Use dynamic SVG paths instead of CSS border-radius for true asymmetric L-shapes:
+
+  ```typescript
+  // packages/app/src/components/Elbow.tsx
+  interface ElbowProps {
+    direction: 'TL' | 'TR' | 'BL' | 'BR';
+    verticalWidth: number;    // pixels
+    horizontalWidth: number;  // pixels
+    width: number;            // total bounding box width
+    height: number;           // total bounding box height
+    cornerRadius: number;     // inner curve radius
+    color: string;
+  }
+
+  function generateElbowPath(props: ElbowProps): string {
+    const { direction, verticalWidth, horizontalWidth, width, height, cornerRadius } = props;
+    const r = Math.min(cornerRadius, verticalWidth, horizontalWidth);
+
+    // Top-Left elbow: vertical arm on left, horizontal arm on top
+    if (direction === 'TL') {
+      return `
+        M 0 0
+        L ${verticalWidth} 0
+        L ${verticalWidth} ${height - horizontalWidth - r}
+        Q ${verticalWidth} ${height - horizontalWidth} ${verticalWidth + r} ${height - horizontalWidth}
+        L ${width} ${height - horizontalWidth}
+        L ${width} ${height}
+        L 0 ${height}
+        Z
+      `;
+    }
+    // Similar for TR, BL, BR...
+  }
+
+  export function Elbow({ direction, verticalWidth, horizontalWidth, ...props }: ElbowProps) {
+    const path = useMemo(
+      () => generateElbowPath({ direction, verticalWidth, horizontalWidth, ...props }),
+      [direction, verticalWidth, horizontalWidth, props.width, props.height, props.cornerRadius]
+    );
+
+    return (
+      <svg viewBox={`0 0 ${props.width} ${props.height}`} className="lcars-elbow">
+        <path d={path} fill={props.color} />
+      </svg>
+    );
+  }
+  ```
+
+  **Performance Note:** Memoize path generation - SVG path strings are expensive to compute but the result is just a string that React diffing handles efficiently.
+
+  **Edge Cases:**
+  - `cornerRadius` > min(`verticalWidth`, `horizontalWidth`) → clamp to smaller dimension
+  - Zero-width arms → render as simple rectangle
+  - Very small corner radius (<5px) → may appear jagged, consider minimum of 5px
+
+---
+
 - [ ] **4.2 Button Corner Styles**
   - Per-corner radius control: `cornerStyle: 'round' | 'square'`
   - Support for pill-shaped buttons (one rounded, one flat end)
@@ -398,6 +480,44 @@ function undo() {
   }
   ```
 
+  **Research Insights - CSS Per-Corner Border-Radius:**
+
+  ```typescript
+  // packages/app/src/components/Button.tsx
+  function getCornerRadius(corner: 'round' | 'square', height: number): string {
+    return corner === 'round' ? `${height / 2}px` : '0';
+  }
+
+  export function Button({ label, leftCorner = 'round', rightCorner = 'round', height }: ButtonProps) {
+    const borderRadius = useMemo(() => {
+      const left = getCornerRadius(leftCorner, height);
+      const right = getCornerRadius(rightCorner, height);
+      return `${left} ${right} ${right} ${left}`; // TL TR BR BL
+    }, [leftCorner, rightCorner, height]);
+
+    return (
+      <button
+        className="lcars-button"
+        style={{ borderRadius }}
+      >
+        {label}
+      </button>
+    );
+  }
+  ```
+
+  **CSS Alternative (simpler for static buttons):**
+  ```css
+  .lcars-button--pill-left {
+    border-radius: 50% 0 0 50%;  /* Round left, square right */
+  }
+  .lcars-button--pill-right {
+    border-radius: 0 50% 50% 0;  /* Square left, round right */
+  }
+  ```
+
+---
+
 - [ ] **4.3 Bar End Caps**
   - Configure each end of bar elements independently
   - Round, square, or pointed caps
@@ -409,6 +529,24 @@ function undo() {
     endCap: 'round' | 'square' | 'pointed';
   }
   ```
+
+  **Research Insights - Cap Implementation:**
+
+  ```css
+  /* Round caps via border-radius */
+  .lcars-bar--cap-round-start { border-radius: 50% 0 0 50%; }
+  .lcars-bar--cap-round-end { border-radius: 0 50% 50% 0; }
+
+  /* Pointed caps via clip-path */
+  .lcars-bar--cap-pointed-start {
+    clip-path: polygon(10% 0, 100% 0, 100% 100%, 10% 100%, 0 50%);
+  }
+  .lcars-bar--cap-pointed-end {
+    clip-path: polygon(0 0, 90% 0, 100% 50%, 90% 100%, 0 100%);
+  }
+  ```
+
+---
 
 - [ ] **4.4 New Elements**
   - **Number Display** - Animated counting with configurable format
@@ -443,16 +581,351 @@ function undo() {
   }
   ```
 
+  **Research Insights - Number Display (GPU-Accelerated Animation):**
+
+  ```typescript
+  // packages/app/src/components/NumberDisplay.tsx
+  function useAnimatedNumber(target: number, duration = 1000): number {
+    const [current, setCurrent] = useState(target);
+    const startRef = useRef<number>(current);
+    const startTimeRef = useRef<number>(0);
+
+    useEffect(() => {
+      if (!animated) {
+        setCurrent(target);
+        return;
+      }
+
+      startRef.current = current;
+      startTimeRef.current = performance.now();
+
+      let frameId: number;
+      function animate(now: number) {
+        const elapsed = now - startTimeRef.current;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+
+        setCurrent(startRef.current + (target - startRef.current) * eased);
+
+        if (progress < 1) {
+          frameId = requestAnimationFrame(animate);
+        }
+      }
+
+      frameId = requestAnimationFrame(animate);
+      return () => cancelAnimationFrame(frameId);
+    }, [target, duration]);
+
+    return current;
+  }
+
+  export function NumberDisplay({ value, format, animated }: NumberProps) {
+    const displayValue = useAnimatedNumber(value);
+
+    const formatted = useMemo(() => {
+      switch (format) {
+        case 'percentage': return `${Math.round(displayValue)}%`;
+        case 'decimal': return displayValue.toFixed(2);
+        default: return Math.round(displayValue).toString();
+      }
+    }, [displayValue, format]);
+
+    return <span className="lcars-number">{formatted}</span>;
+  }
+  ```
+
+  **Research Insights - Status Indicator (CSS-Only Animations):**
+
+  ```css
+  /* packages/app/src/components/StatusIndicator.css */
+  .lcars-status { will-change: opacity; }
+
+  .lcars-status--blink {
+    animation: blink var(--blink-duration, 1s) step-end infinite;
+  }
+  .lcars-status--pulse {
+    animation: pulse var(--blink-duration, 1s) ease-in-out infinite;
+  }
+  .lcars-status--scan {
+    animation: scan var(--blink-duration, 2s) linear infinite;
+  }
+
+  @keyframes blink { 50% { opacity: 0; } }
+  @keyframes pulse { 50% { opacity: 0.3; } }
+  @keyframes scan {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+  }
+
+  /* Speed variants */
+  .lcars-status--slow { --blink-duration: 2s; }
+  .lcars-status--normal { --blink-duration: 1s; }
+  .lcars-status--fast { --blink-duration: 0.5s; }
+  ```
+
+  **Research Insights - Video Element (Command Queuing for Race Conditions):**
+
+  ```typescript
+  // packages/app/src/components/VideoElement.tsx
+  type VideoCommand = { type: 'play' } | { type: 'pause' } | { type: 'seek'; time: number } | { type: 'load'; src: string };
+
+  export function VideoElement({ elementId, src, fit, autoplay, loop, muted }: VideoProps) {
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const commandQueueRef = useRef<VideoCommand[]>([]);
+    const processingRef = useRef(false);
+    const { socket } = useDisplay();
+
+    // Process commands sequentially to prevent race conditions
+    const processQueue = useCallback(async () => {
+      if (processingRef.current || commandQueueRef.current.length === 0) return;
+      processingRef.current = true;
+
+      const video = videoRef.current;
+      if (!video) {
+        processingRef.current = false;
+        return;
+      }
+
+      const cmd = commandQueueRef.current.shift()!;
+
+      try {
+        switch (cmd.type) {
+          case 'play':
+            await video.play();
+            break;
+          case 'pause':
+            video.pause();
+            break;
+          case 'seek':
+            video.currentTime = cmd.time;
+            break;
+          case 'load':
+            video.src = cmd.src;
+            await video.load();
+            break;
+        }
+      } catch (err) {
+        console.error('Video command failed:', cmd, err);
+      }
+
+      processingRef.current = false;
+      processQueue(); // Process next command
+    }, []);
+
+    // Listen for WebSocket commands
+    useEffect(() => {
+      function handleCommand(data: { elementId: string; command: string; time?: number; src?: string }) {
+        if (data.elementId !== elementId) return;
+
+        const cmd: VideoCommand = data.command === 'seek'
+          ? { type: 'seek', time: data.time! }
+          : data.command === 'load'
+          ? { type: 'load', src: data.src! }
+          : { type: data.command as 'play' | 'pause' };
+
+        commandQueueRef.current.push(cmd);
+        processQueue();
+      }
+
+      socket.on('videoCommand', handleCommand);
+      return () => { socket.off('videoCommand', handleCommand); };
+    }, [socket, elementId, processQueue]);
+
+    // Report state changes back to server
+    const reportState = useCallback((state: string) => {
+      const video = videoRef.current;
+      if (!video) return;
+      socket.emit('videoState', {
+        elementId,
+        state,
+        currentTime: video.currentTime,
+      });
+    }, [socket, elementId]);
+
+    return (
+      <video
+        ref={videoRef}
+        src={src}
+        autoPlay={autoplay}
+        loop={loop}
+        muted={muted}
+        style={{ objectFit: fit }}
+        className="lcars-video"
+        onPlay={() => reportState('playing')}
+        onPause={() => reportState('paused')}
+        onEnded={() => reportState('ended')}
+      />
+    );
+  }
+  ```
+
+  **Performance Notes (from Performance Review):**
+  - Video elements consume significant memory - limit to 2-3 per layout
+  - Use `muted` by default to enable autoplay without user interaction
+  - Consider preloading videos during layout load, not on-demand
+  - Report video state sparingly (not on every timeupdate event)
+
+---
+
 - [ ] **4.5 Property Panel Enhancements**
   - Update property panel to support new element properties
   - Visual corner style picker
   - Width sliders for elbow arms
+
+  **Research Insights - Element Registry Pattern (from Architecture Review):**
+
+  ```typescript
+  // packages/app/src/builder/elementRegistry.ts
+  interface ElementDefinition<T extends LayoutElement['type']> {
+    type: T;
+    displayName: string;
+    defaultProps: Partial<Extract<LayoutElement, { type: T }>>;
+    PropertyEditor: React.ComponentType<{ element: Extract<LayoutElement, { type: T }> }>;
+    Renderer: React.ComponentType<{ element: Extract<LayoutElement, { type: T }> }>;
+  }
+
+  const registry = new Map<string, ElementDefinition<any>>();
+
+  export function registerElement<T extends LayoutElement['type']>(def: ElementDefinition<T>) {
+    registry.set(def.type, def);
+  }
+
+  export function getElementDefinition(type: string) {
+    return registry.get(type);
+  }
+
+  // Register all elements
+  registerElement({
+    type: 'elbow',
+    displayName: 'Elbow',
+    defaultProps: { direction: 'TL', verticalWidth: 1, horizontalWidth: 1 },
+    PropertyEditor: ElbowPropertyEditor,
+    Renderer: Elbow,
+  });
+  // ... register other elements
+  ```
+
+  This pattern makes adding new elements straightforward without modifying switch statements.
 
 **Success Criteria:**
 - Elbows can have asymmetric arm widths
 - Buttons support mixed corner styles (round/square)
 - 4 new element types available
 - Property panel supports all new options
+
+**TypeScript Architecture (from TypeScript Review):**
+
+Use discriminated unions for type-safe element handling:
+
+```typescript
+// packages/shared/src/types.ts
+type BaseElement = {
+  id: string;
+  col: number;
+  row: number;
+  colSpan: number;
+  rowSpan: number;
+  color: string;
+};
+
+type ElbowElement = BaseElement & {
+  type: 'elbow';
+  direction: 'TL' | 'TR' | 'BL' | 'BR';
+  verticalWidth: number;
+  horizontalWidth: number;
+};
+
+type ButtonElement = BaseElement & {
+  type: 'button';
+  label: string;
+  leftCorner: 'round' | 'square';
+  rightCorner: 'round' | 'square';
+};
+
+type VideoElement = BaseElement & {
+  type: 'video';
+  src: string;
+  autoplay: boolean;
+  loop: boolean;
+  muted: boolean;
+  fit: 'contain' | 'cover' | 'fill';
+};
+
+// ... other element types
+
+export type LayoutElement =
+  | ElbowElement
+  | ButtonElement
+  | BarElement
+  | FrameElement
+  | TextElement
+  | NumberElement
+  | StatusElement
+  | BarGraphElement
+  | VideoElement;
+
+// Type guard usage
+function renderElement(element: LayoutElement) {
+  switch (element.type) {
+    case 'elbow':
+      // TypeScript knows element is ElbowElement here
+      return <Elbow {...element} />;
+    case 'video':
+      // TypeScript knows element is VideoElement here
+      return <VideoElement {...element} />;
+    // ...
+  }
+}
+```
+
+**React 19 Patterns Applied (from React Review):**
+
+```typescript
+// Use useTransition for non-urgent updates
+function PropertyPanel({ element }: Props) {
+  const [isPending, startTransition] = useTransition();
+  const { updateElement } = useBuilder();
+
+  const handleColorChange = (color: string) => {
+    startTransition(() => {
+      updateElement(element.id, { color });
+    });
+  };
+
+  return (
+    <div className={isPending ? 'property-panel--updating' : ''}>
+      {/* ... */}
+    </div>
+  );
+}
+
+// Memoize context value (from project learnings)
+const value = useMemo(() => ({
+  layout: state.layout,
+  globalState: state.globalState,
+  // ... other values
+}), [state.layout, state.globalState]);
+```
+
+**Edge Cases & Race Conditions (from Race Condition Review):**
+
+1. **Animation Interruption** - When value changes mid-animation:
+   ```typescript
+   // Cancel previous animation before starting new one
+   useEffect(() => {
+     const controller = new AbortController();
+     animate(target, controller.signal);
+     return () => controller.abort();
+   }, [target]);
+   ```
+
+2. **Video Command Conflicts** - Multiple rapid commands:
+   - Use command queue pattern (shown above)
+   - Dedupe redundant commands (skip pause if already paused)
+
+3. **Socket Reconnection** - Elements may miss state:
+   - Request full state sync on reconnect
+   - Server should cache current video states
 
 ---
 
@@ -666,8 +1139,21 @@ socket.emit('videoState', { elementId, state: 'playing' | 'paused' | 'ended', cu
 
 ## Next Steps
 
-1. Run `/workflows:work` to begin Phase 1
-2. Create `CLAUDE.md` with project conventions
-3. Initialize 2-package monorepo
-4. Build server + display client
-5. Test with real screens
+**Phases 1-3 Complete.** Next: Phase 4 (Enhanced Elements)
+
+Recommended order (per Simplicity Review - "Phase 4 Lite"):
+
+1. **4.4a Video Element** - Highest value, enables new capability
+   - Implement VideoElement component with command queue
+   - Add WebSocket events (videoCommand, videoState)
+   - Add to palette and property panel
+
+2. **4.1 Asymmetric Elbows** - Most requested styling enhancement
+   - Refactor to SVG path generation
+   - Add verticalWidth/horizontalWidth controls
+
+3. **4.2 Button Corner Styles** - Quick win, CSS-only
+   - Add leftCorner/rightCorner props
+   - Update property panel
+
+4. **Defer to v3:** Number, StatusIndicator, BarGraph (add when actually needed)
