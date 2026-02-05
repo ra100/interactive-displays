@@ -364,17 +364,106 @@ function undo() {
 
 ---
 
-## v2 Roadmap (Deferred)
+---
+
+#### Phase 4: Enhanced Elements & Styling
+
+**Goal:** More LCARS-authentic elements with configurable internal styling
+
+**Tasks:**
+
+- [ ] **4.1 Asymmetric Elbows**
+  - Separate `verticalWidth` and `horizontalWidth` properties
+  - Support for vertical arm wider than horizontal (authentic LCARS style)
+  - Update property panel with width controls for each arm
+
+  ```typescript
+  interface ElbowElement {
+    direction: 'TL' | 'TR' | 'BL' | 'BR';
+    verticalWidth: number;   // width of vertical arm in grid units (default: 1)
+    horizontalWidth: number; // width of horizontal arm in grid units (default: 1)
+  }
+  ```
+
+- [ ] **4.2 Button Corner Styles**
+  - Per-corner radius control: `cornerStyle: 'round' | 'square'`
+  - Support for pill-shaped buttons (one rounded, one flat end)
+  - Left/right corner independent styling
+
+  ```typescript
+  interface ButtonElement {
+    label: string;
+    leftCorner: 'round' | 'square';   // default: 'round'
+    rightCorner: 'round' | 'square';  // default: 'round'
+  }
+  ```
+
+- [ ] **4.3 Bar End Caps**
+  - Configure each end of bar elements independently
+  - Round, square, or pointed caps
+
+  ```typescript
+  interface BarElement {
+    orientation: 'horizontal' | 'vertical';
+    startCap: 'round' | 'square' | 'pointed';
+    endCap: 'round' | 'square' | 'pointed';
+  }
+  ```
+
+- [ ] **4.4 New Elements**
+  - **Number Display** - Animated counting with configurable format
+  - **Status Indicator** - Blinking lights with customizable patterns
+  - **Bar Graph** - Animated value display with segments
+  - **Video** - Remote-controlled playback (play/pause/seek/load)
+
+  ```typescript
+  interface NumberElement {
+    value: number;
+    format: 'integer' | 'decimal' | 'percentage';
+    animated: boolean;
+  }
+
+  interface StatusIndicatorElement {
+    pattern: 'solid' | 'blink' | 'pulse' | 'scan';
+    blinkSpeed: 'slow' | 'normal' | 'fast';
+  }
+
+  interface BarGraphElement {
+    value: number;        // 0-100
+    segments: number;     // number of segments (default: 10)
+    orientation: 'horizontal' | 'vertical';
+  }
+
+  interface VideoElement {
+    src: string;
+    autoplay?: boolean;
+    loop?: boolean;
+    muted?: boolean;
+    fit: 'contain' | 'cover' | 'fill';
+  }
+  ```
+
+- [ ] **4.5 Property Panel Enhancements**
+  - Update property panel to support new element properties
+  - Visual corner style picker
+  - Width sliders for elbow arms
+
+**Success Criteria:**
+- Elbows can have asymmetric arm widths
+- Buttons support mixed corner styles (round/square)
+- 4 new element types available
+- Property panel supports all new options
+
+---
+
+## Future Roadmap (v3+)
 
 Add based on real usage feedback:
 
-### Additional Elements
-- Number display (animated counting)
-- Status indicator (blinking lights)
-- Bar graph (animated values)
-- Slider, Toggle (interactive controls)
+### Interactive Elements
+- Slider (draggable value control)
+- Toggle (on/off switch)
 - Data grid (scrolling rows)
-- **Video** - Remote-controlled playback with server commands (play/pause/seek/load), preload support, optional multi-client sync
 
 ### Features
 - Service Worker offline caching
@@ -430,7 +519,7 @@ Add based on real usage feedback:
 
 ### Quality
 - [x] TypeScript strict mode
-- [x] Works in Chrome (Chromium tested)
+- [x] Works in Chromium
 - [x] No console errors in normal operation
 
 ---
@@ -487,6 +576,8 @@ Add based on real usage feedback:
 - Socket.io: https://socket.io/docs/v4/
 - @dnd-kit: https://dndkit.com/
 - LCARS design: https://www.lcars.org.uk/
+- LCARS Big Picture: https://elonn.com/big-picture.html
+- Design assets: `design/*.jpg`, `design/*.webp`
 
 ---
 
@@ -505,29 +596,51 @@ interface Layout {
 
 interface LayoutElement {
   id: string;
-  type: 'elbow' | 'bar' | 'frame' | 'button' | 'text';
+  type: 'elbow' | 'bar' | 'frame' | 'button' | 'text' | 'number' | 'status' | 'bargraph' | 'video';
   col: number;      // 0-11 grid column
   row: number;      // grid row
   colSpan: number;  // width in columns
   rowSpan: number;  // height in rows
   color: string;
-  // Type-specific props
-  direction?: 'TL' | 'TR' | 'BL' | 'BR';  // elbow
-  orientation?: 'horizontal' | 'vertical'; // bar
-  label?: string;   // button, text
-}
 
-type GlobalState = 'normal' | 'redAlert' | 'active' | 'damaged';
+  // Elbow props
+  direction?: 'TL' | 'TR' | 'BL' | 'BR';
+  verticalWidth?: number;    // width of vertical arm (default: 1)
+  horizontalWidth?: number;  // width of horizontal arm (default: 1)
 
-// v2: Video element
-interface VideoElement extends Omit<LayoutElement, 'type'> {
-  type: 'video';
-  src: string;           // URL or /assets/video.mp4
+  // Bar props
+  orientation?: 'horizontal' | 'vertical';
+  startCap?: 'round' | 'square' | 'pointed';
+  endCap?: 'round' | 'square' | 'pointed';
+
+  // Button props
+  label?: string;
+  leftCorner?: 'round' | 'square';   // default: 'round'
+  rightCorner?: 'round' | 'square';  // default: 'round'
+
+  // Text props (uses label)
+
+  // Number props
+  value?: number;
+  format?: 'integer' | 'decimal' | 'percentage';
+  animated?: boolean;
+
+  // Status indicator props
+  pattern?: 'solid' | 'blink' | 'pulse' | 'scan';
+  blinkSpeed?: 'slow' | 'normal' | 'fast';
+
+  // Bar graph props
+  segments?: number;  // default: 10
+
+  // Video props
+  src?: string;
   autoplay?: boolean;
   loop?: boolean;
   muted?: boolean;
   fit?: 'contain' | 'cover' | 'fill';
 }
+
+type GlobalState = 'normal' | 'alert' | 'active' | 'damaged';
 ```
 
 ### Socket Events
