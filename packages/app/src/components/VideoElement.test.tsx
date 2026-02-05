@@ -5,7 +5,8 @@ import { VideoElement } from "./VideoElement";
 // Mock the DisplayContext
 vi.mock("../context/DisplayContext", () => ({
   useDisplay: () => ({
-    socket: null, // No socket in tests
+    subscribeToVideoCommands: () => () => {}, // Returns unsubscribe function
+    sendVideoState: () => {},
   }),
 }));
 

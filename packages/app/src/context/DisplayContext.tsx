@@ -14,6 +14,8 @@ import type {
   Layout,
   ServerToClientEvents,
   ClientToServerEvents,
+  VideoCommand,
+  VideoStateUpdate,
 } from "@interactive-displays/shared";
 
 const SERVER_URL =
@@ -26,10 +28,12 @@ interface DisplayContextValue {
   globalState: GlobalState;
   layout: Layout | null;
   isConnected: boolean;
-  socket: AppSocket | null;
   setGlobalState: (state: GlobalState) => void;
   saveLayout: (layout: Layout) => void;
   identify: (screenId: string) => void;
+  sendVideoCommand: (command: VideoCommand) => void;
+  sendVideoState: (state: VideoStateUpdate) => void;
+  subscribeToVideoCommands: (handler: (command: VideoCommand) => void) => () => void;
 }
 
 const DisplayContext = createContext<DisplayContextValue | null>(null);
@@ -100,17 +104,39 @@ export function DisplayProvider({ children }: DisplayProviderProps) {
     socketRef.current?.emit("identify", screenId);
   }, []);
 
+  const sendVideoCommand = useCallback((command: VideoCommand) => {
+    socketRef.current?.emit("videoCommand", command);
+  }, []);
+
+  const sendVideoState = useCallback((state: VideoStateUpdate) => {
+    socketRef.current?.emit("videoState", state);
+  }, []);
+
+  const subscribeToVideoCommands = useCallback(
+    (handler: (command: VideoCommand) => void) => {
+      const socket = socketRef.current;
+      if (!socket) return () => {};
+      socket.on("videoCommand", handler);
+      return () => {
+        socket.off("videoCommand", handler);
+      };
+    },
+    []
+  );
+
   const value = useMemo<DisplayContextValue>(
     () => ({
       globalState,
       layout,
       isConnected,
-      socket: socketRef.current,
       setGlobalState,
       saveLayout,
       identify,
+      sendVideoCommand,
+      sendVideoState,
+      subscribeToVideoCommands,
     }),
-    [globalState, layout, isConnected, setGlobalState, saveLayout, identify]
+    [globalState, layout, isConnected, setGlobalState, saveLayout, identify, sendVideoCommand, sendVideoState, subscribeToVideoCommands]
   );
 
   return (
