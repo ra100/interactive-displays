@@ -2,11 +2,12 @@
   "$schema": "https://unpkg.com/knip@latest/schema.json",
   "workspaces": {
     "packages/server": {
-      "entry": ["src/index.ts"]
+      "ignore": ["src/validation.ts"]
     },
     "packages/app": {
       "entry": ["src/main.tsx"]
-    }
+    },
+    "packages/shared": {}
   },
   "ignore": [
     "**/*.config.ts",
@@ -14,7 +15,6 @@
     ".history/**"
   ],
   "ignoreDependencies": [
-    "@dnd-kit/core",
-    "socket.io-client"
+    "@dnd-kit/core"
   ]
 }
