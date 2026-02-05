@@ -61,7 +61,7 @@ function BuilderContent() {
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
-      const { active, over } = event;
+      const { active, over, delta } = event;
 
       if (!over || over.id !== "canvas") return;
 
@@ -74,11 +74,15 @@ function BuilderContent() {
       if (!canvasElement) return;
 
       const rect = canvasElement.getBoundingClientRect();
-      const dropPoint = event.activatorEvent as PointerEvent;
-      const position = pixelsToGrid(dropPoint.clientX, dropPoint.clientY, rect);
 
       if (data.isNew) {
         // Adding new element from palette
+        // Use activator position + delta to get drop position
+        const activatorEvent = event.activatorEvent as PointerEvent;
+        const dropX = activatorEvent.clientX + delta.x;
+        const dropY = activatorEvent.clientY + delta.y;
+        const position = pixelsToGrid(dropX, dropY, rect);
+
         const size = DEFAULT_ELEMENT_SIZE[data.type];
         const newElement: LayoutElement = {
           id: generateElementId(data.type),
@@ -95,8 +99,13 @@ function BuilderContent() {
         };
         addElement(newElement);
       } else {
-        // Moving existing element
-        moveElement(data.element.id, position.col, position.row);
+        // Moving existing element - calculate new position from delta
+        const cellSize = 64; // CELL_SIZE (60) + gap (4)
+        const deltaCol = Math.round(delta.x / cellSize);
+        const deltaRow = Math.round(delta.y / cellSize);
+        const newCol = Math.max(0, Math.min(11, data.element.col + deltaCol));
+        const newRow = Math.max(0, Math.min(9, data.element.row + deltaRow));
+        moveElement(data.element.id, newCol, newRow);
       }
     },
     [addElement, moveElement]

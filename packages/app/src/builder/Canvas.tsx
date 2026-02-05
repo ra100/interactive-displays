@@ -87,10 +87,16 @@ function DraggableElement({
     }
   };
 
+  const className = [
+    "canvas-element",
+    isSelected && "canvas-element--selected",
+    isDragging && "canvas-element--dragging",
+  ].filter(Boolean).join(" ");
+
   return (
     <div
       ref={setNodeRef}
-      className={`canvas-element ${isSelected ? "canvas-element--selected" : ""}`}
+      className={className}
       style={style}
       onClick={handleClick}
       {...listeners}
