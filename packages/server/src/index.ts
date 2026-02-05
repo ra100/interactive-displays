@@ -7,13 +7,14 @@ import type {
   ServerToClientEvents,
   ClientToServerEvents,
   VideoCommand,
-  VideoStateUpdate,
 } from "./types.js";
 import { getLayout, saveLayout } from "./layouts.js";
 import {
   validateScreenId,
   validateGlobalState,
   validateLayoutId,
+  validateVideoCommand,
+  validateVideoStateUpdate,
 } from "./validation.js";
 import { ZodError } from "zod";
 
@@ -139,20 +140,42 @@ io.on("connection", (socket) => {
   });
 
   // Video control - operator sends command, broadcast to all displays
-  socket.on("videoCommand", (command: VideoCommand) => {
-    fastify.log.info(
-      `Video command: ${command.command} for element ${command.elementId}`
-    );
-    // Broadcast to all clients (including sender for consistency)
-    io.emit("videoCommand", command);
+  socket.on("videoCommand", (command: unknown) => {
+    try {
+      const validCommand = validateVideoCommand(command);
+      fastify.log.info(
+        `Video command: ${validCommand.command} for element ${validCommand.elementId}`
+      );
+      // Broadcast to all clients (including sender for consistency)
+      // Cast needed because Zod's optional inference differs from exactOptionalPropertyTypes
+      io.emit("videoCommand", validCommand as VideoCommand);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        fastify.log.warn(`Invalid video command from ${socket.id}`);
+        socket.emit("error", "INVALID_VIDEO_COMMAND", "Invalid video command format");
+        return;
+      }
+      fastify.log.error(`Error handling videoCommand: ${error}`);
+      socket.emit("error", "VIDEO_COMMAND_FAILED", "Failed to process video command");
+    }
   });
 
   // Video state updates - displays report their video state
-  socket.on("videoState", (state: VideoStateUpdate) => {
-    fastify.log.debug(
-      `Video state: ${state.state} for element ${state.elementId} at ${state.currentTime}s`
-    );
-    // Could track state here for synchronization, but for MVP just log
+  socket.on("videoState", (state: unknown) => {
+    try {
+      const validState = validateVideoStateUpdate(state);
+      fastify.log.debug(
+        `Video state: ${validState.state} for element ${validState.elementId} at ${validState.currentTime}s`
+      );
+      // Could track state here for synchronization, but for MVP just log
+    } catch (error) {
+      if (error instanceof ZodError) {
+        fastify.log.warn(`Invalid video state from ${socket.id}`);
+        // Don't emit error for state updates - they're not critical
+        return;
+      }
+      fastify.log.error(`Error handling videoState: ${error}`);
+    }
   });
 
   socket.on("disconnect", () => {

@@ -1,7 +1,18 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import type { ElbowDirection, BarOrientation, VideoFit, CornerStyle } from "@interactive-displays/shared";
 import { useBuilder } from "./BuilderContext";
 import "./PropertyPanel.css";
+
+// URL validation - only allow safe protocols to prevent XSS
+function isValidVideoUrl(url: string): boolean {
+  if (!url) return true; // Empty is valid (shows placeholder)
+  try {
+    const parsed = new URL(url);
+    return ["http:", "https:", "blob:"].includes(parsed.protocol);
+  } catch {
+    return false;
+  }
+}
 
 const LCARS_COLORS = [
   { name: "Orange", value: "#ff9900" },
@@ -106,10 +117,17 @@ export function PropertyPanel() {
     [selectedElementId, updateElement]
   );
 
+  const [srcError, setSrcError] = useState<string | null>(null);
+
   const handleSrcChange = useCallback(
     (src: string) => {
       if (selectedElementId) {
-        updateElement(selectedElementId, { src });
+        if (isValidVideoUrl(src)) {
+          setSrcError(null);
+          updateElement(selectedElementId, { src });
+        } else {
+          setSrcError("URL must use http, https, or blob protocol");
+        }
       }
     },
     [selectedElementId, updateElement]
@@ -376,9 +394,10 @@ export function PropertyPanel() {
               type="text"
               value={element.src ?? ""}
               onChange={(e) => handleSrcChange(e.target.value)}
-              className="property-input property-input--text"
+              className={`property-input property-input--text ${srcError ? "property-input--error" : ""}`}
               placeholder="Enter video URL..."
             />
+            {srcError && <span className="property-error">{srcError}</span>}
           </div>
 
           <div className="property-group">

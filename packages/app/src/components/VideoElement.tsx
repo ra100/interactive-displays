@@ -43,6 +43,7 @@ export const VideoElement = memo(function VideoElement({
   const videoRef = useRef<HTMLVideoElement>(null);
   const commandQueueRef = useRef<InternalCommand[]>([]);
   const processingRef = useRef(false);
+  const disposedRef = useRef(false); // Guard against operations after unmount
   const { socket } = useDisplay();
 
   const style = useMemo<CSSProperties>(
@@ -70,7 +71,7 @@ export const VideoElement = memo(function VideoElement({
 
   // Process commands sequentially to prevent race conditions
   const processQueue = useCallback(async () => {
-    if (processingRef.current || commandQueueRef.current.length === 0) return;
+    if (disposedRef.current || processingRef.current || commandQueueRef.current.length === 0) return;
     processingRef.current = true;
 
     const video = videoRef.current;
@@ -85,6 +86,8 @@ export const VideoElement = memo(function VideoElement({
       switch (cmd.type) {
         case "play":
           await video.play();
+          // Check if disposed after async operation
+          if (disposedRef.current) return;
           break;
         case "pause":
           video.pause();
@@ -98,13 +101,19 @@ export const VideoElement = memo(function VideoElement({
           break;
       }
     } catch (err) {
-      console.error("Video command failed:", cmd, err);
+      // Don't log errors for disposed components
+      if (!disposedRef.current) {
+        console.error("Video command failed:", cmd, err);
+      }
     }
 
+    // Check if disposed before continuing
+    if (disposedRef.current) return;
+
     processingRef.current = false;
-    // Process next command if any
+    // Process next command using queueMicrotask to break potential stack buildup
     if (commandQueueRef.current.length > 0) {
-      processQueue();
+      queueMicrotask(() => processQueue());
     }
   }, []);
 
@@ -133,9 +142,18 @@ export const VideoElement = memo(function VideoElement({
 
     socket.on("videoCommand", handleCommand);
     return () => {
+      disposedRef.current = true;
+      commandQueueRef.current = []; // Clear queue on unmount
       socket.off("videoCommand", handleCommand);
     };
   }, [socket, id, processQueue]);
+
+  // Clear queue when src becomes empty
+  useEffect(() => {
+    if (!src) {
+      commandQueueRef.current = [];
+    }
+  }, [src]);
 
   // Report state changes back to server
   const reportState = useCallback(
