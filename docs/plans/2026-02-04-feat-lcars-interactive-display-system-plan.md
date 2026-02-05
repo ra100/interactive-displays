@@ -169,7 +169,7 @@ lcars/
 
 **Tasks:**
 
-- [ ] **1.1 Project Setup**
+- [x] **1.1 Project Setup**
   - Initialize pnpm monorepo: `packages/server`, `packages/app`
   - TypeScript config (strict mode)
   - **Oxc** for linting and formatting (replaces ESLint + Prettier)
@@ -215,7 +215,7 @@ lcars/
   pnpm lint-staged
   ```
 
-- [ ] **1.2 Server**
+- [x] **1.2 Server**
   - Fastify + Socket.io
   - `globalState` variable (string: 'normal' | 'redAlert' | 'active' | 'damaged')
   - Broadcast state on change
@@ -223,7 +223,7 @@ lcars/
 
   Files: `packages/server/src/index.ts`, `packages/server/src/types.ts`
 
-- [ ] **1.3 Display Client**
+- [x] **1.3 Display Client**
   - Vite + React app
   - React Context for globalState + layout
   - Connect to Socket.io, listen for state changes
