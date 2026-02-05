@@ -395,7 +395,7 @@ function undo() {
 
 **Tasks:**
 
-- [ ] **4.1 Asymmetric Elbows**
+- [x] **4.1 Asymmetric Elbows** ✓ (2026-02-05)
   - Separate `verticalWidth` and `horizontalWidth` properties
   - Support for vertical arm wider than horizontal (authentic LCARS style)
   - Update property panel with width controls for each arm
@@ -467,7 +467,7 @@ function undo() {
 
 ---
 
-- [ ] **4.2 Button Corner Styles**
+- [x] **4.2 Button Corner Styles** ✓ (2026-02-05)
   - Per-corner radius control: `cornerStyle: 'round' | 'square'`
   - Support for pill-shaped buttons (one rounded, one flat end)
   - Left/right corner independent styling
@@ -548,11 +548,11 @@ function undo() {
 
 ---
 
-- [ ] **4.4 New Elements**
-  - **Number Display** - Animated counting with configurable format
-  - **Status Indicator** - Blinking lights with customizable patterns
-  - **Bar Graph** - Animated value display with segments
-  - **Video** - Remote-controlled playback (play/pause/seek/load)
+- [x] **4.4 New Elements** (Video only) ✓ (2026-02-05)
+  - **Number Display** - Animated counting with configurable format (deferred)
+  - **Status Indicator** - Blinking lights with customizable patterns (deferred)
+  - **Bar Graph** - Animated value display with segments (deferred)
+  - **Video** - Remote-controlled playback (play/pause/seek/load) ✓
 
   ```typescript
   interface NumberElement {
@@ -1139,21 +1139,24 @@ socket.emit('videoState', { elementId, state: 'playing' | 'paused' | 'ended', cu
 
 ## Next Steps
 
-**Phases 1-3 Complete.** Next: Phase 4 (Enhanced Elements)
+**Phases 1-4 Lite Complete.** (2026-02-05)
 
-Recommended order (per Simplicity Review - "Phase 4 Lite"):
+### Phase 4 Lite Summary (Completed)
 
-1. **4.4a Video Element** - Highest value, enables new capability
-   - Implement VideoElement component with command queue
-   - Add WebSocket events (videoCommand, videoState)
-   - Add to palette and property panel
+1. ✓ **4.4a Video Element** - WebSocket-controlled video with command queue pattern
+2. ✓ **4.1 Asymmetric Elbows** - SVG path generation for true L-shapes
+3. ✓ **4.2 Button Corner Styles** - Per-corner border-radius (round/square)
 
-2. **4.1 Asymmetric Elbows** - Most requested styling enhancement
-   - Refactor to SVG path generation
-   - Add verticalWidth/horizontalWidth controls
+### Remaining Phase 4 (Deferred)
 
-3. **4.2 Button Corner Styles** - Quick win, CSS-only
-   - Add leftCorner/rightCorner props
-   - Update property panel
+- **4.3 Bar End Caps** - Round/square/pointed caps
+- **4.4b Number, StatusIndicator, BarGraph** - Add when actually needed
+- **4.5 Property Panel Enhancements** - Element registry pattern (optional refactor)
 
-4. **Defer to v3:** Number, StatusIndicator, BarGraph (add when actually needed)
+### Future Work
+
+See "Future Roadmap (v3+)" for additional features including:
+- Interactive elements (Slider, Toggle, Data grid)
+- Service Worker offline caching
+- Scripted sequences
+- Security hardening
