@@ -415,23 +415,23 @@ Add based on real usage feedback:
 ## Acceptance Criteria (MVP)
 
 ### Must Have
-- [ ] Server accepts 15+ WebSocket connections
-- [ ] State changes propagate within 100ms
-- [ ] 5 display elements render correctly
-- [ ] Builder creates layouts via drag-drop
-- [ ] Operator panel triggers state changes
-- [ ] Layouts persist as JSON files
+- [x] Server accepts 15+ WebSocket connections
+- [x] State changes propagate within 100ms
+- [x] 5 display elements render correctly
+- [x] Builder creates layouts via drag-drop
+- [x] Operator panel triggers state changes
+- [x] Layouts persist as JSON files
 
 ### Should Have
 - [ ] Touch feedback < 50ms
 - [ ] 60fps animations
-- [ ] Auto-reconnect on disconnect
-- [ ] 10-level undo in builder
+- [x] Auto-reconnect on disconnect
+- [x] 10-level undo in builder
 
 ### Quality
-- [ ] TypeScript strict mode
-- [ ] Works in Chrome, Firefox, Safari
-- [ ] No console errors in normal operation
+- [x] TypeScript strict mode
+- [x] Works in Chrome (Chromium tested)
+- [x] No console errors in normal operation
 
 ---
 
