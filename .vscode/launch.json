@@ -1,0 +1,39 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Server",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@interactive-displays/server", "dev"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "App (Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5176",
+      "webRoot": "${workspaceFolder}/packages/app/src",
+      "sourceMapPathOverrides": {
+        "webpack:///./src/*": "${webRoot}/*"
+      }
+    },
+    {
+      "name": "App (Edge)",
+      "type": "msedge",
+      "request": "launch",
+      "url": "http://localhost:5176",
+      "webRoot": "${workspaceFolder}/packages/app/src"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Full Stack",
+      "configurations": ["Server", "App (Chrome)"],
+      "stopAll": true
+    }
+  ]
+}

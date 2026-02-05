@@ -1,0 +1,51 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "dev",
+      "type": "shell",
+      "command": "pnpm dev",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "dev:server",
+      "type": "shell",
+      "command": "pnpm --filter @interactive-displays/server dev",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "dev:app",
+      "type": "shell",
+      "command": "pnpm --filter @interactive-displays/app dev",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "typecheck",
+      "type": "shell",
+      "command": "pnpm typecheck",
+      "group": "test",
+      "problemMatcher": "$tsc"
+    },
+    {
+      "label": "lint",
+      "type": "shell",
+      "command": "pnpm lint",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "pnpm build",
+      "group": "build",
+      "problemMatcher": []
+    }
+  ]
+}

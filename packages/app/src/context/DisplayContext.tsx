@@ -16,7 +16,7 @@ import type {
 
 const SERVER_URL =
   (import.meta.env["VITE_SERVER_URL"] as string | undefined) ||
-  "http://localhost:3000";
+  "http://localhost:3010";
 
 interface DisplayContextValue {
   globalState: GlobalState;

@@ -110,7 +110,7 @@ fastify.get("/health", async () => {
 // Start server
 const start = async () => {
   await ensureDefaultLayout();
-  const port = Number(process.env["PORT"]) || 3000;
+  const port = Number(process.env["PORT"]) || 3010;
   await fastify.listen({ port, host: "0.0.0.0" });
   console.log(`Server listening on port ${port}`);
 };
