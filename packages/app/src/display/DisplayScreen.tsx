@@ -1,44 +1,45 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, memo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDisplay } from "../context/DisplayContext";
-import type { LayoutElement } from "../../../server/src/types.js";
+import type { LayoutElement, GlobalState } from "@interactive-displays/shared";
+import "./DisplayScreen.css";
 
 const GRID_COLUMNS = 12;
 const CELL_SIZE = 60; // pixels
 
-function ElementPlaceholder({ element }: { element: LayoutElement }) {
-  const { globalState } = useDisplay();
+interface ElementPlaceholderProps {
+  element: LayoutElement;
+  globalState: GlobalState;
+}
 
-  const style: React.CSSProperties = {
-    gridColumn: `${element.col + 1} / span ${element.colSpan}`,
-    gridRow: `${element.row + 1} / span ${element.rowSpan}`,
-    backgroundColor: element.color,
-    borderRadius: "8px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    color: "#000",
-    fontFamily: "'Antonio', sans-serif",
-    fontSize: "1rem",
-    textTransform: "uppercase",
-    transition: "background-color 0.3s ease-out, opacity 0.3s ease-out",
-    minHeight: `${element.rowSpan * CELL_SIZE}px`,
-  };
+const ElementPlaceholder = memo(function ElementPlaceholder({
+  element,
+  globalState,
+}: ElementPlaceholderProps) {
+  const style = useMemo<React.CSSProperties>(
+    () => ({
+      gridColumn: `${element.col + 1} / span ${element.colSpan}`,
+      gridRow: `${element.row + 1} / span ${element.rowSpan}`,
+      backgroundColor: element.color,
+      minHeight: `${element.rowSpan * CELL_SIZE}px`,
+    }),
+    [element.col, element.colSpan, element.row, element.rowSpan, element.color]
+  );
 
-  // Apply state-based styling
-  if (globalState === "alert") {
-    style.animation = "pulse 0.5s ease-in-out infinite alternate";
-  } else if (globalState === "damaged") {
-    style.filter = "grayscale(80%)";
-    style.opacity = 0.7;
-  }
+  const className = [
+    "display-element",
+    globalState === "alert" && "display-element--alert",
+    globalState === "damaged" && "display-element--damaged",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
-    <div style={style} data-element-type={element.type}>
+    <div style={style} className={className} data-element-type={element.type}>
       {element.label || element.type.toUpperCase()}
     </div>
   );
-}
+});
 
 export function DisplayScreen() {
   const [searchParams] = useSearchParams();
@@ -53,48 +54,34 @@ export function DisplayScreen() {
     }
   }, [isConnected, screenId, identify]);
 
-  const containerStyle: React.CSSProperties = {
-    width: "100vw",
-    height: "100vh",
-    backgroundColor: "#000",
-    display: "grid",
-    gridTemplateColumns: `repeat(${GRID_COLUMNS}, ${CELL_SIZE}px)`,
-    gridAutoRows: `${CELL_SIZE}px`,
-    gap: "4px",
-    padding: "20px",
-    boxSizing: "border-box",
-    overflow: "hidden",
-  };
+  const containerStyle = useMemo<React.CSSProperties>(
+    () => ({
+      gridTemplateColumns: `repeat(${GRID_COLUMNS}, ${CELL_SIZE}px)`,
+      gridAutoRows: `${CELL_SIZE}px`,
+    }),
+    []
+  );
 
-  const statusStyle: React.CSSProperties = {
-    position: "fixed",
-    top: "10px",
-    right: "10px",
-    padding: "8px 12px",
-    backgroundColor: isConnected ? "#00ff00" : "#ff0000",
-    color: "#000",
-    borderRadius: "4px",
-    fontSize: "12px",
-    fontFamily: "monospace",
-    zIndex: 1000,
-  };
+  const statusClassName = `display-status ${
+    isConnected ? "display-status--connected" : "display-status--disconnected"
+  }`;
 
   return (
     <>
-      <style>
-        {`
-          @keyframes pulse {
-            from { opacity: 1; }
-            to { opacity: 0.6; }
-          }
-        `}
-      </style>
-      <div style={containerStyle} data-state={globalState}>
+      <div
+        className="display-container"
+        style={containerStyle}
+        data-state={globalState}
+      >
         {layout?.elements.map((element) => (
-          <ElementPlaceholder key={element.id} element={element} />
+          <ElementPlaceholder
+            key={element.id}
+            element={element}
+            globalState={globalState}
+          />
         ))}
       </div>
-      <div style={statusStyle}>
+      <div className={statusClassName}>
         {isConnected ? "CONNECTED" : "DISCONNECTED"} | {screenId} |{" "}
         {globalState.toUpperCase()}
       </div>

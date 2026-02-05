@@ -1,0 +1,60 @@
+@keyframes pulse {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.6;
+  }
+}
+
+.display-container {
+  width: 100vw;
+  height: 100vh;
+  background-color: #000;
+  display: grid;
+  gap: 4px;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.display-status {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  padding: 8px 12px;
+  color: #000;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: monospace;
+  z-index: 1000;
+}
+
+.display-status--connected {
+  background-color: #00ff00;
+}
+
+.display-status--disconnected {
+  background-color: #ff0000;
+}
+
+.display-element {
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  font-family: "Antonio", sans-serif;
+  font-size: 1rem;
+  text-transform: uppercase;
+  transition: background-color 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+.display-element--alert {
+  animation: pulse 0.5s ease-in-out infinite alternate;
+}
+
+.display-element--damaged {
+  filter: grayscale(80%);
+  opacity: 0.7;
+}
