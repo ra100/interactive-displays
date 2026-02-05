@@ -1,0 +1,30 @@
+{
+  "name": "interactive-displays",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "oxlint",
+    "format": "oxlint --fix",
+    "typecheck": "pnpm -r run typecheck",
+    "knip": "knip",
+    "dev": "pnpm -r --parallel run dev",
+    "build": "pnpm -r run build",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "knip": "^5.43.3",
+    "lint-staged": "^15.3.0",
+    "oxlint": "^0.15.3",
+    "typescript": "^5.7.3"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "oxlint --fix"
+    ]
+  },
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

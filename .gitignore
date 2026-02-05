@@ -1,1 +1,24 @@
 !.kilocode
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Local history
+.history/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
+# Data (layouts stored locally)
+data/layouts/

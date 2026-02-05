@@ -1,0 +1,20 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "workspaces": {
+    "packages/server": {
+      "entry": ["src/index.ts"]
+    },
+    "packages/app": {
+      "entry": ["src/main.tsx"]
+    }
+  },
+  "ignore": [
+    "**/*.config.ts",
+    "**/*.config.js",
+    ".history/**"
+  ],
+  "ignoreDependencies": [
+    "@dnd-kit/core",
+    "socket.io-client"
+  ]
+}
