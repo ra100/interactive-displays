@@ -76,7 +76,6 @@ export function OperatorPanel() {
         <div className="operator-panel-content">
           <div className="operator-section">
             <span className="operator-section-label">Global State</span>
-            <div className="operator-state-indicator">{globalState.toUpperCase()}</div>
             <div className="state-buttons">
               <StateButton
                 label="NORMAL"

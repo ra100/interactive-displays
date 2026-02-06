@@ -1,11 +1,11 @@
 .operator-panel {
-  width: 200px;
+  width: 220px;
   background-color: #1a1a1a;
   border-left: 1px solid #333;
-  padding: 16px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
   transition: flex 0.2s ease-out;
 }
 
@@ -50,8 +50,8 @@
 .operator-panel-content {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding-top: 16px;
+  gap: 12px;
+  padding-top: 12px;
   border-top: 1px solid #333;
 }
 
@@ -68,31 +68,24 @@
   letter-spacing: 0.05em;
 }
 
-.operator-state-indicator {
-  color: #fff;
-  font-family: "Antonio", sans-serif;
-  font-size: 1rem;
-}
-
 .state-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
 }
 
 .state-button {
   border: none;
-  border-radius: 8px;
+  border-radius: 4px;
   color: #000;
   font-family: "Antonio", sans-serif;
-  font-size: 1rem;
+  font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
-  padding: 12px;
+  padding: 8px 4px;
   cursor: pointer;
   transition: transform 0.1s ease-out, filter 0.1s ease-out;
   position: relative;
-  min-height: 44px;
 }
 
 .state-button:hover {
@@ -110,10 +103,10 @@
 
 .state-button-indicator {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 10px;
-  height: 10px;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
   background-color: #fff;
   border-radius: 50%;
   animation: indicator-pulse 1s ease-in-out infinite;

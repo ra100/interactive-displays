@@ -1,11 +1,11 @@
 .property-panel {
-  width: 240px;
+  width: 220px;
   background-color: #1a1a1a;
   border-left: 1px solid #333;
-  padding: 16px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   overflow-y: auto;
 }
 
