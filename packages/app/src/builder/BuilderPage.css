@@ -9,7 +9,7 @@
 .builder-sidebar {
   display: flex;
   flex-direction: column;
-  width: 440px;
+  width: 240px;
   flex-shrink: 0;
 }
 
