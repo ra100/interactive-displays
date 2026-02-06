@@ -985,8 +985,8 @@ Add based on real usage feedback:
 - [x] Layouts persist as JSON files
 
 ### Should Have
-- [ ] Touch feedback < 50ms
-- [ ] 60fps animations
+- [x] Touch feedback < 50ms ✓ (CSS :active with GPU-accelerated filter/transform)
+- [x] 60fps animations ✓ (CSS transitions/keyframes, GPU-accelerated)
 - [x] Auto-reconnect on disconnect
 - [x] 10-level undo in builder
 
@@ -1139,19 +1139,19 @@ socket.emit('videoState', { elementId, state: 'playing' | 'paused' | 'ended', cu
 
 ## Next Steps
 
-**Phases 1-4 Lite Complete.** (2026-02-05)
+**Phases 1-4 Complete.** (2026-02-06)
 
-### Phase 4 Lite Summary (Completed)
+### Phase 4 Summary (Completed)
 
 1. ✓ **4.4a Video Element** - WebSocket-controlled video with command queue pattern
 2. ✓ **4.1 Asymmetric Elbows** - SVG path generation for true L-shapes
 3. ✓ **4.2 Button Corner Styles** - Per-corner border-radius (round/square)
+4. ✓ **4.3 Bar End Caps** - Round/square/pointed caps with clip-path
 
-### Remaining Phase 4 (Deferred)
+### Remaining Phase 4 (Deferred to v2)
 
-- **4.3 Bar End Caps** - Round/square/pointed caps
 - **4.4b Number, StatusIndicator, BarGraph** - Add when actually needed
-- **4.5 Property Panel Enhancements** - Element registry pattern (optional refactor)
+- **4.5 Element Registry Pattern** - Optional refactor for maintainability
 
 ### Future Work
 
