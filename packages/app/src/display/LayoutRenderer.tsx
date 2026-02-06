@@ -55,6 +55,8 @@ const ElementRenderer = memo(function ElementRenderer({
           key={element.id}
           {...baseProps}
           orientation={element.orientation ?? "horizontal"}
+          startCap={element.startCap ?? "round"}
+          endCap={element.endCap ?? "round"}
         />
       );
 

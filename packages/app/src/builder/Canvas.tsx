@@ -79,7 +79,12 @@ function DraggableElement({
         );
       case "bar":
         return (
-          <Bar {...baseProps} orientation={element.orientation ?? "horizontal"} />
+          <Bar
+            {...baseProps}
+            orientation={element.orientation ?? "horizontal"}
+            startCap={element.startCap ?? "round"}
+            endCap={element.endCap ?? "round"}
+          />
         );
       case "frame":
         return <Frame {...baseProps} />;

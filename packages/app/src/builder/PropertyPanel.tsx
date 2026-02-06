@@ -1,5 +1,5 @@
 import { useCallback, useState, useEffect } from "react";
-import type { LayoutElement, ElbowDirection, BarOrientation, VideoFit, CornerStyle, VideoState } from "@interactive-displays/shared";
+import type { LayoutElement, ElbowDirection, BarOrientation, VideoFit, CornerStyle, CapStyle, VideoState } from "@interactive-displays/shared";
 import { useBuilder } from "./BuilderContext";
 import { useDisplay } from "../context/DisplayContext";
 import "./PropertyPanel.css";
@@ -47,6 +47,12 @@ const VIDEO_FITS: { label: string; value: VideoFit }[] = [
 const CORNER_STYLES: { label: string; value: CornerStyle }[] = [
   { label: "Round", value: "round" },
   { label: "Square", value: "square" },
+];
+
+const CAP_STYLES: { label: string; value: CapStyle }[] = [
+  { label: "Round", value: "round" },
+  { label: "Square", value: "square" },
+  { label: "Pointed", value: "pointed" },
 ];
 
 export function PropertyPanel() {
@@ -262,20 +268,60 @@ export function PropertyPanel() {
       )}
 
       {element.type === "bar" && (
-        <div className="property-group">
-          <label className="property-group-label">Orientation</label>
-          <select
-            value={element.orientation ?? "horizontal"}
-            onChange={(e) => updateField("orientation", e.target.value as BarOrientation)}
-            className="property-select"
-          >
-            {BAR_ORIENTATIONS.map((orient) => (
-              <option key={orient.value} value={orient.value}>
-                {orient.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <>
+          <div className="property-group">
+            <label className="property-group-label">Orientation</label>
+            <select
+              value={element.orientation ?? "horizontal"}
+              onChange={(e) => updateField("orientation", e.target.value as BarOrientation)}
+              className="property-select"
+            >
+              {BAR_ORIENTATIONS.map((orient) => (
+                <option key={orient.value} value={orient.value}>
+                  {orient.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="property-group">
+            <label className="property-group-label">End Caps</label>
+            <div className="property-row">
+              <div className="property-field">
+                <span className="property-field-label">
+                  {element.orientation === "vertical" ? "Top" : "Left"}
+                </span>
+                <select
+                  value={element.startCap ?? "round"}
+                  onChange={(e) => updateField("startCap", e.target.value as CapStyle)}
+                  className="property-select"
+                >
+                  {CAP_STYLES.map((style) => (
+                    <option key={style.value} value={style.value}>
+                      {style.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="property-field">
+                <span className="property-field-label">
+                  {element.orientation === "vertical" ? "Bottom" : "Right"}
+                </span>
+                <select
+                  value={element.endCap ?? "round"}
+                  onChange={(e) => updateField("endCap", e.target.value as CapStyle)}
+                  className="property-select"
+                >
+                  {CAP_STYLES.map((style) => (
+                    <option key={style.value} value={style.value}>
+                      {style.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        </>
       )}
 
       {(element.type === "button" || element.type === "text") && (

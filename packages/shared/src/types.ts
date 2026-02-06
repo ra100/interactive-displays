@@ -12,6 +12,8 @@ export type VideoFit = "contain" | "cover" | "fill";
 
 export type CornerStyle = "round" | "square";
 
+export type CapStyle = "round" | "square" | "pointed";
+
 export interface LayoutElement {
   id: string;
   type: ElementType;
@@ -25,6 +27,8 @@ export interface LayoutElement {
   verticalWidth?: number; // elbow only: width of vertical arm (default: 1)
   horizontalWidth?: number; // elbow only: width of horizontal arm (default: 1)
   orientation?: BarOrientation; // bar only
+  startCap?: CapStyle; // bar only (default: 'round')
+  endCap?: CapStyle; // bar only (default: 'round')
   label?: string; // button, text
   leftCorner?: CornerStyle; // button only (default: 'round')
   rightCorner?: CornerStyle; // button only (default: 'round')

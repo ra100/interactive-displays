@@ -518,7 +518,7 @@ function undo() {
 
 ---
 
-- [ ] **4.3 Bar End Caps**
+- [x] **4.3 Bar End Caps** ✓ (2026-02-06)
   - Configure each end of bar elements independently
   - Round, square, or pointed caps
 
