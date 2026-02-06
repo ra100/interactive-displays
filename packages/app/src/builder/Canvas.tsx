@@ -69,7 +69,14 @@ function DraggableElement({
 
     switch (element.type) {
       case "elbow":
-        return <Elbow {...baseProps} direction={element.direction ?? "TL"} />;
+        return (
+          <Elbow
+            {...baseProps}
+            direction={element.direction ?? "TL"}
+            verticalWidth={element.verticalWidth ?? 1}
+            horizontalWidth={element.horizontalWidth ?? 1}
+          />
+        );
       case "bar":
         return (
           <Bar {...baseProps} orientation={element.orientation ?? "horizontal"} />
@@ -77,7 +84,14 @@ function DraggableElement({
       case "frame":
         return <Frame {...baseProps} />;
       case "button":
-        return <Button {...baseProps} label={element.label ?? "BUTTON"} />;
+        return (
+          <Button
+            {...baseProps}
+            label={element.label ?? "BUTTON"}
+            leftCorner={element.leftCorner ?? "round"}
+            rightCorner={element.rightCorner ?? "round"}
+          />
+        );
       case "text":
         return <Text {...baseProps} label={element.label ?? ""} />;
       case "video":

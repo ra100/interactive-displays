@@ -13,7 +13,16 @@
   flex-shrink: 0;
 }
 
-.builder-sidebar > * {
+.builder-sidebar .property-panel {
+  flex: 2;
+  min-height: 0;
+}
+
+.builder-sidebar .operator-panel {
   flex: 1;
   min-height: 0;
+}
+
+.builder-sidebar .operator-panel--collapsed {
+  flex: 0 0 auto;
 }

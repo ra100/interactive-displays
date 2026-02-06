@@ -1,8 +1,10 @@
-import { useCallback } from "react";
+import { useCallback, useState, useEffect } from "react";
 import type { GlobalState } from "@interactive-displays/shared";
 import { useDisplay } from "../context/DisplayContext";
 import { useBuilder } from "./BuilderContext";
 import "./OperatorPanel.css";
+
+const COLLAPSE_KEY = "lcars-operator-panel-collapsed";
 
 interface StateButtonProps {
   label: string;
@@ -38,93 +40,121 @@ export function OperatorPanel() {
   const { globalState, setGlobalState, saveLayout, isConnected } = useDisplay();
   const { layout, canUndo, canRedo, undo, redo } = useBuilder();
 
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    return localStorage.getItem(COLLAPSE_KEY) === "true";
+  });
+
+  useEffect(() => {
+    localStorage.setItem(COLLAPSE_KEY, String(isCollapsed));
+  }, [isCollapsed]);
+
+  const toggleCollapse = useCallback(() => {
+    setIsCollapsed((prev) => !prev);
+  }, []);
+
   const handleSave = useCallback(() => {
     saveLayout(layout);
   }, [layout, saveLayout]);
 
   return (
-    <div className="operator-panel">
-      <h3 className="operator-panel-title">Operator</h3>
-
-      <div className="operator-section">
-        <span className="operator-section-label">Global State</span>
-        <div className="operator-state-indicator">{globalState.toUpperCase()}</div>
-        <div className="state-buttons">
-          <StateButton
-            label="NORMAL"
-            state="normal"
-            color="#ffcc99"
-            currentState={globalState}
-            onClick={() => setGlobalState("normal")}
-          />
-          <StateButton
-            label="ALERT"
-            state="alert"
-            color="#ff0000"
-            currentState={globalState}
-            onClick={() => setGlobalState("alert")}
-          />
-          <StateButton
-            label="ACTIVE"
-            state="active"
-            color="#00ff00"
-            currentState={globalState}
-            onClick={() => setGlobalState("active")}
-          />
-          <StateButton
-            label="DAMAGED"
-            state="damaged"
-            color="#666666"
-            currentState={globalState}
-            onClick={() => setGlobalState("damaged")}
-          />
-        </div>
-      </div>
-
-      <div className="operator-section">
-        <span className="operator-section-label">History</span>
-        <div className="history-buttons">
-          <button
-            type="button"
-            className="history-button"
-            onClick={undo}
-            disabled={!canUndo}
-          >
-            Undo
-          </button>
-          <button
-            type="button"
-            className="history-button"
-            onClick={redo}
-            disabled={!canRedo}
-          >
-            Redo
-          </button>
-        </div>
-      </div>
-
-      <div className="operator-section">
-        <span className="operator-section-label">Layout</span>
-        <div className="layout-info">
-          <span className="layout-name">{layout.name}</span>
-          <span className="layout-id">ID: {layout.id}</span>
-        </div>
+    <div className={`operator-panel ${isCollapsed ? "operator-panel--collapsed" : ""}`}>
+      <div className="operator-panel-header">
+        <h3 className="operator-panel-title">Operator</h3>
         <button
           type="button"
-          className="save-button"
-          onClick={handleSave}
-          disabled={!isConnected}
+          className="operator-panel-toggle"
+          onClick={toggleCollapse}
+          aria-expanded={!isCollapsed}
+          aria-label={isCollapsed ? "Expand operator panel" : "Collapse operator panel"}
+          title={isCollapsed ? "Expand" : "Collapse"}
         >
-          Save Layout
+          {isCollapsed ? "▲" : "▼"}
         </button>
       </div>
 
-      <div className="operator-section">
-        <span className="operator-section-label">Connection</span>
-        <div className={`connection-status ${isConnected ? "connection-status--connected" : "connection-status--disconnected"}`}>
-          {isConnected ? "Connected" : "Disconnected"}
+      {!isCollapsed && (
+        <div className="operator-panel-content">
+          <div className="operator-section">
+            <span className="operator-section-label">Global State</span>
+            <div className="operator-state-indicator">{globalState.toUpperCase()}</div>
+            <div className="state-buttons">
+              <StateButton
+                label="NORMAL"
+                state="normal"
+                color="#ffcc99"
+                currentState={globalState}
+                onClick={() => setGlobalState("normal")}
+              />
+              <StateButton
+                label="ALERT"
+                state="alert"
+                color="#ff0000"
+                currentState={globalState}
+                onClick={() => setGlobalState("alert")}
+              />
+              <StateButton
+                label="ACTIVE"
+                state="active"
+                color="#00ff00"
+                currentState={globalState}
+                onClick={() => setGlobalState("active")}
+              />
+              <StateButton
+                label="DAMAGED"
+                state="damaged"
+                color="#666666"
+                currentState={globalState}
+                onClick={() => setGlobalState("damaged")}
+              />
+            </div>
+          </div>
+
+          <div className="operator-section">
+            <span className="operator-section-label">History</span>
+            <div className="history-buttons">
+              <button
+                type="button"
+                className="history-button"
+                onClick={undo}
+                disabled={!canUndo}
+              >
+                Undo
+              </button>
+              <button
+                type="button"
+                className="history-button"
+                onClick={redo}
+                disabled={!canRedo}
+              >
+                Redo
+              </button>
+            </div>
+          </div>
+
+          <div className="operator-section">
+            <span className="operator-section-label">Layout</span>
+            <div className="layout-info">
+              <span className="layout-name">{layout.name}</span>
+              <span className="layout-id">ID: {layout.id}</span>
+            </div>
+            <button
+              type="button"
+              className="save-button"
+              onClick={handleSave}
+              disabled={!isConnected}
+            >
+              Save Layout
+            </button>
+          </div>
+
+          <div className="operator-section">
+            <span className="operator-section-label">Connection</span>
+            <div className={`connection-status ${isConnected ? "connection-status--connected" : "connection-status--disconnected"}`}>
+              {isConnected ? "Connected" : "Disconnected"}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
