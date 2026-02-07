@@ -16,10 +16,10 @@
     "@interactive-displays/shared": "workspace:*",
     "fastify": "^5.2.1",
     "socket.io": "^4.8.1",
-    "zod": "^3.24.1"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@types/node": "^22.10.7",
+    "@types/node": "^25.2.1",
     "tsx": "^4.19.2",
     "vitest": "^4.0.18"
   }
