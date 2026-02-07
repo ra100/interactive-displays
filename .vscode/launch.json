@@ -30,13 +30,6 @@
       "sourceMapPathOverrides": {
         "webpack:///./src/*": "${webRoot}/*"
       }
-    },
-    {
-      "name": "App (Edge)",
-      "type": "msedge",
-      "request": "launch",
-      "url": "http://localhost:5176",
-      "webRoot": "${workspaceFolder}/packages/app/src"
     }
   ],
   "compounds": [
