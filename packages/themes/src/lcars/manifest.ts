@@ -51,7 +51,14 @@ export const lcars = defineTheme({
     },
     damaged: {
       tokens: {
-        palette: { primary: "#7a6a58", secondary: "#8f8170", accent: "#6e5f6e", info: "#5f6a7a", neutral: "#5a4c3c" },
+        palette: {
+          primary: "#7a6a58",
+          secondary: "#8f8170",
+          accent: "#6e5f6e",
+          info: "#5f6a7a",
+          neutral: "#5a4c3c",
+          warning: "#8c7a3c",
+        },
         foreground: "#8f8170",
       },
     },

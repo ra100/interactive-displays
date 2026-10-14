@@ -56,8 +56,8 @@
   justify-content: center;
   width: 100%;
   height: 100%;
-  min-width: 60px;
-  min-height: 60px;
+  min-width: var(--touch);
+  min-height: var(--touch);
   padding: 0 calc(2 * var(--u));
   border: none;
   border-radius: var(--radius);
@@ -106,7 +106,7 @@
 }
 
 .base-frame[data-archetype="header-main"] {
-  grid-template: "title" calc(10 * var(--u)) "toolbar" calc(8 * var(--u)) "main" 1fr "status" calc(5 * var(--u)) / minmax(0, 1fr);
+  grid-template: "title" calc(10 * var(--u)) "toolbar" max(var(--touch), calc(8 * var(--u))) "main" 1fr "status" calc(5 * var(--u)) / minmax(0, 1fr);
 }
 
 .base-frame[data-archetype="dashboard"] {
@@ -128,4 +128,20 @@
 
 .base-frame__slot[data-slot="status"] {
   border-top: calc(0.2 * var(--u)) solid var(--tone-neutral);
+}
+
+/* State effects: a frame around the screen, steady for warning, pulsing for alert. */
+@keyframes base-alert-pulse {
+  50% {
+    box-shadow: inset 0 0 0 calc(0.4 * var(--u)) var(--tone-danger);
+  }
+}
+
+.screen[data-theme="base"][data-effect="warning"] {
+  box-shadow: inset 0 0 0 calc(0.6 * var(--u)) var(--tone-warning);
+}
+
+.screen[data-theme="base"][data-effect="alert"] {
+  box-shadow: inset 0 0 0 calc(1 * var(--u)) var(--tone-danger);
+  animation: base-alert-pulse 1.2s ease-in-out infinite;
 }

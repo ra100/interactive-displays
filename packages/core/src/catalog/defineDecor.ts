@@ -11,7 +11,7 @@ export interface DecorDefinition<Props extends z.ZodType = z.ZodType> {
   readonly example: z.input<Props>;
 }
 
-export type AnyDecorDefinition = DecorDefinition<z.ZodType<Record<string, unknown>>>;
+export type AnyDecorDefinition = DecorDefinition<z.ZodType<Record<string, unknown>, Record<string, unknown>>>;
 
 export type DecorProps<Definition extends DecorDefinition> = z.output<Definition["props"]>;
 

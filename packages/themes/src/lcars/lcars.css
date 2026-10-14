@@ -103,9 +103,10 @@
   gap: var(--lc-gap);
 }
 
+/* Fixed-height blocks, never shorter than a touch target. */
 .lcars-frame__nav > .slot > .slot__item {
   flex: none;
-  height: calc(7.5 * var(--u));
+  height: max(var(--touch), calc(7.5 * var(--u)));
 }
 
 .lcars-frame__fill {
@@ -132,7 +133,7 @@
   --lc-side: calc(9 * var(--u));
 
   grid-template-columns: var(--lc-side) minmax(0, 1fr);
-  grid-template-rows: var(--lc-head) calc(8 * var(--u)) minmax(0, 1fr) var(--lc-foot);
+  grid-template-rows: var(--lc-head) max(var(--touch), calc(8 * var(--u))) minmax(0, 1fr) var(--lc-foot);
 }
 
 .lcars-frame--header-main .lcars-frame__title {
@@ -336,11 +337,12 @@
   box-sizing: border-box;
   width: 100%;
   height: 100%;
-  min-width: 60px;
-  min-height: 60px;
+  min-width: var(--touch);
+  min-height: var(--touch);
   padding: 0 calc(2.4 * var(--u));
   border: none;
-  border-radius: 999px;
+  /* A pill when wide; a rounded block when a narrow slot makes it taller than wide. */
+  border-radius: min(999px, 30cqw);
   background: var(--tone);
   color: var(--theme-bg);
   font-family: var(--font-display);
