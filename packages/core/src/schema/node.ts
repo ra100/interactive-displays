@@ -11,7 +11,6 @@ export const StackLayoutSchema = z.object({
   kind: z.literal("stack"),
   direction: z.enum(["row", "column"]),
   gap: z.enum(["none", "small", "medium", "large"]).default("medium"),
-  align: z.enum(["start", "center", "end", "stretch"]).default("stretch"),
 });
 
 export const LayoutSchema = z.discriminatedUnion("kind", [StackLayoutSchema]);

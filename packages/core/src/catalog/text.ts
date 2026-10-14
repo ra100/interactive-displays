@@ -12,4 +12,5 @@ export const text = defineWidget({
     size: z.enum(["small", "medium", "large"]).default("medium"),
     tone: ToneSchema.default("secondary"),
   }),
+  example: { text: "All systems nominal." },
 });

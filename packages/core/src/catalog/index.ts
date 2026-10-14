@@ -1,9 +1,12 @@
 import { button } from "./button.ts";
-import { createCatalog } from "./defineWidget.ts";
+import { createCatalog, type WidgetProps } from "./defineWidget.ts";
 import { text } from "./text.ts";
 import { title } from "./title.ts";
 
-export { button, text, title };
+// Adding a widget: one definition file here, its test, and an entry in this object.
+export const widgets = { title, text, button } as const;
 
-// Adding a widget: one definition file here, its test, and an entry in this list.
-export const catalog = createCatalog([title, text, button]);
+export type WidgetKind = keyof typeof widgets;
+export type WidgetPropsOf<Kind extends WidgetKind> = WidgetProps<(typeof widgets)[Kind]>;
+
+export const catalog = createCatalog(Object.values(widgets));
