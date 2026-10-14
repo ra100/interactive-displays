@@ -12,6 +12,8 @@ export const ScreenSchema = z.object({
   schemaVersion: z.literal(1),
   id: IdSchema,
   name: z.string().min(1).max(120),
+  // The ship section this screen belongs to, e.g. "engineering".
+  section: IdSchema.optional(),
   tags: z.array(z.string().min(1).max(40)).max(50).default([]),
   profile: ProfileSchema.default({ aspect: "16:9", fit: "fluid" }),
   revision: z.number().int().min(0).default(0),

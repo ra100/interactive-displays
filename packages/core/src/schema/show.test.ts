@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveScreenId, ShowSchema } from "./show.ts";
+import { findState, resolveScreenId, ShowSchema } from "./show.ts";
 
 const show = ShowSchema.parse({
   schemaVersion: 1,
@@ -41,5 +41,34 @@ describe("resolveScreenId", () => {
   it("returns undefined when nothing is assigned", () => {
     const bare = ShowSchema.parse({ schemaVersion: 1, id: "s", name: "S", theme: { id: "base" } });
     expect(resolveScreenId(bare, "d-new")).toBeUndefined();
+  });
+});
+
+describe("show states", () => {
+  const minimal = { schemaVersion: 1, id: "s", name: "S", theme: { id: "base" } };
+
+  it("defaults to a single normal state", () => {
+    expect(ShowSchema.parse(minimal).states).toEqual([{ id: "normal", label: "Normal", effect: "none" }]);
+  });
+
+  it("parses states with effects and banners", () => {
+    const show = ShowSchema.parse({
+      ...minimal,
+      states: [
+        { id: "normal", label: "Normal" },
+        { id: "red-alert", label: "Red alert", effect: "alert", banner: "RED ALERT" },
+      ],
+    });
+    expect(findState(show, "red-alert")).toEqual({ id: "red-alert", label: "Red alert", effect: "alert", banner: "RED ALERT" });
+    expect(findState(show, "nope")).toBeUndefined();
+  });
+
+  it("rejects duplicate state and display ids", () => {
+    expect(ShowSchema.safeParse({ ...minimal, states: [{ id: "a", label: "A" }, { id: "a", label: "B" }] }).success).toBe(false);
+    expect(ShowSchema.safeParse({ ...minimal, displays: [{ id: "x" }, { id: "x" }] }).success).toBe(false);
+  });
+
+  it("rejects an unknown effect", () => {
+    expect(ShowSchema.safeParse({ ...minimal, states: [{ id: "a", label: "A", effect: "sparkles" }] }).success).toBe(false);
   });
 });
