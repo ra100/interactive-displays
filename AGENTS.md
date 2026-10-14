@@ -1,188 +1,129 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for AI agents and humans working in this repository.
 
-## Project Overview
+## Project
 
-LCARS Interactive Display System - A WebSocket-based client-server system for creating and displaying Star Trek-style sci-fi interfaces for video production. Enables 6-15 simultaneous browser displays with real-time coordination.
+Interactive Displays: a self-hosted system that drives 6–15 browser displays on a film set with sci-fi interfaces
+(Star Trek LCARS first, other looks later), coordinated in real time from one server.
+
+**Source of truth:** `docs/plans/2026-10-14-feat-interactive-displays-v2-plan.md` (the v2 design and roadmap).
+The v1 code is kept read-only under `legacy/` for reference; never import from it.
 
 ## Architecture
 
 ```
-lcars/
-├── packages/
-│   ├── server/          # Fastify + Socket.io (Node.js 24 LTS)
-│   ├── app/             # React 19 + Vite (display + builder modes)
-│   └── shared/          # Shared types and utilities
-├── data/layouts/        # JSON layout files (gitignored)
-├── tests/               # E2E tests (Playwright)
-└── docs/
-    ├── plans/           # Implementation plans
-    ├── solutions/       # Lessons learned
-    └── deviations/      # Plan deviation records
+packages/
+  core/     @interactive-displays/core    pure TS, no React, no Node APIs; runs in browser and server
+            schema/   Zod schemas: ids, tones, node tree, Screen, Show, theme manifest
+            catalog/  defineWidget() registry; one file per widget
+            validate/ validateScreen: schema + unique ids + known kinds + props
+            protocol/ typed Socket.io events (hello → snapshot)
+  themes/   @interactive-displays/themes
+            ./manifest  pure data (server-safe): theme tokens
+            ./react     browser only: widget renderers, CSS
+            base/       neutral theme that renders every widget; the fallback for all other themes
+  server/   Fastify + Socket.io + static app, one process, one port; runs TS directly (no build)
+            seed/     demo show copied into an empty data directory on first start
+  app/      React 19 + Vite SPA: /d/:displayId display route and runtime (ScreenView, NodeView)
+tests/e2e/  Playwright, against the built app served by the real server
+data/       runtime data (gitignored): settings.json, shows/<id>/show.json, shows/<id>/screens/*.json
 ```
 
-**Tech Stack:** pnpm monorepo, TypeScript strict mode, React 19, Fastify, Socket.io, @dnd-kit
+**Import boundaries:** `core` imports only `zod`. Theme manifests import only `core`. The server imports `core`
+(and later theme manifests). Only `app` imports `@interactive-displays/themes/react`.
 
-## Development Workflow
+**Key ideas** (details in the plan):
 
-### TDD/BDD Pattern (Mandatory)
-
-**All new code must have tests written FIRST or alongside the implementation.**
-
-1. **Write test first** - Define expected behavior before implementation
-2. **Implement minimal code** - Just enough to pass the test
-3. **Run tests frequently** - After every meaningful change
-4. **Refactor** - Clean up while tests stay green
-
-### Testing Strategy
-
-#### Unit Tests (Vitest)
-- **Location:** Co-located with source files (`*.test.ts` / `*.test.tsx`)
-- **Scope:** Individual functions, utilities, React components in isolation
-- **Mocking:** Mock external dependencies (Socket.io, file system)
-
-```
-packages/app/src/
-├── utils/
-│   ├── getStateClass.ts
-│   └── getStateClass.test.ts    # Unit test next to source
-├── components/
-│   ├── Button.tsx
-│   └── Button.test.tsx          # Component unit test
-```
-
-#### Integration Tests (Vitest)
-- **Location:** Co-located with source files (`*.integration.test.ts`)
-- **Scope:** Multiple units working together, context providers, hooks
-- **Example:** Testing BuilderContext with mock socket
-
-```
-packages/app/src/
-├── context/
-│   ├── DisplayContext.tsx
-│   └── DisplayContext.integration.test.tsx
-```
-
-#### E2E Tests (Playwright)
-- **Location:** `/tests/e2e/`
-- **Scope:** Full user flows across browser, server, and WebSocket
-- **Example:** User creates layout, saves, opens on another display
-
-```
-tests/
-├── e2e/
-│   ├── display.spec.ts          # Display client tests
-│   ├── builder.spec.ts          # Builder flow tests
-│   ├── state-sync.spec.ts       # Multi-client sync tests
-│   └── acceptance.spec.ts       # Acceptance criteria
-```
-
-### Test File Naming
-
-| Type | Pattern | Example |
-|------|---------|---------|
-| Unit | `*.test.ts` | `getStateClass.test.ts` |
-| Integration | `*.integration.test.ts` | `DisplayContext.integration.test.ts` |
-| E2E | `*.spec.ts` | `builder.spec.ts` |
-
-### After Each Functional Piece
-
-1. Write unit tests for new utilities/components
-2. Write integration tests for context/hooks
-3. Run the test suite: `pnpm test`
-4. Run code review (use `/workflows:review` or review agents)
-5. Apply code simplification - remove unnecessary complexity
-6. Commit only when tests pass
-
-### Commit Convention
-
-Use **Conventional Commits** with **gitmoji** prefixes:
-
-```
-🎉 feat: add elbow component with TL/TR/BL/BR variants
-🐛 fix: correct WebSocket reconnection handling
-♻️ refactor: simplify state broadcast logic
-✅ test: add Playwright tests for button touch feedback
-📝 docs: update operator quick-start guide
-🔧 chore: configure pnpm workspace
-```
-
-**Rules:**
-- Small commits with small working parts
-- Each commit should be a complete, working unit
-- Never commit failing tests
-
-### Sprint Completion
-
-At the end of each phase/sprint, provide:
-
-1. **Manual testing guide** - Step-by-step instructions for human verification
-2. **What to test** - Key user flows and edge cases
-3. **How to provide feedback** - Where to report issues or suggestions
-4. **Known limitations** - What's not yet implemented
-
-## Plan Deviations
-
-When deviating from the plan in `docs/plans/`, create a deviation record:
-
-**File:** `docs/deviations/YYYY-MM-DD-<topic>.md`
-
-**Template:**
-```markdown
-# Deviation: <Brief Description>
-
-## Date
-YYYY-MM-DD
-
-## Original Plan
-[Quote or reference the original plan section]
-
-## What Changed
-[Describe the actual implementation]
-
-## Justification
-[Explain why the deviation was necessary]
-
-## Impact
-[Note any downstream effects on other planned work]
-```
+- Documents store *meaning*, themes decide *look*. Screens are a tree of containers and widgets; colours are
+  tone roles (`primary`, `accent`, `danger`, …), never hex values.
+- Every widget is one `defineWidget()` definition: Zod props schema, defaults, an example, a description for AI.
+  Types, validation, JSON Schema, contract tests and (later) the editor inspector all come from it.
+- Themes are packs: a pure-data manifest plus React renderers. Missing renderers fall back to `base`.
+- Layout is fluid: stacks with weights, `--u` (1% of the display's shorter side) and container query units.
+- A display says `hello` and gets a full `snapshot`; reconnecting is just another hello.
 
 ## Commands
 
 ```bash
-# Install dependencies
-pnpm install
-
-# Development
-pnpm dev              # Run all packages in dev mode
-
-# Testing
-pnpm test             # Run all tests (unit + integration)
-pnpm test:unit        # Unit tests only (Vitest)
-pnpm test:e2e         # E2E tests (Playwright)
-pnpm test:watch       # Watch mode for unit tests
-
-# Code Quality
-pnpm lint             # Oxlint
-pnpm typecheck        # TypeScript strict check
-
-# Build
-pnpm build            # Production build
+pnpm install          # Node >= 22.18 (Node 24 in Docker/CI), pnpm 9
+pnpm dev              # server on :3010 (node --watch) + Vite on :5176 (proxies /socket.io)
+pnpm test             # unit + integration tests in every package (Vitest)
+pnpm build            # builds the app into packages/app/dist
+pnpm test:e2e         # Playwright; run `pnpm build` first
+pnpm lint             # oxlint (.oxlintrc.json)
+pnpm typecheck        # tsc --noEmit in every package
+pnpm knip             # unused files, exports and dependencies
+pnpm start            # production server serving the built app
+docker compose up -d  # production image with a persistent volume
 ```
 
-## Key Conventions
+Showcase screenshots: `pnpm build && SHOWCASE=phase-N pnpm test:e2e showcase` writes `docs/showcase/phase-N/*.png`.
+In a container without a matching Playwright browser, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE`.
 
-- **No `any` types** - TypeScript strict mode enforced
-- **Fat arrow functions** - Use `const fn = () => {}` instead of `function fn() {}`
-- **Tests required** - All new code needs unit/integration tests
-- **React Context** for state (not Zustand in MVP)
-- **5 LCARS elements only:** Elbow, Bar, Frame, Button, Text
-- **Global state:** `'normal' | 'alert' | 'active' | 'damaged'`
-- **JSON files** for layout persistence (no database)
+## Conventions
 
-## Reference Documents
+- **TypeScript strict**, no `any`, no non-null assertions; `exactOptionalPropertyTypes` is on.
+- **Fat arrow functions** (`const fn = () => {}`); error boundaries are the only classes.
+- **Relative imports use the `.ts`/`.tsx` extension** (Node runs the server's TypeScript directly with type
+  stripping), and only erasable syntax is allowed (no enums, namespaces or parameter properties).
+- **Zod 4 is the single schema source.** Derive types with `z.infer`; never hand-write a type that mirrors a schema.
+- **No hex colours in documents or renderers**; renderers read CSS variables (`var(--tone)`, `var(--theme-bg)`).
+- **Touch targets ≥ 60 px.** Buttons give immediate `:active` feedback.
+- **A broken widget never breaks a display**: props are re-validated in the runtime and each widget has an
+  error boundary.
 
-- **Plan:** `docs/plans/2026-02-04-feat-lcars-interactive-display-system-plan.md`
-- **Acceptance Testing:** `docs/ACCEPTANCE-TESTING.md`
-- **Design assets:** `design/*.jpg`, `design/*.webp`
+### Adding a widget
+
+1. `packages/core/src/catalog/<kind>.ts` with `defineWidget({ kind, label, category, description, props, example })`.
+2. Add it to the `widgets` object in `packages/core/src/catalog/index.ts` and extend `catalog.test.ts`.
+3. Add a base renderer in `packages/themes/src/base/` and register it in `base/renderers.ts`
+   (the compiler requires it; the contract test renders the example in every theme).
+
+### Adding a theme
+
+1. `packages/themes/src/<id>/manifest.ts` with `defineTheme({ id, name, tokens })`; register it in `src/manifest.ts`.
+2. Optional renderers in `packages/themes/src/<id>/renderers.ts`; register them in `src/react.ts`.
+3. The contract test covers the new theme automatically.
+
+## Workflow
+
+### TDD (mandatory)
+
+Write the test first or alongside the code; every change ships with tests.
+
+| Type | Pattern | Where |
+|---|---|---|
+| Unit | `*.test.ts(x)` | next to the source |
+| Integration | `*.integration.test.ts(x)` | next to the source |
+| E2E | `*.spec.ts` | `tests/e2e/` |
+
+### Commits
+
+Conventional Commits with gitmoji, small and always green:
+
+```
+🎉 feat(core): add readout widget
+🐛 fix(server): keep displays connected across restart
+♻️ refactor(app): simplify node rendering
+✅ test: add e2e restart flow
+📝 docs: update testing guide
+🔧 chore: bump dependencies
+🐳 chore: adjust Docker image
+```
+
+### Phases and pull requests
+
+Each roadmap phase from the plan ships as its own pull request, stacked on the previous phase's branch.
+Every phase PR includes screenshots (`docs/showcase/phase-N/`), an updated showcase page
+(`docs/showcase/README.md`) and a manual testing guide (`docs/ACCEPTANCE-TESTING.md`).
+
+### Plan deviations
+
+When the implementation departs from the plan, add `docs/deviations/YYYY-MM-DD-<topic>.md` with the sections
+Date, Original Plan, What Changed, Justification and Impact.
+
+## Skills
+
+Task-specific guidance lives in `.claude/skills/`: `widgets` (catalog and renderers), `themes` (theme packs),
+`server` (data, protocol, deployment).
