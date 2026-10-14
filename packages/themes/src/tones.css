@@ -1,0 +1,25 @@
+/* Tone roles resolve to the active theme's palette. Renderers set data-tone and read var(--tone). */
+[data-tone="primary"] {
+  --tone: var(--tone-primary);
+}
+[data-tone="secondary"] {
+  --tone: var(--tone-secondary);
+}
+[data-tone="accent"] {
+  --tone: var(--tone-accent);
+}
+[data-tone="info"] {
+  --tone: var(--tone-info);
+}
+[data-tone="neutral"] {
+  --tone: var(--tone-neutral);
+}
+[data-tone="success"] {
+  --tone: var(--tone-success);
+}
+[data-tone="warning"] {
+  --tone: var(--tone-warning);
+}
+[data-tone="danger"] {
+  --tone: var(--tone-danger);
+}

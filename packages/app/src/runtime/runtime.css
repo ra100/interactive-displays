@@ -1,0 +1,113 @@
+/*
+ * Theme-independent layout. The screen unit --u is 1% of the display's shorter side; it is
+ * registered as a length so it resolves once on .screen and every widget inherits the same value.
+ */
+@property --u {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 1px;
+}
+
+.screen-frame {
+  container-type: size;
+  display: grid;
+  place-items: center;
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+  background: #000;
+}
+
+.screen {
+  --u: 1cqmin;
+  display: flex;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: calc(2 * var(--u));
+  overflow: hidden;
+  background: var(--theme-bg);
+  color: var(--theme-fg);
+  font-family: var(--font-body);
+}
+
+.screen[data-fit="contain"] {
+  width: min(100cqw, calc(100cqh * var(--aspect-ratio)));
+  height: min(100cqh, calc(100cqw / var(--aspect-ratio)));
+}
+
+.screen > * {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.stack {
+  display: flex;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.stack[data-direction="row"] {
+  flex-direction: row;
+}
+
+.stack[data-direction="column"] {
+  flex-direction: column;
+}
+
+.stack[data-gap="none"] {
+  gap: 0;
+}
+
+.stack[data-gap="small"] {
+  gap: var(--u);
+}
+
+.stack[data-gap="medium"] {
+  gap: calc(2 * var(--u));
+}
+
+.stack[data-gap="large"] {
+  gap: calc(4 * var(--u));
+}
+
+/* flex-grow comes from the child's weight. */
+.stack__item {
+  display: flex;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+  min-height: 0;
+}
+
+.stack__item > * {
+  flex: 1;
+}
+
+/* Widgets size their type to their own box with cq* units. */
+.widget-slot {
+  container-type: size;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
+.widget-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(0.5 * var(--u));
+  box-sizing: border-box;
+  height: 100%;
+  border: calc(0.3 * var(--u)) dashed var(--tone-warning);
+  color: var(--tone-warning);
+  font-family: var(--font-body);
+  font-size: calc(2 * var(--u));
+  text-transform: uppercase;
+  opacity: 0.7;
+}
