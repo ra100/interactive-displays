@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "id": "demo",
+  "name": "Demo Show",
+  "theme": { "id": "base" },
+  "defaultScreen": "welcome",
+  "displays": [{ "id": "test", "name": "Test display" }]
+}
