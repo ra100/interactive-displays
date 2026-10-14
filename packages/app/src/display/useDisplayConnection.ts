@@ -13,6 +13,8 @@ export interface DisplayConnection {
   status: ConnectionStatus;
   snapshot: DisplaySnapshot | null;
   error: string | null;
+  // The latest identify request; `at` tells repeated requests for the same label apart.
+  identify: { label: string; at: number } | null;
 }
 
 const RELOAD_KEY = "interactive-displays.protocolReload";
@@ -35,6 +37,7 @@ export const useDisplayConnection = (displayId: string): DisplayConnection => {
     status: "connecting",
     snapshot: null,
     error: null,
+    identify: null,
   });
 
   useEffect(() => {
@@ -63,7 +66,18 @@ export const useDisplayConnection = (displayId: string): DisplayConnection => {
         snapshot.protocol === PROTOCOL_VERSION
           ? null
           : `This display runs protocol ${PROTOCOL_VERSION}, the server ${snapshot.protocol}. Clear the browser cache.`;
-      setConnection({ status: "connected", snapshot, error });
+      setConnection((current) => ({ ...current, status: "connected", snapshot, error }));
+    });
+
+    // Show-wide state changes arrive as a small event, not a snapshot, to stay inside the 100 ms budget.
+    socket.on("state", ({ state }) => {
+      setConnection((current) =>
+        current.snapshot ? { ...current, snapshot: { ...current.snapshot, state } } : current,
+      );
+    });
+
+    socket.on("identify", ({ label }) => {
+      setConnection((current) => ({ ...current, identify: { label, at: Date.now() } }));
     });
 
     socket.on("error", (error) => {

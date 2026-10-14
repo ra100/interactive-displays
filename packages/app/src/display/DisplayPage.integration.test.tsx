@@ -1,8 +1,9 @@
 import { type DisplaySnapshot, PROTOCOL_VERSION, ScreenSchema } from "@interactive-displays/core";
 import { act, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "../App.tsx";
+import { IDENTIFY_MS } from "./IdentifyOverlay.tsx";
 
 const fake = vi.hoisted(() => {
   const handlers = new Map<string, (payload?: unknown) => void>();
@@ -41,7 +42,16 @@ const serverSends = (event: string, payload?: unknown) => {
 
 const snapshot = (overrides: Partial<DisplaySnapshot> = {}): DisplaySnapshot => ({
   protocol: PROTOCOL_VERSION,
-  show: { id: "demo", name: "Demo Show", theme: { id: "base" } },
+  show: {
+    id: "demo",
+    name: "Demo Show",
+    theme: { id: "base" },
+    states: [
+      { id: "normal", label: "Normal", effect: "none" },
+      { id: "red-alert", label: "Red alert", effect: "alert", banner: "RED ALERT" },
+    ],
+  },
+  state: "normal",
   display: { id: "bridge-1" },
   screen: ScreenSchema.parse({
     schemaVersion: 1,
@@ -53,6 +63,15 @@ const snapshot = (overrides: Partial<DisplaySnapshot> = {}): DisplaySnapshot => 
       layout: { kind: "stack", direction: "column" },
       children: [
         { node: { id: "title", type: "widget", kind: "title", props: { text: "WELCOME ABOARD" } } },
+        {
+          node: {
+            id: "status",
+            type: "widget",
+            kind: "text",
+            props: { text: "ALL CLEAR" },
+            when: [{ state: "red-alert", props: { text: "BATTLE STATIONS", tone: "danger" } }],
+          },
+        },
         { node: { id: "go", type: "widget", kind: "button", props: { label: "ENGAGE" } } },
       ],
     },
@@ -116,13 +135,55 @@ describe("display page", () => {
     expect(fake.calls.connect).toBe(1);
   });
 
-  it("says when no screen is assigned", () => {
+  it("says when no screen is assigned, with the display id in large type", () => {
     renderAt("/d/bridge-1");
     serverSends("connect");
     serverSends("snapshot", snapshot({ screen: null }));
 
     expect(screen.getByText("NO SCREEN ASSIGNED")).toBeInTheDocument();
-    expect(screen.getByText("bridge-1 · Demo Show")).toBeInTheDocument();
+    expect(screen.getByText("bridge-1")).toHaveClass("status-message__code");
+    expect(screen.getByText("Demo Show")).toBeInTheDocument();
+  });
+
+  it("switches state from a state event without a new snapshot", () => {
+    const { container } = renderAt("/d/bridge-1");
+    serverSends("connect");
+    serverSends("snapshot", snapshot());
+    expect(screen.getByText("ALL CLEAR")).toBeInTheDocument();
+
+    serverSends("state", { state: "red-alert" });
+
+    const root = container.querySelector(".screen");
+    expect(root).toHaveAttribute("data-state", "red-alert");
+    expect(root).toHaveAttribute("data-effect", "alert");
+    expect(screen.getByText("BATTLE STATIONS")).toHaveAttribute("data-tone", "danger");
+  });
+
+  it("starts in the state from the snapshot", () => {
+    const { container } = renderAt("/d/bridge-1");
+    serverSends("connect");
+    serverSends("snapshot", snapshot({ state: "red-alert" }));
+
+    expect(container.querySelector(".screen")).toHaveAttribute("data-effect", "alert");
+  });
+
+  it("previews another theme and variant from the URL", () => {
+    const { container } = renderAt("/d/bridge-1?theme=lcars&variant=picard");
+    serverSends("connect");
+    serverSends("snapshot", snapshot());
+
+    const root = container.querySelector(".screen");
+    expect(root).toHaveAttribute("data-theme", "lcars");
+    expect(root).toHaveAttribute("data-variant", "picard");
+  });
+
+  it("renders an unknown state as normal", () => {
+    const { container } = renderAt("/d/bridge-1");
+    serverSends("connect");
+    serverSends("snapshot", snapshot({ state: "mystery" }));
+
+    expect(container.querySelector(".screen")).toHaveAttribute("data-effect", "none");
+    expect(screen.getByText("ALL CLEAR")).toBeInTheDocument();
   });
 
   it("shows a server error before any snapshot", () => {
@@ -161,5 +222,30 @@ describe("display page", () => {
     localStorage.setItem("interactive-displays.displayId", "bridge-7");
     renderAt("/");
     expect(screen.getByText("bridge-7")).toBeInTheDocument();
+  });
+});
+
+describe("identify", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("flashes the label over the screen for a few seconds", () => {
+    renderAt("/d/bridge-1");
+    serverSends("connect");
+    serverSends("snapshot", snapshot());
+    serverSends("identify", { label: "Bridge 1" });
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Bridge 1");
+    expect(screen.getByRole("heading", { name: "WELCOME ABOARD" })).toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(IDENTIFY_MS);
+    });
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });

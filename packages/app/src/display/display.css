@@ -45,3 +45,44 @@ body,
   letter-spacing: 0.1em;
   pointer-events: none;
 }
+
+.status-message__code {
+  margin: 2vmin 0;
+  color: #e6e9ee;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 14vmin;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+/* Identify: the display's name over everything, with a blinking border, for a few seconds. */
+@keyframes identify-blink {
+  50% {
+    border-color: transparent;
+  }
+}
+
+.identify-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  border: 2vmin solid #fff;
+  background: rgb(0 0 0 / 75%);
+  animation: identify-blink 0.5s steps(1) 10;
+  pointer-events: none;
+}
+
+.identify-overlay__label {
+  margin: 0;
+  padding: 0 4vmin;
+  color: #fff;
+  font-family: system-ui, sans-serif;
+  font-size: 16vmin;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-transform: uppercase;
+}
