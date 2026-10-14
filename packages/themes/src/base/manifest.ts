@@ -1,9 +1,11 @@
 import { defineTheme } from "@interactive-displays/core";
 
-// Neutral fallback theme: renders every widget and keeps the model honest about not depending on one look.
+// Neutral fallback theme: renders every widget and frame, and keeps the model honest about not depending
+// on one look. It doubles as the editor's wireframe view.
 export const base = defineTheme({
   id: "base",
   name: "Base",
+  description: "Neutral, readable wireframe look. Every other theme falls back to it.",
   tokens: {
     palette: {
       primary: "#5b9dff",
@@ -23,4 +25,10 @@ export const base = defineTheme({
     },
     radius: "small",
   },
+  effects: {
+    warning: { tokens: { palette: { primary: "#f2c94c" } } },
+    alert: { tokens: { palette: { primary: "#ff5c5c", secondary: "#ff9c9c" }, background: "#1a0b0d" } },
+    damaged: { tokens: { palette: { primary: "#6b7480", secondary: "#59616b", accent: "#7a6a55" } } },
+  },
+  archetypes: ["sidebar", "header-main", "dashboard"],
 });

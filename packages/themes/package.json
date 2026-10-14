@@ -13,7 +13,9 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@interactive-displays/core": "workspace:*"
+    "@fontsource/antonio": "~5.2.0",
+    "@interactive-displays/core": "workspace:*",
+    "zod": "^4.3.6"
   },
   "peerDependencies": {
     "react": "^19.0.0"

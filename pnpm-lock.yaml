@@ -116,9 +116,15 @@ importers:
 
   packages/themes:
     dependencies:
+      '@fontsource/antonio':
+        specifier: ~5.2.0
+        version: 5.2.8
       '@interactive-displays/core':
         specifier: workspace:*
         version: link:../core
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
     devDependencies:
       '@testing-library/jest-dom':
         specifier: ^6.9.1
@@ -483,6 +489,9 @@ packages:
 
   '@fastify/static@10.1.6':
     resolution: {integrity: sha512-f3x9XisI+y6AIhIfA/+Q3SFsuXeqNNk5HQh5htgHsPxmMLb4pLFskV6eFaLSW3IbI4azrS5np+/tkzXNH99LyQ==}
+
+  '@fontsource/antonio@5.2.8':
+    resolution: {integrity: sha512-kDt+PP5i0uj06l8mFfzozVbnYTAmHvedLEIOcT4TDUkBrY8R6N3Lvl2pU48SajpcVyc2xfi7zht0bnBUrVzvPQ==}
 
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
@@ -2198,6 +2207,8 @@ snapshots:
       fastify-plugin: 6.0.1
       fastq: 1.20.1
       glob: 13.0.6
+
+  '@fontsource/antonio@5.2.8': {}
 
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:
