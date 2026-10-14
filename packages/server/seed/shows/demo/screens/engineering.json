@@ -1,0 +1,503 @@
+{
+  "schemaVersion": 1,
+  "id": "engineering",
+  "name": "Main engineering",
+  "tags": [
+    "demo",
+    "lcars"
+  ],
+  "profile": {
+    "aspect": "16:9",
+    "fit": "fluid"
+  },
+  "root": {
+    "id": "root",
+    "type": "container",
+    "layout": {
+      "kind": "frame",
+      "archetype": "header-main"
+    },
+    "children": [
+      {
+        "slot": "title",
+        "node": {
+          "id": "title",
+          "type": "widget",
+          "kind": "title",
+          "props": {
+            "text": "Main engineering",
+            "code": "04-1977"
+          }
+        }
+      },
+      {
+        "slot": "toolbar",
+        "node": {
+          "id": "tool-core",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Warp core",
+            "tone": "primary"
+          }
+        }
+      },
+      {
+        "slot": "toolbar",
+        "node": {
+          "id": "tool-eps",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "EPS grid",
+            "tone": "secondary"
+          }
+        }
+      },
+      {
+        "slot": "toolbar",
+        "node": {
+          "id": "tool-dilithium",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Dilithium",
+            "tone": "accent"
+          }
+        }
+      },
+      {
+        "slot": "toolbar",
+        "node": {
+          "id": "tool-damage",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Diagnostics",
+            "tone": "info"
+          },
+          "when": [
+            {
+              "state": "damaged",
+              "props": {
+                "label": "Damage control",
+                "tone": "danger"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slot": "main",
+        "node": {
+          "id": "body",
+          "type": "container",
+          "layout": {
+            "kind": "grid",
+            "columns": [
+              "2fr",
+              "1fr"
+            ],
+            "rows": [
+              "1fr",
+              "1fr"
+            ],
+            "gap": "large"
+          },
+          "children": [
+            {
+              "area": {
+                "col": 1,
+                "row": 1
+              },
+              "node": {
+                "id": "core",
+                "type": "container",
+                "layout": {
+                  "kind": "stack",
+                  "direction": "column",
+                  "gap": "medium"
+                },
+                "children": [
+                  {
+                    "weight": 1,
+                    "node": {
+                      "id": "core-title",
+                      "type": "widget",
+                      "kind": "title",
+                      "props": {
+                        "text": "Warp core",
+                        "code": "M/ARA-01",
+                        "tone": "primary"
+                      }
+                    }
+                  },
+                  {
+                    "weight": 2,
+                    "node": {
+                      "id": "core-text",
+                      "type": "widget",
+                      "kind": "text",
+                      "props": {
+                        "text": "Matter/antimatter reaction assembly stable. Intermix ratio 1:1. Dilithium matrix aligned.",
+                        "size": "medium"
+                      },
+                      "when": [
+                        {
+                          "state": "damaged",
+                          "props": {
+                            "text": "Magnetic constriction failing. Prepare to eject the warp core.",
+                            "tone": "danger"
+                          }
+                        },
+                        {
+                          "state": "red-alert",
+                          "props": {
+                            "text": "Core output at 104%. Holding at maximum warp.",
+                            "tone": "warning"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "area": {
+                "col": 2,
+                "row": 1,
+                "rowSpan": 2
+              },
+              "node": {
+                "id": "eps",
+                "type": "container",
+                "layout": {
+                  "kind": "stack",
+                  "direction": "column",
+                  "gap": "small"
+                },
+                "children": [
+                  {
+                    "weight": 1.5,
+                    "node": {
+                      "id": "eps-title",
+                      "type": "widget",
+                      "kind": "title",
+                      "props": {
+                        "text": "EPS taps",
+                        "tone": "info"
+                      }
+                    }
+                  },
+                  {
+                    "weight": 1,
+                    "node": {
+                      "id": "eps-1",
+                      "type": "container",
+                      "layout": {
+                        "kind": "stack",
+                        "direction": "row",
+                        "gap": "small"
+                      },
+                      "children": [
+                        {
+                          "weight": 3,
+                          "node": {
+                            "id": "eps-1-label",
+                            "type": "widget",
+                            "kind": "text",
+                            "props": {
+                              "text": "Deck 1\u201310",
+                              "size": "small",
+                              "tone": "neutral"
+                            }
+                          }
+                        },
+                        {
+                          "weight": 2,
+                          "node": {
+                            "id": "eps-1-value",
+                            "type": "widget",
+                            "kind": "text",
+                            "props": {
+                              "text": "98%",
+                              "size": "small",
+                              "tone": "secondary"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "weight": 1,
+                    "node": {
+                      "id": "eps-2",
+                      "type": "container",
+                      "layout": {
+                        "kind": "stack",
+                        "direction": "row",
+                        "gap": "small"
+                      },
+                      "children": [
+                        {
+                          "weight": 3,
+                          "node": {
+                            "id": "eps-2-label",
+                            "type": "widget",
+                            "kind": "text",
+                            "props": {
+                              "text": "Deck 11\u201320",
+                              "size": "small",
+                              "tone": "neutral"
+                            }
+                          }
+                        },
+                        {
+                          "weight": 2,
+                          "node": {
+                            "id": "eps-2-value",
+                            "type": "widget",
+                            "kind": "text",
+                            "props": {
+                              "text": "97%",
+                              "size": "small",
+                              "tone": "secondary"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "weight": 1,
+                    "node": {
+                      "id": "eps-3",
+                      "type": "container",
+                      "layout": {
+                        "kind": "stack",
+                        "direction": "row",
+                        "gap": "small"
+                      },
+                      "children": [
+                        {
+                          "weight": 3,
+                          "node": {
+                            "id": "eps-3-label",
+                            "type": "widget",
+                            "kind": "text",
+                            "props": {
+                              "text": "Deck 21\u201330",
+                              "size": "small",
+                              "tone": "neutral"
+                            }
+                          }
+                        },
+                        {
+                          "weight": 2,
+                          "node": {
+                            "id": "eps-3-value",
+                            "type": "widget",
+                            "kind": "text",
+                            "props": {
+                              "text": "99%",
+                              "size": "small",
+                              "tone": "secondary"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "weight": 1,
+                    "node": {
+                      "id": "eps-4",
+                      "type": "container",
+                      "layout": {
+                        "kind": "stack",
+                        "direction": "row",
+                        "gap": "small"
+                      },
+                      "children": [
+                        {
+                          "weight": 3,
+                          "node": {
+                            "id": "eps-4-label",
+                            "type": "widget",
+                            "kind": "text",
+                            "props": {
+                              "text": "Deck 31\u201342",
+                              "size": "small",
+                              "tone": "neutral"
+                            }
+                          }
+                        },
+                        {
+                          "weight": 2,
+                          "node": {
+                            "id": "eps-4-value",
+                            "type": "widget",
+                            "kind": "text",
+                            "props": {
+                              "text": "96%",
+                              "size": "small",
+                              "tone": "secondary"
+                            }
+                          }
+                        }
+                      ],
+                      "when": [
+                        {
+                          "state": "damaged",
+                          "hidden": true
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "area": {
+                "col": 1,
+                "row": 2
+              },
+              "node": {
+                "id": "systems",
+                "type": "container",
+                "layout": {
+                  "kind": "grid",
+                  "columns": [
+                    "1fr",
+                    "1fr",
+                    "1fr"
+                  ],
+                  "rows": [
+                    "1fr",
+                    "1fr"
+                  ],
+                  "gap": "small"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "sys-impulse",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Impulse",
+                        "tone": "secondary"
+                      }
+                    }
+                  },
+                  {
+                    "node": {
+                      "id": "sys-deflector",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Deflector",
+                        "tone": "info"
+                      }
+                    }
+                  },
+                  {
+                    "node": {
+                      "id": "sys-sif",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Integrity field",
+                        "tone": "accent"
+                      }
+                    }
+                  },
+                  {
+                    "node": {
+                      "id": "sys-life",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Life support",
+                        "tone": "success"
+                      }
+                    }
+                  },
+                  {
+                    "node": {
+                      "id": "sys-transporter",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Transporters",
+                        "tone": "neutral"
+                      }
+                    }
+                  },
+                  {
+                    "node": {
+                      "id": "sys-eject",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Core eject",
+                        "tone": "neutral"
+                      },
+                      "when": [
+                        {
+                          "state": "damaged",
+                          "props": {
+                            "tone": "danger"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slot": "status",
+        "node": {
+          "id": "status-line",
+          "type": "widget",
+          "kind": "text",
+          "props": {
+            "text": "ALL ENGINEERING SYSTEMS NOMINAL \u00b7 CHIEF ENGINEER ON DUTY",
+            "size": "small",
+            "tone": "secondary"
+          },
+          "when": [
+            {
+              "state": "yellow-alert",
+              "props": {
+                "text": "YELLOW ALERT \u00b7 SHIELDS UP \u00b7 ALL DECKS STAND BY",
+                "tone": "warning"
+              }
+            },
+            {
+              "state": "red-alert",
+              "props": {
+                "text": "RED ALERT \u00b7 ALL HANDS TO BATTLE STATIONS",
+                "tone": "danger"
+              }
+            },
+            {
+              "state": "damaged",
+              "props": {
+                "text": "HULL BREACH DECK 12 \u00b7 DAMAGE CONTROL TEAMS REPORT",
+                "tone": "danger"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "section": "engineering"
+}

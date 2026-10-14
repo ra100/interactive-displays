@@ -2,37 +2,45 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import fastifyStatic from "@fastify/static";
 import { PROTOCOL_VERSION } from "@interactive-displays/core";
+import { decorCatalog } from "@interactive-displays/themes/manifest";
 import Fastify, { type FastifyInstance } from "fastify";
 import { Server } from "socket.io";
 import type { Config } from "./config.ts";
+import { registerApi } from "./http/api.ts";
 import { SEED_DIR } from "./paths.ts";
 import { attachRealtime, countDisplays, type RealtimeServer } from "./realtime.ts";
+import { createShowService } from "./showService.ts";
 import { ensureSeeded, loadActiveShow } from "./storage/repository.ts";
 
 const hasFileExtension = (url: string): boolean => path.extname(url.split("?")[0] ?? "") !== "";
 
-// One process, one port: health check, Socket.io and the built app.
+// One process, one port: health check, REST API, Socket.io and the built app.
 export const buildServer = async (config: Config): Promise<FastifyInstance> => {
   const app = Fastify({ logger: { level: config.logLevel } });
 
   await ensureSeeded(config.dataDir, SEED_DIR, app.log);
-  const loaded = await loadActiveShow(config.dataDir, app.log);
+  const loaded = await loadActiveShow(config.dataDir, decorCatalog, app.log);
+  const service = createShowService({ dataDir: config.dataDir, decor: decorCatalog, log: app.log, loaded });
 
   const io: RealtimeServer = new Server(app.server, { serveClient: false });
-  attachRealtime(io, () => loaded);
+  attachRealtime(io, service);
 
   // Long-lived sockets would otherwise keep the HTTP server from closing. Closing the transports
   // (rather than disconnecting sockets) tells displays to reconnect on their own once we are back.
   app.addHook("preClose", async () => {
     io.engine.close();
+    await service.flush();
   });
 
   app.get("/health", async () => ({
     status: loaded ? "ok" : "degraded",
     protocol: PROTOCOL_VERSION,
     show: loaded?.show.id ?? null,
+    state: loaded ? service.state() : null,
     displays: countDisplays(io),
   }));
+
+  registerApi(app, service, io);
 
   if (existsSync(path.join(config.appDist, "index.html"))) {
     await app.register(fastifyStatic, {
@@ -48,7 +56,7 @@ export const buildServer = async (config: Config): Promise<FastifyInstance> => {
     app.log.warn({ appDist: config.appDist }, "App build not found; run `pnpm build`. Serving the API only.");
   }
 
-  // Client-side routes (/d/bridge-1) get the app shell; missing files and API paths stay 404.
+  // Client-side routes (/d/bridge-1, /gallery) get the app shell; missing files and API paths stay 404.
   app.setNotFoundHandler((request, reply) => {
     const wantsAppShell =
       request.method === "GET" &&

@@ -94,6 +94,9 @@ importers:
       '@interactive-displays/core':
         specifier: workspace:*
         version: link:../core
+      '@interactive-displays/themes':
+        specifier: workspace:*
+        version: link:../themes
       fastify:
         specifier: ^5.12.4
         version: 5.12.7

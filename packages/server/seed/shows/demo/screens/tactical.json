@@ -1,0 +1,400 @@
+{
+  "schemaVersion": 1,
+  "id": "tactical",
+  "name": "Tactical",
+  "tags": [
+    "demo",
+    "lcars"
+  ],
+  "profile": {
+    "aspect": "16:9",
+    "fit": "fluid"
+  },
+  "root": {
+    "id": "root",
+    "type": "container",
+    "layout": {
+      "kind": "frame",
+      "archetype": "dashboard"
+    },
+    "children": [
+      {
+        "slot": "title",
+        "node": {
+          "id": "title",
+          "type": "widget",
+          "kind": "title",
+          "props": {
+            "text": "Tactical",
+            "code": "03-1984",
+            "tone": "danger"
+          }
+        }
+      },
+      {
+        "slot": "main",
+        "node": {
+          "id": "weapons",
+          "type": "container",
+          "layout": {
+            "kind": "stack",
+            "direction": "column",
+            "gap": "medium"
+          },
+          "children": [
+            {
+              "weight": 1,
+              "node": {
+                "id": "weapons-title",
+                "type": "widget",
+                "kind": "title",
+                "props": {
+                  "text": "Weapons",
+                  "code": "TAC-7",
+                  "tone": "primary"
+                }
+              }
+            },
+            {
+              "weight": 4,
+              "node": {
+                "id": "weapons-grid",
+                "type": "container",
+                "layout": {
+                  "kind": "grid",
+                  "columns": [
+                    "1fr",
+                    "1fr"
+                  ],
+                  "rows": [
+                    "1fr",
+                    "1fr"
+                  ],
+                  "gap": "medium"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "w-phasers",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Phasers",
+                        "tone": "primary"
+                      }
+                    }
+                  },
+                  {
+                    "node": {
+                      "id": "w-torpedoes",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Photon torpedoes",
+                        "tone": "danger"
+                      }
+                    }
+                  },
+                  {
+                    "node": {
+                      "id": "w-lock",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Target lock",
+                        "tone": "warning"
+                      }
+                    }
+                  },
+                  {
+                    "node": {
+                      "id": "w-evasive",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Evasive pattern",
+                        "tone": "info"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "weight": 1,
+              "node": {
+                "id": "weapons-text",
+                "type": "widget",
+                "kind": "text",
+                "props": {
+                  "text": "Phaser banks charged. 250 torpedoes in the magazine.",
+                  "size": "small"
+                },
+                "when": [
+                  {
+                    "state": "red-alert",
+                    "props": {
+                      "text": "Weapons armed. Firing solution ready.",
+                      "tone": "danger"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slot": "aside",
+        "node": {
+          "id": "shields",
+          "type": "container",
+          "layout": {
+            "kind": "stack",
+            "direction": "column",
+            "gap": "small"
+          },
+          "children": [
+            {
+              "weight": 1.5,
+              "node": {
+                "id": "shields-title",
+                "type": "widget",
+                "kind": "title",
+                "props": {
+                  "text": "Shields",
+                  "tone": "info"
+                }
+              }
+            },
+            {
+              "weight": 1,
+              "node": {
+                "id": "sh-fwd",
+                "type": "container",
+                "layout": {
+                  "kind": "stack",
+                  "direction": "row",
+                  "gap": "small"
+                },
+                "children": [
+                  {
+                    "weight": 3,
+                    "node": {
+                      "id": "sh-fwd-label",
+                      "type": "widget",
+                      "kind": "text",
+                      "props": {
+                        "text": "Forward",
+                        "size": "small",
+                        "tone": "neutral"
+                      }
+                    }
+                  },
+                  {
+                    "weight": 2,
+                    "node": {
+                      "id": "sh-fwd-value",
+                      "type": "widget",
+                      "kind": "text",
+                      "props": {
+                        "text": "100%",
+                        "size": "small",
+                        "tone": "success"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "weight": 1,
+              "node": {
+                "id": "sh-aft",
+                "type": "container",
+                "layout": {
+                  "kind": "stack",
+                  "direction": "row",
+                  "gap": "small"
+                },
+                "children": [
+                  {
+                    "weight": 3,
+                    "node": {
+                      "id": "sh-aft-label",
+                      "type": "widget",
+                      "kind": "text",
+                      "props": {
+                        "text": "Aft",
+                        "size": "small",
+                        "tone": "neutral"
+                      }
+                    }
+                  },
+                  {
+                    "weight": 2,
+                    "node": {
+                      "id": "sh-aft-value",
+                      "type": "widget",
+                      "kind": "text",
+                      "props": {
+                        "text": "100%",
+                        "size": "small",
+                        "tone": "success"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "weight": 1,
+              "node": {
+                "id": "sh-port",
+                "type": "container",
+                "layout": {
+                  "kind": "stack",
+                  "direction": "row",
+                  "gap": "small"
+                },
+                "children": [
+                  {
+                    "weight": 3,
+                    "node": {
+                      "id": "sh-port-label",
+                      "type": "widget",
+                      "kind": "text",
+                      "props": {
+                        "text": "Port",
+                        "size": "small",
+                        "tone": "neutral"
+                      }
+                    }
+                  },
+                  {
+                    "weight": 2,
+                    "node": {
+                      "id": "sh-port-value",
+                      "type": "widget",
+                      "kind": "text",
+                      "props": {
+                        "text": "100%",
+                        "size": "small",
+                        "tone": "success"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "weight": 1,
+              "node": {
+                "id": "sh-stbd",
+                "type": "container",
+                "layout": {
+                  "kind": "stack",
+                  "direction": "row",
+                  "gap": "small"
+                },
+                "children": [
+                  {
+                    "weight": 3,
+                    "node": {
+                      "id": "sh-stbd-label",
+                      "type": "widget",
+                      "kind": "text",
+                      "props": {
+                        "text": "Starboard",
+                        "size": "small",
+                        "tone": "neutral"
+                      }
+                    }
+                  },
+                  {
+                    "weight": 2,
+                    "node": {
+                      "id": "sh-stbd-value",
+                      "type": "widget",
+                      "kind": "text",
+                      "props": {
+                        "text": "100%",
+                        "size": "small",
+                        "tone": "success"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "weight": 1.5,
+              "node": {
+                "id": "shields-mode",
+                "type": "widget",
+                "kind": "button",
+                "props": {
+                  "label": "Raise shields",
+                  "tone": "info"
+                },
+                "when": [
+                  {
+                    "state": "yellow-alert",
+                    "props": {
+                      "label": "Shields up",
+                      "tone": "warning"
+                    }
+                  },
+                  {
+                    "state": "red-alert",
+                    "props": {
+                      "label": "Shields up",
+                      "tone": "danger"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slot": "status",
+        "node": {
+          "id": "status-line",
+          "type": "widget",
+          "kind": "text",
+          "props": {
+            "text": "NO CONTACTS \u00b7 LONG RANGE SENSORS CLEAR",
+            "size": "small",
+            "tone": "secondary"
+          },
+          "when": [
+            {
+              "state": "yellow-alert",
+              "props": {
+                "text": "YELLOW ALERT \u00b7 SHIELDS UP \u00b7 ALL DECKS STAND BY",
+                "tone": "warning"
+              }
+            },
+            {
+              "state": "red-alert",
+              "props": {
+                "text": "RED ALERT \u00b7 ALL HANDS TO BATTLE STATIONS",
+                "tone": "danger"
+              }
+            },
+            {
+              "state": "damaged",
+              "props": {
+                "text": "HULL BREACH DECK 12 \u00b7 DAMAGE CONTROL TEAMS REPORT",
+                "tone": "danger"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "section": "tactical"
+}

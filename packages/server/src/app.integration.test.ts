@@ -1,111 +1,65 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import {
-  type ClientToServerEvents,
-  type DisplaySnapshot,
-  PROTOCOL_VERSION,
-  type ProtocolError,
-  type ServerToClientEvents,
-} from "@interactive-displays/core";
-import type { FastifyInstance } from "fastify";
-import { io as connect, type Socket } from "socket.io-client";
+import { PROTOCOL_VERSION } from "@interactive-displays/core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { buildServer } from "./app.ts";
-import type { Config } from "./config.ts";
+import { createTestServer } from "./testing/testServer.ts";
 
-type Client = Socket<ServerToClientEvents, ClientToServerEvents>;
+const server = createTestServer();
 
-let root: string;
-let config: Config;
-let app: FastifyInstance | undefined;
-const clients: Client[] = [];
-
-const start = async (): Promise<string> => {
-  app = await buildServer(config);
-  await app.listen({ port: 0, host: "127.0.0.1" });
-  const address = app.server.address();
-  if (!address || typeof address === "string") throw new Error("no address");
-  return `http://127.0.0.1:${address.port}`;
-};
-
-const stop = async () => {
-  for (const client of clients.splice(0)) client.disconnect();
-  await app?.close();
-  app = undefined;
-};
-
-const hello = (url: string, payload: unknown): Promise<DisplaySnapshot | ProtocolError> =>
-  new Promise((resolve, reject) => {
-    const client: Client = connect(url, { transports: ["websocket"], reconnection: false });
-    clients.push(client);
-    client.on("connect_error", reject);
-    client.on("snapshot", resolve);
-    client.on("error", resolve);
-    client.on("connect", () => {
-      (client.emit as (event: string, payload: unknown) => void)("hello", payload);
-    });
-  });
-
-const displayHello = (displayId: string) => ({ role: "display", displayId, protocol: PROTOCOL_VERSION });
-
-beforeEach(async () => {
-  root = await mkdtemp(path.join(tmpdir(), "displays-app-"));
-  const appDist = path.join(root, "dist");
-  await mkdir(path.join(appDist, "assets"), { recursive: true });
-  await writeFile(path.join(appDist, "index.html"), "<!doctype html><title>shell</title>");
-  await writeFile(path.join(appDist, "assets", "app-123.js"), "console.log(1)");
-  config = { port: 0, host: "127.0.0.1", dataDir: path.join(root, "data"), appDist, logLevel: "silent" };
-});
-
-afterEach(async () => {
-  await stop();
-  await rm(root, { recursive: true, force: true });
-});
+beforeEach(server.setup);
+afterEach(server.teardown);
 
 describe("server", () => {
   it("reports health with the seeded demo show", async () => {
-    const url = await start();
-    const response = await fetch(`${url}/health`);
+    await server.start();
+    const { body } = await server.api("GET", "/health");
 
-    expect(await response.json()).toEqual({ status: "ok", protocol: PROTOCOL_VERSION, show: "demo", displays: 0 });
+    expect(body).toEqual({ status: "ok", protocol: PROTOCOL_VERSION, show: "demo", state: "normal", displays: 0 });
   });
 
-  it("sends a snapshot with the default screen in reply to hello", async () => {
-    const url = await start();
-    const snapshot = (await hello(url, displayHello("bridge-1"))) as DisplaySnapshot;
+  it("sends a snapshot with the default screen, theme and states in reply to hello", async () => {
+    await server.start();
+    const { snapshot } = await server.display("bridge-1");
 
     expect(snapshot.protocol).toBe(PROTOCOL_VERSION);
-    expect(snapshot.show).toEqual({ id: "demo", name: "Demo Show", theme: { id: "base" } });
+    expect(snapshot.show).toMatchObject({ id: "demo", name: "Demo Show", theme: { id: "lcars" } });
+    expect(snapshot.show.states.map((state) => state.id)).toEqual([
+      "normal",
+      "yellow-alert",
+      "red-alert",
+      "damaged",
+      "blackout",
+    ]);
+    expect(snapshot.state).toBe("normal");
     expect(snapshot.display).toEqual({ id: "bridge-1" });
-    expect(snapshot.screen?.id).toBe("welcome");
+    expect(snapshot.screen?.id).toBe("bridge");
   });
 
-  it("includes the display's name from the show", async () => {
-    const url = await start();
-    const snapshot = (await hello(url, displayHello("test"))) as DisplaySnapshot;
+  it("sends an assigned display its own screen and name", async () => {
+    await server.start();
+    const { snapshot } = await server.display("engineering-1");
 
-    expect(snapshot.display).toEqual({ id: "test", name: "Test display" });
+    expect(snapshot.display).toEqual({ id: "engineering-1", name: "Engineering 1" });
+    expect(snapshot.screen?.id).toBe("engineering");
   });
 
   it("counts connected displays", async () => {
-    const url = await start();
-    await hello(url, displayHello("a"));
-    await hello(url, displayHello("b"));
+    await server.start();
+    await server.display("a");
+    await server.display("b");
 
-    const health = (await (await fetch(`${url}/health`)).json()) as { displays: number };
-    expect(health.displays).toBe(2);
+    expect((await server.api<{ displays: number }>("GET", "/health")).body.displays).toBe(2);
   });
 
   it("rejects an invalid hello", async () => {
-    const url = await start();
-    const reply = await hello(url, { role: "display", displayId: "../../etc" });
+    await server.start();
+    const { reply } = await server.hello({ role: "display", displayId: "../../etc" });
 
     expect(reply).toMatchObject({ code: "INVALID_HELLO" });
   });
 
   it("serves the app shell for client routes and 404 for missing files", async () => {
-    const url = await start();
+    const url = await server.start();
 
     const shell = await fetch(`${url}/d/bridge-1`);
     expect(shell.status).toBe(200);
@@ -119,28 +73,30 @@ describe("server", () => {
     expect((await fetch(`${url}/api/nothing`)).status).toBe(404);
   });
 
-  it("keeps its data across a restart", async () => {
-    await start();
-    await stop();
+  it("keeps its data and state across a restart", async () => {
+    await server.start();
+    await server.api("POST", "/api/state", { state: "red-alert" });
+    await server.stop();
 
     // Edit the data while the server is down; the next start must read it, not re-seed.
-    const screenFile = path.join(config.dataDir, "shows/demo/screens/welcome.json");
+    const screenFile = path.join(server.config().dataDir, "shows/demo/screens/bridge.json");
     const screen = JSON.parse(await readFile(screenFile, "utf8"));
     await writeFile(screenFile, JSON.stringify({ ...screen, name: "Edited" }));
 
-    const url = await start();
-    const snapshot = (await hello(url, displayHello("bridge-1"))) as DisplaySnapshot;
+    await server.start();
+    const { snapshot } = await server.display("bridge-1");
     expect(snapshot.screen?.name).toBe("Edited");
+    expect(snapshot.state).toBe("red-alert");
   });
 
   it("tells displays when there is no usable show", async () => {
-    await mkdir(config.dataDir, { recursive: true });
-    await writeFile(path.join(config.dataDir, "settings.json"), JSON.stringify({ schemaVersion: 1, activeShow: "gone" }));
+    const { dataDir } = server.config();
+    await mkdir(dataDir, { recursive: true });
+    await writeFile(path.join(dataDir, "settings.json"), JSON.stringify({ schemaVersion: 1, activeShow: "gone" }));
 
-    const url = await start();
-    expect(await hello(url, displayHello("bridge-1"))).toMatchObject({ code: "NO_ACTIVE_SHOW" });
-
-    const health = (await (await fetch(`${url}/health`)).json()) as { status: string };
-    expect(health.status).toBe("degraded");
+    await server.start();
+    const { reply } = await server.hello({ role: "display", displayId: "bridge-1", protocol: PROTOCOL_VERSION });
+    expect(reply).toMatchObject({ code: "NO_ACTIVE_SHOW" });
+    expect((await server.api<{ status: string }>("GET", "/health")).body.status).toBe("degraded");
   });
 });

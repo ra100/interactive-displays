@@ -2,7 +2,59 @@
   "schemaVersion": 1,
   "id": "demo",
   "name": "Demo Show",
-  "theme": { "id": "base" },
-  "defaultScreen": "welcome",
-  "displays": [{ "id": "test", "name": "Test display" }]
+  "theme": {
+    "id": "lcars"
+  },
+  "states": [
+    {
+      "id": "normal",
+      "label": "Normal",
+      "effect": "none"
+    },
+    {
+      "id": "yellow-alert",
+      "label": "Yellow alert",
+      "effect": "warning",
+      "banner": "YELLOW ALERT"
+    },
+    {
+      "id": "red-alert",
+      "label": "Red alert",
+      "effect": "alert",
+      "banner": "RED ALERT"
+    },
+    {
+      "id": "damaged",
+      "label": "Damaged",
+      "effect": "damaged",
+      "banner": "HULL BREACH"
+    },
+    {
+      "id": "blackout",
+      "label": "Blackout",
+      "effect": "blackout"
+    }
+  ],
+  "defaultScreen": "bridge",
+  "displays": [
+    {
+      "id": "test",
+      "name": "Test display"
+    },
+    {
+      "id": "engineering-1",
+      "name": "Engineering 1",
+      "screen": "engineering"
+    },
+    {
+      "id": "tactical-1",
+      "name": "Tactical 1",
+      "screen": "tactical"
+    },
+    {
+      "id": "corridor-1",
+      "name": "Corridor panel",
+      "screen": "standby"
+    }
+  ]
 }

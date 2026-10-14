@@ -1,8 +1,15 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "workspaces": {
-    "packages/*": {}
+    "packages/*": {},
+    "packages/themes": {
+      "ignoreDependencies": [
+        "react"
+      ]
+    }
   },
-  "ignore": ["legacy/**"],
+  "ignore": [
+    "legacy/**"
+  ],
   "ignoreExportsUsedInFile": true
 }
