@@ -1,16 +1,26 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { createCatalog, defineWidget } from "./defineWidget.ts";
-import { button, catalog, text, title } from "./index.ts";
+import { button } from "./button.ts";
+import { catalog, widgets } from "./index.ts";
+import { text } from "./text.ts";
+import { title } from "./title.ts";
 
 describe("catalog", () => {
   it("contains the Phase 0 widgets", () => {
     expect([...catalog.keys()]).toEqual(["title", "text", "button"]);
   });
 
+  it.each(Object.entries(widgets))("registers %s under its own kind", (key, definition) => {
+    expect(definition.kind).toBe(key);
+  });
+
+  it.each([...catalog.values()])("$kind has a valid example", (definition) => {
+    expect(definition.props.safeParse(definition.example).success).toBe(true);
+  });
+
   it("rejects duplicate kinds", () => {
-    const again = defineWidget({ ...title, label: "Title again" });
-    expect(() => createCatalog([title, again])).toThrow(/Duplicate widget kind "title"/);
+    const again = defineWidget({ ...title, label: "Title again" });    expect(() => createCatalog([title, again])).toThrow(/Duplicate widget kind "title"/);
   });
 
   it.each([...catalog.values()])("$kind exports a JSON Schema for its props", (definition) => {

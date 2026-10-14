@@ -11,4 +11,5 @@ export const button = defineWidget({
     label: z.string().min(1).max(40),
     tone: ToneSchema.default("accent"),
   }),
+  example: { label: "ENGAGE" },
 });

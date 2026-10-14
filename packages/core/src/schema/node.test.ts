@@ -23,7 +23,7 @@ describe("NodeSchema", () => {
 
     expect(node.type).toBe("container");
     if (node.type !== "container") return;
-    expect(node.layout).toEqual({ kind: "stack", direction: "column", gap: "medium", align: "stretch" });
+    expect(node.layout).toEqual({ kind: "stack", direction: "column", gap: "medium" });
 
     const row = node.children[1]?.node;
     expect(row?.type).toBe("container");

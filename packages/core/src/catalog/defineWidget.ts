@@ -9,6 +9,8 @@ export interface WidgetDefinition<Props extends z.ZodType = z.ZodType> {
   // One sentence for editors and AI: what the widget is for, not how it looks.
   readonly description: string;
   readonly props: Props;
+  // Valid sample props, used by previews, contract tests and AI prompts.
+  readonly example: z.input<Props>;
 }
 
 export type AnyWidgetDefinition = WidgetDefinition<z.ZodType<Record<string, unknown>>>;

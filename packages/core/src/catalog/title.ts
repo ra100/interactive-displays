@@ -12,4 +12,5 @@ export const title = defineWidget({
     code: z.string().max(24).optional(),
     tone: ToneSchema.default("primary"),
   }),
+  example: { text: "MAIN ENGINEERING", code: "04-1977" },
 });
