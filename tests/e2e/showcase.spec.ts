@@ -1,48 +1,78 @@
 import path from "node:path";
-import { expect, test } from "@playwright/test";
-import { createManagedServer } from "./support/server.ts";
+import { expect, type Page, test } from "@playwright/test";
+import { identify, setState } from "./support/api.ts";
 
-// Screenshots for the PR and docs/showcase. Run with: SHOWCASE=phase-0 pnpm test:e2e showcase
+// Screenshots for the PR and docs/showcase. Run with: SHOWCASE=phase-1 pnpm test:e2e showcase
+// Each phase captures what it added; earlier phases' images stay in their own folders.
 const phase = process.env["SHOWCASE"];
 const out = (name: string) => path.join("docs", "showcase", phase ?? "", `${name}.png`);
+
+const shoot = async (page: Page, name: string, url: string, ready: RegExp | string) => {
+  await page.goto(url);
+  await expect(page.getByText(ready).first()).toBeVisible();
+  // Let the self-hosted font settle before capturing.
+  await page.evaluate(() => document.fonts.ready);
+  await page.screenshot({ path: out(name) });
+};
 
 test.describe("showcase", () => {
   test.skip(!phase, "set SHOWCASE=<phase> to capture screenshots");
 
-  const viewports = [
-    { name: "welcome-16x9", width: 1280, height: 720 },
-    { name: "welcome-4x3", width: 1024, height: 768 },
-    { name: "welcome-9x16", width: 540, height: 960 },
-  ];
-
-  for (const { name, width, height } of viewports) {
-    test(name, async ({ page }) => {
-      await page.setViewportSize({ width, height });
-      await page.goto("/d/test");
-      await expect(page.getByRole("heading", { name: /interactive displays/i })).toBeVisible();
-      await page.screenshot({ path: out(name) });
-    });
-  }
-
-  test("reconnecting", async ({ page }) => {
-    const server = createManagedServer(3013);
-    await server.start();
-    try {
-      await page.setViewportSize({ width: 1280, height: 720 });
-      await page.goto(`${server.url}/d/test`);
-      await expect(page.getByRole("heading", { name: /interactive displays/i })).toBeVisible();
-      await server.stop();
-      await expect(page.getByText("RECONNECTING")).toBeVisible();
-      await page.screenshot({ path: out("reconnecting") });
-    } finally {
-      await server.stop();
-    }
+  test.beforeEach(async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
   });
 
-  test("invalid-id", async ({ page }) => {
-    await page.setViewportSize({ width: 1280, height: 720 });
-    await page.goto("/d/Not%20Valid");
-    await expect(page.getByText("INVALID DISPLAY ID")).toBeVisible();
-    await page.screenshot({ path: out("invalid-id") });
+  test.afterEach(async ({ request }) => {
+    await setState(request, "normal");
+  });
+
+  test("screens", async ({ page }) => {
+    await shoot(page, "bridge-sidebar", "/d/test", /bridge operations/i);
+    await shoot(page, "engineering-header-main", "/d/engineering-1", /main engineering/i);
+    await shoot(page, "tactical-dashboard", "/d/tactical-1", /long range sensors/i);
+    await shoot(page, "standby-canvas", "/d/corridor-1", /please stand by/i);
+  });
+
+  test("states", async ({ page, request }) => {
+    for (const [state, text] of [
+      ["yellow-alert", /shields up/i],
+      ["red-alert", /battle stations/i],
+      ["damaged", /hull breach/i],
+    ] as const) {
+      await setState(request, state);
+      await shoot(page, `bridge-${state}`, "/d/test", text);
+    }
+    await setState(request, "red-alert");
+    await shoot(page, "tactical-red-alert", "/d/tactical-1", /firing solution/i);
+  });
+
+  test("themes and variants", async ({ page }) => {
+    await shoot(page, "bridge-base-theme", "/d/test?theme=base", /bridge operations/i);
+    await shoot(page, "engineering-nemesis", "/d/engineering-1?variant=nemesis", /main engineering/i);
+    await shoot(page, "tactical-picard", "/d/tactical-1?variant=picard", /long range sensors/i);
+  });
+
+  test("identify", async ({ page, request }) => {
+    await page.goto("/d/engineering-1");
+    await expect(page.getByText(/main engineering/i)).toBeVisible();
+    await identify(request, "engineering-1");
+    await expect(page.getByRole("alert")).toBeVisible();
+    await page.screenshot({ path: out("identify") });
+  });
+
+  test("portrait", async ({ page }) => {
+    await page.setViewportSize({ width: 540, height: 960 });
+    await shoot(page, "bridge-9x16", "/d/test", /bridge operations/i);
+  });
+
+  test("gallery", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto("/gallery");
+    await expect(page.locator(".frame").first()).toBeVisible();
+    await page.evaluate(() => document.fonts.ready);
+    // The gallery scrolls inside its own box; grow the viewport to fit it all in one image.
+    const height = await page.locator(".gallery").evaluate((element) => element.scrollHeight);
+    await page.setViewportSize({ width: 1280, height });
+    await page.screenshot({ path: out("gallery") });
   });
 });
