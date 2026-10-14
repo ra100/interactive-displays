@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { IdSchema } from "../schema/ids.ts";
 import type { Screen } from "../schema/screen.ts";
-import type { StateDef } from "../schema/show.ts";
+import type { Show, StateDef } from "../schema/show.ts";
 
 // Bumped on any breaking change to events or payloads; a display reloads when the server's differs.
 export const PROTOCOL_VERSION = 2;
@@ -18,7 +18,7 @@ export type Hello = z.infer<typeof HelloSchema>;
 // It is sent again whenever the display's screen or assignment changes.
 export interface DisplaySnapshot {
   protocol: number;
-  show: { id: string; name: string; theme: { id: string; variant?: string }; states: StateDef[] };
+  show: { id: string; name: string; theme: Show["theme"]; states: StateDef[] };
   // The current show state id; always one of show.states.
   state: string;
   display: { id: string; name?: string };

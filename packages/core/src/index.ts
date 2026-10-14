@@ -9,6 +9,7 @@ export * from "./catalog/defineWidget.ts";
 export * from "./catalog/defineDecor.ts";
 export * from "./catalog/index.ts";
 export * from "./tree/tree.ts";
+export * from "./tree/when.ts";
 export * from "./validate/validateScreen.ts";
 export * from "./ops/ops.ts";
 export * from "./ops/applyOps.ts";
