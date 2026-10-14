@@ -1,0 +1,47 @@
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+.status-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1vmin;
+  height: 100dvh;
+  color: #9aa4b2;
+  font-family: system-ui, sans-serif;
+  text-align: center;
+}
+
+.status-message__title {
+  margin: 0;
+  font-size: 4vmin;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.status-message__detail {
+  margin: 0;
+  font-size: 2vmin;
+  opacity: 0.8;
+}
+
+.connection-badge {
+  position: fixed;
+  right: 1.5vmin;
+  bottom: 1.5vmin;
+  padding: 0.6vmin 1.2vmin;
+  border-radius: 0.6vmin;
+  background: rgb(0 0 0 / 70%);
+  color: #f2c94c;
+  font-family: system-ui, sans-serif;
+  font-size: 1.6vmin;
+  letter-spacing: 0.1em;
+  pointer-events: none;
+}

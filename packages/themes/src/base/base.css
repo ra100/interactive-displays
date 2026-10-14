@@ -1,0 +1,93 @@
+/* Base theme renderers. Sizes use the widget box (cq*) and the screen unit (--u) so they scale with the display. */
+
+.base-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: calc(2 * var(--u));
+  height: 100%;
+  border-bottom: calc(0.4 * var(--u)) solid var(--tone);
+  color: var(--tone);
+  font-family: var(--font-display);
+  text-transform: uppercase;
+}
+
+.base-title__text {
+  margin: 0;
+  overflow: hidden;
+  font-size: min(60cqh, 9cqw, calc(9 * var(--u)));
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.base-title__code {
+  flex: none;
+  font-size: min(30cqh, calc(3 * var(--u)));
+  opacity: 0.8;
+}
+
+.base-text {
+  margin: 0;
+  overflow: hidden;
+  color: var(--tone);
+  font-family: var(--font-body);
+  line-height: 1.4;
+}
+
+.base-text[data-size="small"] {
+  font-size: calc(2.4 * var(--u));
+}
+
+.base-text[data-size="medium"] {
+  font-size: calc(3.2 * var(--u));
+}
+
+.base-text[data-size="large"] {
+  font-size: calc(4.5 * var(--u));
+}
+
+.base-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-width: 60px;
+  min-height: 60px;
+  padding: 0 calc(2 * var(--u));
+  border: none;
+  border-radius: var(--radius);
+  background: var(--tone);
+  color: var(--theme-bg);
+  font-family: var(--font-display);
+  font-size: min(35cqh, 12cqw, calc(4 * var(--u)));
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    filter 80ms ease-out,
+    transform 80ms ease-out;
+}
+
+.base-button:active {
+  filter: brightness(1.35);
+  transform: scale(0.97);
+}
+
+.base-button:focus-visible {
+  outline: calc(0.4 * var(--u)) solid var(--theme-fg);
+  outline-offset: calc(0.3 * var(--u));
+}
+
+.base-button__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
