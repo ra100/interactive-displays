@@ -1,0 +1,15 @@
+# docker compose up -d  →  open http://<this-machine>:3010/d on every display.
+services:
+  displays:
+    image: ghcr.io/ra100/interactive-displays:latest
+    build: .
+    ports:
+      - "3010:3010"
+    volumes:
+      - displays-data:/data
+    restart: unless-stopped
+    environment:
+      LOG_LEVEL: info
+
+volumes:
+  displays-data:
