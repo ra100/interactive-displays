@@ -1,17 +1,8 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "workspaces": {
-    "packages/core": {},
-    "packages/themes": {
-      "entry": ["src/manifest.ts", "src/react.ts"]
-    },
-    "packages/server": {
-      "entry": ["src/index.ts"]
-    },
-    "packages/app": {
-      "entry": ["src/main.tsx"]
-    }
+    "packages/*": {}
   },
-  "ignore": ["legacy/**", "**/*.config.ts"],
+  "ignore": ["legacy/**"],
   "ignoreExportsUsedInFile": true
 }

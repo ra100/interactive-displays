@@ -7,6 +7,7 @@ import { App } from "../App.tsx";
 const fake = vi.hoisted(() => {
   const handlers = new Map<string, (payload?: unknown) => void>();
   const emitted: Array<{ event: string; payload: unknown }> = [];
+  const calls = { connect: 0 };
   const socket = {
     on: (event: string, handler: (payload?: unknown) => void) => {
       handlers.set(event, handler);
@@ -16,13 +17,18 @@ const fake = vi.hoisted(() => {
       emitted.push({ event, payload });
       return socket;
     },
+    connect: () => {
+      calls.connect += 1;
+      return socket;
+    },
     disconnect: () => socket,
   };
   const reset = () => {
     handlers.clear();
     emitted.length = 0;
+    calls.connect = 0;
   };
-  return { socket, handlers, emitted, reset };
+  return { socket, handlers, emitted, calls, reset };
 });
 
 vi.mock("socket.io-client", () => ({ io: () => fake.socket }));
@@ -98,6 +104,16 @@ describe("display page", () => {
 
     serverSends("connect");
     expect(screen.queryByText("RECONNECTING")).not.toBeInTheDocument();
+  });
+
+  it("reconnects after the server drops it on purpose", () => {
+    renderAt("/d/bridge-1");
+    serverSends("connect");
+    serverSends("disconnect", "transport close");
+    expect(fake.calls.connect).toBe(0);
+
+    serverSends("disconnect", "io server disconnect");
+    expect(fake.calls.connect).toBe(1);
   });
 
   it("says when no screen is assigned", () => {

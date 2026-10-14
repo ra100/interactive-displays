@@ -2,7 +2,7 @@
 
 .base-title {
   display: flex;
-  align-items: baseline;
+  align-items: flex-end;
   justify-content: space-between;
   gap: calc(2 * var(--u));
   height: 100%;
@@ -13,9 +13,9 @@
 }
 
 .base-title__text {
-  margin: 0;
+  margin: 0 0 0.1em;
   overflow: hidden;
-  font-size: min(60cqh, 9cqw, calc(9 * var(--u)));
+  font-size: min(60cqh, 5.5cqw, calc(9 * var(--u)));
   font-weight: 700;
   letter-spacing: 0.04em;
   line-height: 1.1;
@@ -25,6 +25,7 @@
 
 .base-title__code {
   flex: none;
+  padding-bottom: 0.4em;
   font-size: min(30cqh, calc(3 * var(--u)));
   opacity: 0.8;
 }
@@ -63,7 +64,7 @@
   background: var(--tone);
   color: var(--theme-bg);
   font-family: var(--font-display);
-  font-size: min(35cqh, 12cqw, calc(4 * var(--u)));
+  font-size: min(35cqh, 9cqw, calc(4 * var(--u)));
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;

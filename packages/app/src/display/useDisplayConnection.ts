@@ -46,8 +46,11 @@ export const useDisplayConnection = (displayId: string): DisplayConnection => {
       socket.emit("hello", { role: "display", displayId, protocol: PROTOCOL_VERSION });
     });
 
-    socket.on("disconnect", () => {
+    socket.on("disconnect", (reason) => {
       setConnection((current) => ({ ...current, status: "disconnected" }));
+      // Socket.io only auto-reconnects after network loss; a display should also come back
+      // after the server deliberately dropped it.
+      if (reason === "io server disconnect") socket.connect();
     });
 
     socket.on("connect_error", () => {
