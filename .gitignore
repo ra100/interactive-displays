@@ -20,13 +20,10 @@ dist/
 # OS
 .DS_Store
 
-# Data
-data/layouts/*.tmp
+# Runtime data (created and seeded on first start)
+/data/
 
 # Playwright
 playwright-report/
 test-results/
 .playwright-mcp/
-
-# Test screenshots
-!docs/screenshots/

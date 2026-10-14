@@ -8,6 +8,7 @@
   "ignorePatterns": [
     "dist",
     "node_modules",
+    "legacy",
     "*.config.js",
     "*.config.ts"
   ]

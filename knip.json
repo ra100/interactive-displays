@@ -1,19 +1,17 @@
 {
-  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "$schema": "https://unpkg.com/knip@5/schema.json",
   "workspaces": {
+    "packages/core": {},
+    "packages/themes": {
+      "entry": ["src/manifest.ts", "src/react.ts"]
+    },
     "packages/server": {
-      "ignore": ["src/validation.ts"]
+      "entry": ["src/index.ts"]
     },
     "packages/app": {
-      "entry": ["src/main.tsx"],
-      "ignore": ["src/components/index.ts"]
-    },
-    "packages/shared": {}
+      "entry": ["src/main.tsx"]
+    }
   },
-  "ignore": [
-    "**/*.config.ts",
-    "**/*.config.js",
-    ".history/**"
-  ],
-    "ignoreExportsUsedInFile": true
+  "ignore": ["legacy/**", "**/*.config.ts"],
+  "ignoreExportsUsedInFile": true
 }

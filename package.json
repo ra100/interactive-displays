@@ -1,5 +1,6 @@
 {
   "name": "interactive-displays",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -7,8 +8,9 @@
     "format": "oxlint --fix",
     "typecheck": "pnpm -r run typecheck",
     "knip": "knip",
-    "dev": "pnpm -r --parallel run dev",
+    "dev": "pnpm --parallel --filter @interactive-displays/server --filter @interactive-displays/app run dev",
     "build": "pnpm -r run build",
+    "start": "pnpm --filter @interactive-displays/server start",
     "test": "pnpm -r run test",
     "test:unit": "pnpm -r run test",
     "test:e2e": "playwright test",
@@ -30,6 +32,6 @@
   },
   "packageManager": "pnpm@9.15.4",
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=22.18.0"
   }
 }
