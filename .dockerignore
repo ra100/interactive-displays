@@ -1,0 +1,16 @@
+**/node_modules
+**/dist
+**/*.test.ts
+**/*.test.tsx
+.git
+.github
+.husky
+.vscode
+.claude
+data
+design
+docs
+legacy
+tests
+test-results
+playwright-report
