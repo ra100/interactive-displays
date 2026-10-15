@@ -1,0 +1,203 @@
+{
+  "id": "mainframe",
+  "label": "Mainframe",
+  "description": "The ship's computer: processing, memory banks and the comms uplink.",
+  "code": "CPU",
+  "archetypes": {
+    "header-main": 2,
+    "sidebar": 2,
+    "dashboard": 1
+  },
+  "titles": [
+    "MAINFRAME",
+    "SHIP COMPUTER",
+    "INTERFACE 7",
+    "CENTRAL PROCESSING"
+  ],
+  "nav": [
+    "PROCESSING",
+    "MEMORY",
+    "UPLINK",
+    "SPECIAL ORDERS",
+    "QUERY",
+    "LOG"
+  ],
+  "status": [
+    "READY FOR QUERY",
+    "UPLINK STANDBY",
+    "PRIORITY ONE · RETURN SAMPLE"
+  ],
+  "systems": [
+    {
+      "id": "cpu",
+      "label": "PROCESSING",
+      "metrics": [
+        {
+          "id": "load",
+          "label": "CPU LOAD",
+          "range": [
+            20,
+            45
+          ],
+          "unit": "%",
+          "alertRange": [
+            90,
+            100
+          ],
+          "prefer": [
+            "gauge"
+          ],
+          "motion": "wave"
+        },
+        {
+          "id": "queue",
+          "label": "QUERY QUEUE",
+          "range": [
+            0,
+            6
+          ],
+          "precision": 0
+        },
+        {
+          "id": "temp",
+          "label": "CORE TEMP",
+          "range": [
+            40,
+            55
+          ],
+          "unit": "°C"
+        }
+      ],
+      "actions": [
+        {
+          "label": "RUN DIAGNOSTIC"
+        },
+        {
+          "label": "OVERRIDE",
+          "danger": true
+        }
+      ],
+      "notes": [
+        "Heuristic routines loaded"
+      ]
+    },
+    {
+      "id": "memory",
+      "label": "MEMORY BANKS",
+      "metrics": [
+        {
+          "id": "used",
+          "label": "BANKS IN USE",
+          "range": [
+            60,
+            75
+          ],
+          "unit": "%",
+          "prefer": [
+            "gauge"
+          ]
+        },
+        {
+          "id": "errors",
+          "label": "PARITY ERRORS",
+          "range": [
+            0,
+            2
+          ],
+          "alertRange": [
+            20,
+            60
+          ],
+          "precision": 0
+        }
+      ],
+      "actions": [
+        {
+          "label": "COMPACT BANKS"
+        },
+        {
+          "label": "WIPE BANK 7",
+          "danger": true
+        }
+      ],
+      "short": "MEMORY"
+    },
+    {
+      "id": "uplink",
+      "label": "UPLINK",
+      "metrics": [
+        {
+          "id": "signal",
+          "label": "SIGNAL",
+          "range": [
+            -90,
+            -70
+          ],
+          "unit": "dB",
+          "motion": "wave"
+        },
+        {
+          "id": "delay",
+          "label": "LIGHT DELAY",
+          "range": [
+            38,
+            42
+          ],
+          "unit": "min",
+          "precision": 1
+        }
+      ],
+      "actions": [
+        {
+          "label": "SEND REPORT"
+        },
+        {
+          "label": "OPEN CHANNEL"
+        },
+        {
+          "label": "JAM TRANSMISSION",
+          "danger": true,
+          "actions": [
+            {
+              "do": "setState",
+              "state": "red-alert"
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "Company channel encrypted",
+        "Distress beacon on standby"
+      ]
+    }
+  ],
+  "blocks": {
+    "prefer": [
+      "control-panel",
+      "trend-panel",
+      "readout-column"
+    ],
+    "avoid": []
+  },
+  "alert": {
+    "banner": true,
+    "emphasise": [
+      "load",
+      "errors",
+      "temp"
+    ],
+    "status": [
+      "UNAUTHORISED ACCESS",
+      "SPECIAL ORDER 12 ACTIVE",
+      "SELF-DESTRUCT ARMED"
+    ]
+  },
+  "tags": [
+    "computer",
+    "mainframe",
+    "memory",
+    "query",
+    "comms",
+    "uplink"
+  ]
+}

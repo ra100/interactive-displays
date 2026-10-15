@@ -1,0 +1,81 @@
+{
+  "codeFormats": [
+    "@@@-###",
+    "##.##.##",
+    "@##:##",
+    "#### @@",
+    "###-@@-#"
+  ],
+  "statuses": [
+    "OK",
+    "NOMINAL",
+    "STANDBY",
+    "READY",
+    "ONLINE",
+    "SEALED",
+    "LOCKED",
+    "IDLE",
+    "CYCLING",
+    "ARMED"
+  ],
+  "alertStatuses": [
+    "FAULT",
+    "BREACH",
+    "CRITICAL",
+    "OVERHEAT",
+    "OFFLINE",
+    "ABORT"
+  ],
+  "phrases": [
+    "{system} {word} check complete",
+    "Rerouting {word} through backup relay",
+    "{system}: {word} pressure equalised",
+    "Polling {word} sensors on deck 3",
+    "{word} manifold cycling",
+    "{system} {word} servo recalibrated",
+    "Awaiting {word} clearance from bridge",
+    "{word} telemetry logged to mainframe",
+    "{system} running on reserve {word}",
+    "Purging {word} line, sequence 4",
+    "{word} seal integrity confirmed",
+    "Company directive: maintain {word} schedule"
+  ],
+  "words": [
+    "coolant",
+    "flux",
+    "bus",
+    "relay",
+    "thruster",
+    "ballast",
+    "scrubber",
+    "seal",
+    "manifold",
+    "servo",
+    "telemetry",
+    "hydraulic",
+    "oxygen",
+    "fuel",
+    "bulkhead",
+    "gyro",
+    "radiator",
+    "battery",
+    "beacon",
+    "hatch",
+    "valve",
+    "pump",
+    "sensor",
+    "pressure",
+    "heat-sink",
+    "ore",
+    "clamp",
+    "uplink",
+    "parity",
+    "fusion"
+  ],
+  "logColumns": [
+    "TIME",
+    "UNIT",
+    "READING",
+    "STATE"
+  ]
+}

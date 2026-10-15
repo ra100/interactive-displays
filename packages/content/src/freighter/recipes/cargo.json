@@ -1,0 +1,205 @@
+{
+  "id": "cargo",
+  "label": "Cargo hold",
+  "description": "Holds, docking clamps and the cargo manifest.",
+  "code": "CGO",
+  "archetypes": {
+    "header-main": 2,
+    "dashboard": 2,
+    "sidebar": 1
+  },
+  "titles": [
+    "CARGO HOLD",
+    "CARGO MANIFEST",
+    "HOLD STATUS",
+    "LOADING CONTROL"
+  ],
+  "nav": [
+    "HOLD A",
+    "HOLD B",
+    "CLAMPS",
+    "MANIFEST",
+    "CRANES",
+    "CUSTOMS"
+  ],
+  "status": [
+    "20 000 000 T ORE · BOUND FOR EARTH",
+    "CLAMPS ENGAGED",
+    "HOLD B SEALED"
+  ],
+  "systems": [
+    {
+      "id": "holds",
+      "label": "HOLDS",
+      "metrics": [
+        {
+          "id": "mass",
+          "label": "CARGO MASS",
+          "range": [
+            19000,
+            20500
+          ],
+          "unit": "kt"
+        },
+        {
+          "id": "temp",
+          "label": "HOLD TEMP",
+          "range": [
+            -12,
+            -4
+          ],
+          "unit": "°C",
+          "alertRange": [
+            15,
+            30
+          ],
+          "motion": "wave"
+        },
+        {
+          "id": "pressure",
+          "label": "HOLD PRESSURE",
+          "range": [
+            96,
+            102
+          ],
+          "unit": "kPa",
+          "alertRange": [
+            20,
+            60
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "label": "SEAL HOLDS"
+        },
+        {
+          "label": "VENT HOLD B",
+          "danger": true
+        }
+      ],
+      "notes": [
+        "Ore refinery cargo, 20 million tonnes",
+        "Manifest checksum verified"
+      ]
+    },
+    {
+      "id": "clamps",
+      "label": "DOCKING CLAMPS",
+      "metrics": [
+        {
+          "id": "load",
+          "label": "CLAMP LOAD",
+          "range": [
+            55,
+            70
+          ],
+          "unit": "%",
+          "alertRange": [
+            90,
+            100
+          ],
+          "prefer": [
+            "gauge"
+          ]
+        },
+        {
+          "id": "lock",
+          "label": "LOCK STRENGTH",
+          "range": [
+            92,
+            99
+          ],
+          "unit": "%",
+          "alertRange": [
+            30,
+            60
+          ],
+          "prefer": [
+            "gauge"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "label": "RELEASE CLAMPS",
+          "danger": true,
+          "actions": [
+            {
+              "do": "setState",
+              "state": "yellow-alert"
+            }
+          ]
+        },
+        {
+          "label": "ENGAGE CLAMPS"
+        }
+      ],
+      "short": "CLAMPS"
+    },
+    {
+      "id": "cranes",
+      "label": "CRANES",
+      "metrics": [
+        {
+          "id": "arm",
+          "label": "ARM EXTENSION",
+          "range": [
+            10,
+            40
+          ],
+          "unit": "%",
+          "motion": "wave"
+        },
+        {
+          "id": "lift",
+          "label": "LIFT LOAD",
+          "range": [
+            80,
+            120
+          ],
+          "unit": "t"
+        }
+      ],
+      "actions": [
+        {
+          "label": "PARK CRANES"
+        },
+        {
+          "label": "CYCLE LIFT"
+        }
+      ],
+      "notes": [
+        "Crane 2 awaiting service"
+      ]
+    }
+  ],
+  "blocks": {
+    "prefer": [
+      "status-board",
+      "readout-column",
+      "button-column"
+    ],
+    "avoid": []
+  },
+  "alert": {
+    "banner": true,
+    "emphasise": [
+      "pressure",
+      "load",
+      "lock"
+    ],
+    "status": [
+      "HULL BREACH · HOLD B",
+      "CLAMP FAILURE",
+      "CARGO SHIFT DETECTED"
+    ]
+  },
+  "tags": [
+    "cargo",
+    "hold",
+    "freight",
+    "manifest",
+    "docking"
+  ]
+}

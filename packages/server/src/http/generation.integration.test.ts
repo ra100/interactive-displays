@@ -19,8 +19,17 @@ describe("generation over REST", () => {
   it("lists the built-in packs", async () => {
     const { status, body } = await server.api<{ packs: ContentPack[] }>("GET", "/api/content");
     expect(status).toBe(200);
-    expect(body.packs.map((pack) => pack.id)).toEqual(["trek"]);
+    expect(body.packs.map((pack) => [pack.id, pack.theme])).toEqual([
+      ["trek", "lcars"],
+      ["freighter", "crt"],
+    ]);
     expect(body.packs[0]?.recipes.length).toBeGreaterThanOrEqual(9);
+  });
+
+  it("generates from the freighter pack in a show of any theme", async () => {
+    const { status, body } = await server.api<Generated>("POST", "/api/generate", { section: "reactor", seed: 7, id: "reactor" });
+    expect(status).toBe(201);
+    expect(body.screens[0]).toMatchObject({ id: "reactor", section: "reactor", generator: { recipe: "freighter/reactor", seed: 7 } });
   });
 
   it("generates a draft from a section and the same one again from the same seed", async () => {

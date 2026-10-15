@@ -16,6 +16,7 @@ export const trek: ContentPackInput = {
   id: "trek",
   name: "Starship",
   description: "Sections of a Star Trek style starship: engineering, bridge stations, sickbay and more.",
+  theme: "lcars",
   vocab,
   blocks: blocks as ContentPackInput["blocks"],
   recipes: [engineering, environmental, tactical, helm, science, medical, communications, security, operations] as ContentPackInput["recipes"],
