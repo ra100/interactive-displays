@@ -9,36 +9,40 @@ const states: StateDef[] = [
   { id: "red-alert", label: "Red alert", effect: "alert", sound: "alert" },
 ];
 
+type Entered = { state: string; at: number } | null;
+
 const setup = (enabled: boolean) => {
   const player: SoundPlayer = { play: vi.fn() };
-  const hook = renderHook(
-    ({ state, on }: { state: string | undefined; on: boolean }) => useSounds("lcars", on, state, states, player),
-    { initialProps: { state: undefined as string | undefined, on: enabled } },
-  );
+  const hook = renderHook(({ entered, on }: { entered: Entered; on: boolean }) => useSounds("lcars", on, entered, states, player), {
+    initialProps: { entered: null as Entered, on: enabled },
+  });
   return { player, hook };
 };
 
 describe("useSounds", () => {
-  it("plays a state's sound when the show enters it, not on the first snapshot", () => {
+  it("plays a state's sound each time the show enters it", () => {
     const { player, hook } = setup(true);
-    hook.rerender({ state: "red-alert", on: true });
     expect(player.play).not.toHaveBeenCalled();
 
-    hook.rerender({ state: "normal", on: true });
-    hook.rerender({ state: "red-alert", on: true });
-    hook.rerender({ state: "red-alert", on: true });
+    const alert = { state: "red-alert", at: 1 };
+    hook.rerender({ entered: { state: "normal", at: 0 }, on: true });
+    hook.rerender({ entered: alert, on: true });
+    hook.rerender({ entered: alert, on: true });
     expect(player.play).toHaveBeenCalledTimes(1);
     expect(player.play).toHaveBeenCalledWith("lcars", "alert");
+
+    hook.rerender({ entered: { state: "red-alert", at: 2 }, on: true });
+    expect(player.play).toHaveBeenCalledTimes(2);
   });
 
-  it("stays quiet while the show has sounds off", () => {
+  it("stays quiet while the show has sounds off, and does not catch up when they come on", () => {
     const { player, hook } = setup(false);
-    hook.rerender({ state: "normal", on: false });
-    hook.rerender({ state: "red-alert", on: false });
+    hook.rerender({ entered: { state: "red-alert", at: 1 }, on: false });
     hook.result.current("press");
     expect(player.play).not.toHaveBeenCalled();
 
-    hook.rerender({ state: "red-alert", on: true });
+    hook.rerender({ entered: { state: "red-alert", at: 1 }, on: true });
+    expect(player.play).not.toHaveBeenCalled();
     hook.result.current("press");
     expect(player.play).toHaveBeenCalledWith("lcars", "press");
   });

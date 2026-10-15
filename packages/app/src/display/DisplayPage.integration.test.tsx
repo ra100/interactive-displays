@@ -374,7 +374,12 @@ describe("live values and controls", () => {
     serverSends("state", { state: "normal" });
     serverSends("state", { state: "yellow-alert" });
     expect(audioContext).toHaveBeenCalledTimes(1);
-    expect(oscillators).toHaveBeenCalled();
+    expect(oscillators).toHaveBeenCalledTimes(2);
+
+    // A reconnect's snapshot brings a state the show entered while this display was away: no late alarm.
+    serverSends("snapshot", liveSnapshot({ show: { ...base.show, sounds: true }, state: "normal" }));
+    serverSends("snapshot", liveSnapshot({ show: { ...base.show, sounds: true }, state: "yellow-alert" }));
+    expect(oscillators).toHaveBeenCalledTimes(2);
   });
 });
 

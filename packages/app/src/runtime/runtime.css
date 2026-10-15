@@ -43,7 +43,8 @@
   --touch: calc(8.3 * var(--u));
 }
 
-/* A still screen (thumbnails, screenshots) shows one frame of every animation. */
+/* A still screen (thumbnails, screenshots) shows one frame of every animation, its own included. */
+.screen[data-still],
 .screen[data-still] *,
 .screen[data-still] *::before,
 .screen[data-still] *::after {
