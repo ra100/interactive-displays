@@ -6,6 +6,64 @@ Docker smoke test); these steps are for a person with real displays.
 Report problems or ideas as a GitHub issue (label `v2`) or in the project thread, with the display type,
 browser, the URL you opened and a photo or screenshot if possible.
 
+## Phase 5: AI and MCP
+
+### Setup
+
+Any Phase 4 data directory works. You need:
+
+- the server reachable from the computer running your MCP client;
+- Claude Code, Claude Desktop or another MCP client;
+- `/builder` and `/operator` open in a browser;
+- one display at `/d/<any-name>`.
+
+For Fill with AI, start the server with `ANTHROPIC_API_KEY` set (Docker: put it in `.env`). The MCP part needs no
+key.
+
+Connect Claude Code:
+
+```bash
+claude mcp add --transport http displays http://<server>:3010/mcp
+# with EDITOR_TOKEN set:
+claude mcp add --transport http displays http://<server>:3010/mcp --header "Authorization: Bearer <token>"
+```
+
+In Claude Desktop, add a custom connector with the same URL.
+
+### The Phase 5 exit check
+
+"From Claude Desktop/Code, 'environmental screen, keep my header' produces a lint-clean draft that appears live in
+the editor."
+
+| # | Step | Expected |
+|---|---|---|
+| 1 | Ask the client: "What can you do with this display system?" | It lists the screens, sections and tools (it read the catalog, theme and recipes) |
+| 2 | Open the Engineering screen in `/builder`. Ask: "Make an environmental screen and keep the header from engineering" | A new Environmental draft appears in the library, with Engineering's header; the client reports no lint warnings |
+| 3 | Open the new screen in the editor, then ask the client to change its title or add a panel | The editor shows the change within a second, without a reload; Undo in the editor takes it back |
+| 4 | Ask it to publish the screen | It says the operator has not allowed it and names the **AI may publish** switch |
+| 5 | Turn on **AI may publish** in `/operator`, ask again | The screen is published; assign it to your display to see it |
+| 6 | Ask it to set red alert | Refused until **AI may run the show** is on; then every display switches |
+| 7 | Lock a panel in the editor, ask the client to regenerate the screen | Everything except the locked panel changes |
+
+### More MCP checks
+
+| Step | Expected |
+|---|---|
+| Ask for a suite ("an overview and one screen per system for medical") | Four linked screens; on a display their nav buttons move between them |
+| Use the `new-section-recipe` prompt for "shuttle bay" | The client writes and saves a recipe; the Generate dialog in `/builder` lists Shuttle bay after a reload, and generated screens react to red alert |
+| Ask it to edit a locked node | It gets an error saying the node is locked and nothing changes |
+| With `EDITOR_TOKEN` set, connect without the header | The client cannot connect (401) |
+
+### Fill with AI
+
+| Step | Expected |
+|---|---|
+| Open the editor without `ANTHROPIC_API_KEY` | No **Fill with AI** button |
+| With the key, press **Fill with AI**, pick "Fill the placeholders" or type a brief, press **Ask** | "Working…", then a preview of the proposed screen and a sentence about what changed; the draft itself has not changed (its revision in the History tab is the same) |
+| Press **Discard** | Nothing changes |
+| Ask again and press **Apply** | The screen changes and saves; one **Undo** brings the old one back |
+| Lock the title and ask it to rename the title | The proposal leaves the title alone |
+
 ## Phase 4: one-click generation
 
 ### Setup

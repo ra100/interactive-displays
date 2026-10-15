@@ -3,6 +3,60 @@
 What each phase of the v2 rebuild looks like. Screenshots are captured by `tests/e2e/showcase.spec.ts`
 against the real server and built app (`pnpm build && SHOWCASE=phase-N pnpm test:e2e showcase`).
 
+## Phase 5: AI and MCP
+
+AI works on screens through the same command layer as people: an MCP client (Claude Desktop, Claude Code or any
+other) connects to `/mcp`, and the editor has its own **Fill with AI** when the server has an API key. Drafts are
+validated like any edit, locked parts are never touched, and nothing goes on air until the operator allows it.
+
+**An MCP client designs while the editor watches.** The client generated a Tactical screen, then renamed it with
+`apply_ops`; the open editor shows the change without a reload. Once published (after the operator allowed it),
+it runs on a display like any other screen.
+
+| Editor, live | On a display |
+|---|---|
+| ![MCP edit appearing in the editor](phase-5/editor-mcp-live.png) | ![MCP-generated tactical screen](phase-5/display-mcp-tactical.png) |
+
+**The operator keeps AI off the air.** Two switches in `/operator`: **AI may publish** and **AI may run the show**
+(assign screens, change state, signals and videos). Both are off until someone turns them on.
+
+![AI switches in the operator console](phase-5/operator-ai-switches.png)
+
+**AI can add new sections.** The client wrote a "Shuttle bay" recipe (systems, readings with alert ranges, buttons,
+nav labels) with `save_recipe`, then generated a screen from it. Red alert works with no extra work because the
+recipe gave alert ranges.
+
+| Shuttle bay | In red alert |
+|---|---|
+| ![Shuttle bay from an AI-written recipe](phase-5/display-mcp-shuttle-bay.png) | ![Shuttle bay in red alert](phase-5/display-mcp-shuttle-bay-red-alert.png) |
+
+**Fill with AI in the editor.** Describe the change, look at the proposal, apply it as one undoable edit or discard
+it. These screenshots use a stand-in for the Messages API (the same one the e2e test uses), so they show the flow
+rather than a real model's answer.
+
+| Brief | Proposal | Applied |
+|---|---|---|
+| ![Fill with AI brief](phase-5/fill-brief.png) | ![Fill with AI proposal](phase-5/fill-proposal.png) | ![Fill with AI applied](phase-5/fill-applied.png) |
+
+### Under the hood
+
+- `/mcp` is the official MCP TypeScript SDK over Streamable HTTP, stateless, behind the editor token. Twenty tools
+  (discover, generate, edit, check, library, and five gated live tools), four resources (design guide, catalog,
+  recipes, screens) and three prompts (design a screen, fill placeholders, new section recipe).
+- Every tool calls the same `showService` and `generation` functions as REST, so validation, revisions, locks and
+  broadcasts are identical. `apply_ops` and `regenerate` always respect locks.
+- Generation now also runs on the server, from the built-in packs plus the show's own recipes and blocks
+  (`shows/<id>/content/`).
+- Fill with AI runs the Anthropic tool runner on a copy of the screen (`look`, `get_node`, `get_widget`,
+  `apply_ops`) and returns ops; the editor applies them through its normal session.
+- Code: [`server/src/mcp/`](../../packages/server/src/mcp/),
+  [`server/src/generation.ts`](../../packages/server/src/generation.ts),
+  [`server/src/assistant.ts`](../../packages/server/src/assistant.ts),
+  [`builder/editor/FillDialog.tsx`](../../packages/app/src/builder/editor/FillDialog.tsx); tests in
+  [`mcp.integration.test.ts`](../../packages/server/src/mcp/mcp.integration.test.ts),
+  [`assistant.integration.test.ts`](../../packages/server/src/assistant.integration.test.ts) and
+  [`tests/e2e/ai.spec.ts`](../../tests/e2e/ai.spec.ts).
+
 ## Phase 4: one-click generation
 
 Pick a ship section and get a plausible, on-style screen in one click. The generator works from a content pack
