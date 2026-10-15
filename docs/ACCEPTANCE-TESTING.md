@@ -6,6 +6,94 @@ Docker smoke test); these steps are for a person with real displays.
 Report problems or ideas as a GitHub issue (label `v2`) or in the project thread, with the display type,
 browser, the URL you opened and a photo or screenshot if possible.
 
+## Phase 3: living screens
+
+### Setup
+
+Start from a **fresh data directory** (`docker compose down -v`; from source, delete `data/`) so the demo show
+gains its signals, the bound gauges and buttons, and the new Viewscreen screen with its sensor video. A Phase 2
+data directory keeps its own show and screens, which have no signals or actions.
+
+`http://<server>:3010/health` should say `"protocol":4`. You need: four displays opened at `/d/test`,
+`/d/engineering-1`, `/d/tactical-1` and `/d/viewscreen-1`, a phone for `/operator` and a laptop for `/builder`.
+
+Sound is off by default. To hear it, turn on "Sounds on displays" in the operator console and touch each display
+once (browsers only play sound after a touch), or start the kiosk browser with
+`--autoplay-policy=no-user-gesture-required`.
+
+### The Phase 3 exit check
+
+"A hand-built engineering screen animates believably, red alert visibly changes it, display buttons do something."
+
+| # | Step | Expected |
+|---|---|---|
+| 1 | Watch `/d/engineering-1` for half a minute | Core output creeps between about 88 and 99%, the output trace draws a line, the EPS taps change in their decimals, grid load wanders, numbers scroll in the cascade, plasma bars pulse and relay lamps blink, each at its own pace. Nothing jumps or moves in step |
+| 2 | Assign Main engineering to `/d/test` in the operator console and put it next to `/d/engineering-1` | Both show the same core output and the same EPS readings at the same moment; assign Show default again afterwards |
+| 3 | Set Red alert | Engineering turns red; a flashing RED ALERT banner appears above the core; core output climbs above 100% and the gauge turns to danger past 102; the text says "Core output at 104%" |
+| 4 | Set Damaged | Brown palette; HULL BREACH banner; core output sinks to 35–75% and turns danger below 60; relays go red and busy |
+| 5 | Set Normal | Everything settles back |
+
+### Buttons on the displays
+
+| # | Step | Expected |
+|---|---|---|
+| 1 | On `/d/test`, press Red alert | Every display goes red at once; Shields reads 100%; on the bridge, Yellow alert and Red alert disappear and a green Stand down takes their place |
+| 2 | Press Stand down | Every display returns to normal; Shields 0% |
+| 3 | Press Yellow alert, then Stand down | Amber, shields up; then back |
+| 4 | On `/d/test`, press Engineering in the sidebar | That display (only) shows Main engineering; its operator card says "On Main engineering" |
+| 5 | Press Diagnostics, then Back | Ship schematic with a Back button; Back returns to Main engineering |
+| 6 | In the operator console, press Send back on the test display's card | It returns to the bridge |
+| 7 | On `/d/engineering-1`, press Core eject | The show goes to Damaged; hull integrity drops to 61% on the bridge and on the tactical hull gauge |
+| 8 | Set Normal, then reset hull with the operator's Hull integrity slider | 100% everywhere |
+| 9 | On `/d/tactical-1`, press Raise shields, then Lower | The shield arc fills to 100% and empties, on every display that shows shields |
+| 10 | On `/d/viewscreen-1`, press Hold, Play, Replay | The sensor sweep pauses, resumes and starts over, on that display only |
+| 11 | Press any button | It flashes, so the camera sees the touch even when it is quick |
+
+### Operator console
+
+| # | Step | Expected |
+|---|---|---|
+| 1 | Open `/operator` on the phone | Below the states: Live values (Shield strength, Hull integrity, Warp factor with sliders, Warp core output as a moving reading), then Display controls with two switches |
+| 2 | Drag Shield strength | The tactical arc and the bridge's Shields follow while you drag; − and + move it by 5 |
+| 3 | Move Warp factor | The bridge's Warp factor follows in steps of 0.1 |
+| 4 | Open `/operator` on a second phone and move a slider on the first | The second phone's slider follows |
+| 5 | Turn off "Display buttons run the show", then press Red alert on `/d/test` | The button flashes but nothing changes; navigation and video buttons still work. Turn it back on |
+| 6 | Turn on "Sounds on displays", touch each display once, press buttons | A short chirp per press; Open channel on the bridge plays a hail; Red alert sounds a klaxon on every display, Yellow alert a warning tone |
+| 7 | On the Viewscreen card, press Pause, Play, Restart under "Video · feed" | The video on `/d/viewscreen-1` follows |
+| 8 | Look at the thumbnails | They show shared values as they change, but stand still otherwise |
+
+### Editor
+
+| # | Step | Expected |
+|---|---|---|
+| 1 | `/builder`, press Signals | A list of the show's seven signals; selecting one shows its name, id, unit, whether every display shares it, and where its value comes from |
+| 2 | Add signal: name "Plasma pressure", id `plasma.pressure`, Wanders from 20 to 80, Its own value; Save signals | Saved; a lowest above the highest, or a repeated id, is explained and cannot be saved |
+| 3 | Open Main engineering, select the Core output gauge; under Live value pick Plasma pressure | The preview follows the new signal at once (unpublished: displays keep the old one until Publish) |
+| 4 | Pick "Wanders", then change Lowest and Highest | The gauge wanders in that range by itself |
+| 5 | Pick "Its own value" | The gauge shows its Value property again |
+| 6 | Select a button; under When used, Add an action: Go to screen, Change show state, Set a shared value, Play a sound | Each adds a small form; choices the show cannot do (a video when the screen has none) are greyed out; Remove takes one away |
+| 7 | Open Tactical, select the contacts table | Columns edit one per line, Rows one row per line with cells split by `|` |
+| 8 | Point a Go to screen action at a new, empty screen, delete that screen in the library, then reopen this one | Checks warns "There is no screen … to go to" |
+| 9 | Publish, then press the button on a display | It does what the actions say |
+
+### Edge cases worth trying
+
+- Restart the server: Shield strength, Hull integrity and Warp factor keep the values the crew set; displays that
+  buttons had moved go back to their assigned screens.
+- Press a button just as the state changes and it disappears: a press on a hidden button is ignored.
+- Upload an H.264 MP4 and play it on a display running open-source Chromium: it stays black. Use WebM (VP9), which
+  every display browser plays, or Google Chrome.
+- Edit the show's signals while displays are on: they pick up the change at once, keeping the values of signals
+  that still exist.
+
+### Known limitations (Phase 3)
+
+- Per-state signal ranges (`byState`) are edited in `show.json`; the signals dialog keeps them as they are.
+- No countdown clock, video seek, cue lists or local toggles yet (see
+  `docs/deviations/2026-10-15-phase-3-living-screens.md`).
+- Where a display's buttons took it is forgotten when the server restarts.
+- Sounds are simple synthesised tones; recorded sound packs come with Phase 6.
+
 ## Phase 2: editor and operator console
 
 ### Setup
@@ -157,7 +245,7 @@ States in the demo show: `normal`, `yellow-alert`, `red-alert`, `damaged`, `blac
 | 2 | Open `/d/engineering-1`, `/d/tactical-1` and `/d/corridor-1` on three more displays | Main engineering (toolbar of pills), Tactical (capped header and footer, shield readouts on the right), and the "LCARS ACCESS 4774 / PLEASE STAND BY" standby panel |
 | 3 | Compare with the pictures in `design/` | The sweep, bars, condensed type and colours read as LCARS; nothing looks like a web page |
 | 4 | Set `red-alert` | Every open display turns red within a blink, all at once; frames pulse; the bridge status reads "RED ALERT · ALL HANDS TO BATTLE STATIONS" and the third button says "Stand down" |
-| 5 | Set `yellow-alert`, then `damaged` | Yellow: amber tones, shields read "Raised". Damaged: dim brown palette, parts of the screen flicker and the image jitters now and then; hull integrity 64% in red |
+| 5 | Set `yellow-alert`, then `damaged` | Yellow: amber tones, shields read "Raised". Damaged: dim brown palette, parts of the screen flicker and the image jitters now and then; the hull integrity reading turns red |
 | 6 | Set `blackout`, then `normal` | Every display goes black; `normal` brings the screens back instantly |
 | 7 | Set `red-alert`, then open a new display at `/d/late-joiner` | It starts in red alert |
 | 8 | Restart the server (`docker compose restart`) while in a state other than normal | Displays reconnect in the same state |

@@ -8,7 +8,7 @@ description: Create or change theme packs in packages/themes (manifest tokens, v
 A theme pack has two halves:
 
 - `src/<id>/manifest.ts`: pure data via `defineTheme({ id, name, description, tokens, variants, effects,
-  archetypes, decor })`. Imported by the server, generator and MCP, so it may import only `core` and `zod`.
+  archetypes, decor, sounds })`. Imported by the server, generator and MCP, so it may import only `core` and `zod`.
 - `src/<id>/renderers.ts` + components + CSS: browser only, registered in `src/react.ts`.
 
 Register the manifest in `src/manifest.ts`. Anything a theme does not render falls back to `base`, except decor.
@@ -23,6 +23,7 @@ Register the manifest in `src/manifest.ts`. Anything a theme does not render fal
 | Frames | `renderers.frames` | one component per archetype; receives `slots` (already rendered) and places them |
 | Widgets | `renderers.widgets` | receive validated `props`, `nodeId` and `slot` (draw a nav button differently from a toolbar one) |
 | Decor | manifest `decor` + `renderers.decor` | `defineDecor({ kind: "<id>.<name>", props, example })`, rendered only in this theme |
+| Sounds | manifest `sounds` | synthesised with Web Audio: steps of `{ freq, to?, ms, wave, gain }`, `repeat`; base has `press`, `confirm`, `warning`, `alert`, and a theme overrides or adds (`lcars` adds `hail`). Keep the shared names so a show sounds right in every theme |
 
 Tokens are resolved in order: base tokens, then the show's variant, then the current state's effect
 (`resolveTokens`). The runtime handles `blackout` (hides everything) and a generic `damaged` flicker for every
@@ -40,7 +41,12 @@ theme; add your own looks on top.
 | `--u` | 1% of the display's shorter side, set by the runtime |
 | `--touch` | minimum touch target: 60 px on a display, scaled in previews; use it for anything pressable |
 
-The screen root also carries `data-theme`, `data-variant`, `data-state` and `data-effect`.
+The screen root also carries `data-theme`, `data-variant`, `data-state`, `data-effect` and, in thumbnails,
+`data-still` (animations paused).
+
+Runtime helpers for renderers (`src/runtime.ts`): `useShowStateInfo()` (current state's label and banner, for
+the alert banner), `useNow(ms)` (a shared ticker), `useStill()`, `usePressFlash()` (a camera-visible flash on
+press) and `useMediaCommands(nodeId, listener)` (video commands from buttons and the operator).
 
 ## Rules
 
