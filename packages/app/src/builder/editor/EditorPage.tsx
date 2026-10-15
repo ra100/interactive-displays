@@ -17,6 +17,7 @@ import {
   type Op,
   type Profile,
   ProfileSchema,
+  randomSeed,
   type Screen,
   takenIds,
 } from "@interactive-displays/core";
@@ -28,6 +29,7 @@ import { api } from "../../tools/api.ts";
 import { ConfirmDialog } from "../../tools/Dialog.tsx";
 import { ToolGate, type Tools } from "../../tools/ToolGate.tsx";
 import { useToast } from "../../tools/useToast.tsx";
+import { generationBase, regenerate, sectionOf } from "../generation.ts";
 import { publishStatus } from "../publishStatus.ts";
 import { AddPanel } from "./AddPanel.tsx";
 import type { DragSource } from "./dragSource.ts";
@@ -244,6 +246,12 @@ const Editor = ({ overview, connection, screenId }: Tools & { screenId: string }
     notify(`Restored revision ${revision} as revision ${result.data.screen.revision}`);
   };
 
+  const section = sectionOf(screen);
+  const regenerateScreen = () => {
+    const ops = regenerate(screen, generationBase(show, overview.screens.map((each) => each.id)), randomSeed());
+    if (ops && apply(ops)) notify("Regenerated everything that is not locked; Undo brings the old screen back");
+  };
+
   const setLiveEdit = async (on: boolean) => {
     const result = await api("PUT", "/api/show/settings", { liveEdit: on });
     if (!result.ok) notify(result.error, "danger");
@@ -279,6 +287,16 @@ const Editor = ({ overview, connection, screenId }: Tools & { screenId: string }
               Redo
             </button>
           </div>
+          {section ? (
+            <button
+              type="button"
+              className="tool-button tool-button--small"
+              onClick={regenerateScreen}
+              title={`New ${section.recipe.label} content for everything that is not locked`}
+            >
+              Regenerate
+            </button>
+          ) : null}
           <span className="editor__spacer" />
           <label className="switch" title="Rehearsal mode: every edit to any screen goes on air at once">
             <input

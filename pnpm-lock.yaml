@@ -32,6 +32,9 @@ importers:
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@interactive-displays/content':
+        specifier: workspace:*
+        version: link:../content
       '@interactive-displays/core':
         specifier: workspace:*
         version: link:../core
