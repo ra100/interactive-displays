@@ -500,6 +500,20 @@ export const createShowService = ({
         return { ok: true, value: next };
       }),
 
+    // Plays another theme's sounds on every display, or the theme's own again with null.
+    setSoundPack: (pack: string | null): Promise<CommandResult<string | null>> =>
+      serialize(async () => {
+        if (!loaded) return NO_SHOW;
+        if (pack !== null && !themeManifests.has(pack)) {
+          return { ok: false, status: 422, message: `There is no sound pack "${pack}"; try ${[...themeManifests.keys()].join(", ")}` };
+        }
+        const { soundPack: _previous, ...show } = loaded.show;
+        loaded.show = pack === null ? show : { ...show, soundPack: pack };
+        await saveShow(dataDir, loaded.show);
+        emit({ type: "show" });
+        return { ok: true, value: pack };
+      }),
+
     // How big every display draws its screen, unless the display has a scale of its own.
     setScale: (scale: number): Promise<CommandResult<number>> =>
       serialize(async () => {

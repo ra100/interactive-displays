@@ -97,6 +97,8 @@ export const ShowSchema = z.object({
   name: z.string().min(1).max(120),
   theme: z.object({ id: IdSchema, variant: IdSchema.optional() }),
   scale: UiScaleSchema.default(DEFAULT_UI_SCALE),
+  // Whose sounds displays play: another theme's pack, e.g. LCARS chirps on a HUD look. Unset: the theme's own.
+  soundPack: IdSchema.optional(),
   // Show-wide modes; the first one is the state a fresh show starts in.
   states: z
     .array(StateDefSchema)

@@ -46,6 +46,7 @@ const SettingsBody = z
   .strict();
 const ThemeBody = z.object({ id: IdSchema, variant: IdSchema.optional() }).strict();
 const ScaleBody = z.object({ scale: UiScaleSchema }).strict();
+const SoundPackBody = z.object({ pack: IdSchema.nullable() }).strict();
 const CuesBody = z.object({ cues: z.unknown() }).strict();
 const SignalsBody = z.object({ signals: z.unknown() }).strict();
 const SignalParams = z.object({ id: SignalIdSchema });
@@ -212,6 +213,13 @@ export const registerApi = (
     const body = ScaleBody.safeParse(request.body);
     if (!body.success) return badRequest(reply, body.error);
     return send(reply, await service.setScale(body.data.scale), (scale) => ({ scale }));
+  });
+
+  // Whose sounds the displays play; null for the theme's own.
+  app.put("/api/show/sound-pack", async (request, reply) => {
+    const body = SoundPackBody.safeParse(request.body);
+    if (!body.success) return badRequest(reply, body.error);
+    return send(reply, await service.setSoundPack(body.data.pack), (pack) => ({ pack }));
   });
 
   // Replaces the running order.

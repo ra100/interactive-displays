@@ -228,7 +228,11 @@ describe("live values and display controls", () => {
     expect(theme).toHaveValue("base");
     expect(screen.getByRole("combobox", { name: "Variant" })).toBeDisabled();
     await userEvent.selectOptions(theme, "Holo HUD");
-    expect(writes().map((call) => [call.path, call.body])).toEqual([["/api/show/theme", { id: "hud" }]]);
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Sounds" }), "LCARS");
+    expect(writes().map((call) => [call.path, call.body])).toEqual([
+      ["/api/show/theme", { id: "hud" }],
+      ["/api/show/sound-pack", { pack: "lcars" }],
+    ]);
   });
 
   it("sizes the show for its panels, and one display apart from the rest", async () => {

@@ -49,6 +49,7 @@ export const buildSnapshot = (service: ShowService, displayId: string): DisplayS
       states: show.states,
       signals: show.signals,
       sounds: show.settings.sounds,
+      ...(show.soundPack ? { soundPack: show.soundPack } : {}),
     },
     state: service.state(),
     signals: service.signalValues(),
