@@ -33,13 +33,17 @@ packages/
             protocol/ typed Socket.io events: hello (display, operator, builder) → snapshot or overview,
                       state, signals, video, identify, reload, watch → screen, press, error
   content/  @interactive-displays/content
-            trek/     the Starship pack: recipes/<section>.json (9 sections), blocks.json, vocab.json; index.ts
-                      exports `packs` (schema-checked on load) and `findRecipe("trek/engineering")`
+            trek/     the Starship pack for LCARS: recipes/<section>.json (9 sections), blocks.json, vocab.json
+            corvette/ the Patrol corvette pack written for the HUD (6 sections); freighter/ the Deep-space
+                      freighter pack for the CRT terminal (7 sections); a pack names its `theme`
+                      index.ts exports `packs` (schema-checked on load) and `findRecipe("trek/engineering")`
   themes/   @interactive-displays/themes
             ./manifest  pure data (server-safe): theme manifests, decor catalog
             ./react     browser only: widget, frame and decor renderers, CSS
             base/       neutral theme that renders every widget and frame; the fallback for all others
             lcars/      LCARS: TNG palette + variants, effects, sounds, three frames, four decor pieces, Antonio font
+            hud/        Holo HUD: translucent panels, Rajdhani + Share Tech Mono, reticle/corners/scale/arcs decor
+            crt/        Terminal: green phosphor CRT (amber and ice variants), VT323, rules/brackets/radar decor
   server/   Fastify + Socket.io + static app, one process, one port; runs TS directly (no build)
             showService.ts  the command layer: every change is validated, persisted and broadcast here;
                             drafts, publish, revisions, previews, assets, signals, display presses
@@ -58,8 +62,9 @@ packages/
             display/  /d/:displayId: connection, state changes, signals, presses, video commands, state
                       sounds, identify overlay, draft preview badge
             gallery/  /gallery (lazy): every frame, widget-by-slot and decor per theme, variant and effect
-            operator/ /operator (lazy): state buttons, blackout, live value sliders, display switches,
-                      display cards (assign, identify, QR, video transport, send back)
+            operator/ /operator (lazy): cues (GO, space bar, record what is on air), state buttons, blackout,
+                      live value sliders, Look (theme, variant, size, sound pack), display switches, display cards
+                      (assign, size, identify, QR, video transport, send back)
             builder/  /builder (lazy): library/ (screens, templates, Generate dialog, signals), generation.ts
                       (generator inputs from the show and theme, regenerate and reroll) and editor/ (session with undo
                       and rebase, outline, preview, inspector with live values and actions, history, assets,
@@ -79,7 +84,8 @@ and `zod`. The server imports `core`, `content`, `@interactive-displays/themes/m
   colours are tone roles (`primary`, `accent`, `danger`, …), never hex values.
 - Containers lay out as a `frame` (an archetype with named slots whose chrome the theme draws), `stack`,
   `grid` or `canvas`. Widgets learn their slot, so a theme can draw a nav button differently from a toolbar one.
-- Decor (`lcars.elbow`) is ornament that belongs to one theme and is hidden in every other theme.
+- Decor (`lcars.elbow`) is ornament that belongs to one theme. Another theme draws it with the stand-in its
+  manifest names in `decorStandIns` (`lcars.bar` → `hud.scale`), or hides it.
 - A show defines its states (`normal`, `red-alert`, …), each naming an effect (`none`, `warning`, `alert`,
   `damaged`, `blackout`) and optionally a theme sound. The theme restyles each effect; nodes can override props
   or visibility per state with `when`.
@@ -87,8 +93,10 @@ and `zod`. The server imports `core`, `content`, `@interactive-displays/themes/m
   no network; `shared` ones are owned by the server (set by the operator or display buttons, or ticked) and
   broadcast at most every 100 ms. Widgets follow them through `bind`; per-state ranges go in `byState`.
 - Controls (button, button group, toggle, slider) carry `actions`: navigate and back (that display only),
-  setState and setSignal (show-wide, behind the `displayGlobalActions` setting), video and sound (run on the
-  display). A press goes to the server as `press { nodeId, value? }`; the server decides what it may do.
+  setState, setSignal and cue (show-wide, behind the `displayGlobalActions` setting), video and sound (run on
+  the display).
+- A show has a running order of `cues`; each sets the state, shared values, display screens and videos at once.
+  The operator's GO runs the next one; the last cue run survives a restart. A press goes to the server as `press { nodeId, value? }`; the server decides what it may do.
 - One-click generation: a content pack recipe (systems, readings with alert ranges, buttons, nav labels) plus a
   seed, density and display shape gives a screen. The same inputs always give the same screen; locked nodes keep
   their place, `placeholder` widgets are filled by matching their intent, and alert ranges become `byState` for the
@@ -103,7 +111,8 @@ and `zod`. The server imports `core`, `content`, `@interactive-displays/themes/m
   Types, validation, JSON Schema, contract tests and the editor's inspector all come from it.
 - Themes are packs: a pure-data manifest (tokens, variants, effects, decor) plus React renderers for widgets,
   frames and decor. Missing renderers fall back to `base`.
-- Layout is fluid: stacks with weights, `--u` (1% of the display's shorter side) and container query units.
+- Layout is fluid: stacks with weights, `--u` and container query units. `--u` is 1% of the display's shorter side
+  times the scale: the show's (0.7 by default, for 4K panels of 80–100"), a display's own, and any node's `scale`.
 - A display says `hello` and gets a full `snapshot`; reconnecting is just another hello. Show state changes
   arrive as a small `state` event so they reach every display within 100 ms.
 
@@ -151,8 +160,11 @@ In a container without a matching Playwright browser, set `PLAYWRIGHT_CHROMIUM_E
    decor })`; register it in `src/manifest.ts`. Decor kinds must be named `<id>.<name>`.
 2. Renderers for widgets, frames and decor in `packages/themes/src/<id>/renderers.ts` (all optional except
    decor); register them in `src/react.ts`.
-3. The contract tests render every widget in every slot, every frame and every decor piece in the new theme
-   automatically; check it by eye at `/gallery?theme=<id>`.
+3. Map other themes' decor to your pieces in the manifest's `decorStandIns`, so re-skinned screens keep their
+   ornament.
+4. The contract tests render every widget in every slot, every frame and every decor piece in the new theme
+   automatically; check it by eye at `/gallery?theme=<id>`, and on a 4K viewport at 70%.
+5. Give it a content pack (`packages/content/src/<pack>/`, `theme: "<id>"`) so generated screens look native.
 
 ### Adding a ship section
 
