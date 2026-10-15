@@ -32,6 +32,7 @@ export const sampleOverview = (overrides: Partial<ShowOverview> = {}): ShowOverv
     displays: [{ id: "eng-1", name: "Engineering 1", screen: "engineering" }],
   }),
   state: "normal",
+  cue: null,
   signals: {},
   screens: [
     { id: "bridge", name: "Bridge", tags: [], profile: { aspect: "16:9", fit: "fluid" }, revision: 0, published: 0 },

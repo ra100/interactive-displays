@@ -237,6 +237,9 @@ export const attachRealtime = (
       case "signals":
         queueSignals(event.values);
         return;
+      case "cue":
+        queueOverview();
+        return;
       case "video":
         io.to(displayRoom(event.displayId)).emit("video", { target: event.target, command: event.command });
         return;

@@ -11,6 +11,7 @@ import {
   sectionsOf,
   SignalIdSchema,
   UiScaleSchema,
+  CueListSchema,
   VideoCommandSchema,
 } from "@interactive-displays/core";
 import { getThemeManifest } from "@interactive-displays/themes/manifest";
@@ -165,15 +166,18 @@ export const createMcpServer = ({ service, generation, connected }: McpDeps): Mc
     "list_displays",
     {
       title: "Displays and show state",
-      description: "The show's state and states, shared signal values, and every display with what it shows and whether it is connected.",
+      description:
+        "The show's state and states, shared signal values, the running order of cues and the last one run, and every display with what it shows and whether it is connected.",
       annotations: READ,
     },
     () => {
       const overview = buildOverview(service, connected());
       if (!overview) return failure("The server has no active show", { status: 503 });
-      const { show, state, signals, displays } = overview;
+      const { show, state, cue, signals, displays } = overview;
       return json({
         state,
+        cues: show.cues,
+        lastCue: cue,
         states: show.states.map(({ id, label, effect }) => ({ id, label, effect })),
         signals: show.signals.map((signal) => ({ id: signal.id, label: signal.label, value: signals[signal.id] })),
         settings: show.settings,
@@ -361,6 +365,30 @@ export const createMcpServer = ({ service, generation, connected }: McpDeps): Mc
       annotations: LIVE,
     },
     ({ id, variant }) => gated("aiLiveControl", async () => result(await service.setTheme({ id, variant }), (theme) => ({ theme }))),
+  );
+
+  server.registerTool(
+    "set_cues",
+    {
+      title: "Write the running order",
+      description:
+        "Replaces the show's cues, first to last. Each cue has an id and label and changes at least one of: state, signals (shared manual ones, id -> value), screens (displayId -> screen id, or null for the default) and videos ({display, target, command}). Nothing goes on air until a cue runs.",
+      inputSchema: { cues: CueListSchema },
+      annotations: WRITE,
+    },
+    async ({ cues }) => result(await service.defineCues(cues), (saved) => ({ cues: saved.map((cue) => cue.id) })),
+  );
+
+  server.registerTool(
+    "run_cue",
+    {
+      title: "Run a cue",
+      description:
+        'Runs a cue from the show\'s running order (list_displays lists them), or with no cue the next one, like the operator\'s GO. A cue changes the state, shared values, screens and videos at once. Needs "AI may run the show".',
+      inputSchema: { cue: IdSchema.optional() },
+      annotations: LIVE,
+    },
+    ({ cue }) => gated("aiLiveControl", async () => result(await (cue ? service.runCue(cue) : service.go()), (ran) => ran)),
   );
 
   server.registerTool(
