@@ -518,7 +518,7 @@ describe("controls on displays", () => {
     const service = await open();
     expect(await service.press("engineering-1", { nodeId: "sys-eject" })).toEqual(["setState", "setSignal"]);
     expect(service.state()).toBe("damaged");
-    expect(service.signalValues(0)["hull"]).toBe(64);
+    expect(service.signalValues(0)["hull"]).toBe(61);
   });
 
   it("uses the control's own value when the action names none", async () => {

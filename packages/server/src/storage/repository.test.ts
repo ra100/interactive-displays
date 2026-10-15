@@ -66,7 +66,7 @@ describe("ensureSeeded", () => {
     expect([...(loaded?.published.keys() ?? [])]).toEqual([...(loaded?.screens.keys() ?? [])]);
     expect(await listAssets(dataDir, "demo")).toMatchObject([
       { name: "schematic.svg", kind: "image" },
-      { name: "viewscreen.mp4", kind: "video" },
+      { name: "viewscreen.webm", kind: "video" },
     ]);
     expect(log.warn).not.toHaveBeenCalled();
   });

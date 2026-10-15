@@ -147,7 +147,7 @@
                     }
                   },
                   {
-                    "weight": 1,
+                    "weight": 2.5,
                     "node": {
                       "id": "core-banner",
                       "type": "widget",
@@ -287,7 +287,7 @@
                       "type": "widget",
                       "kind": "readout",
                       "props": {
-                        "label": "Deck 1\u201310",
+                        "label": "Deck 1–10",
                         "value": 97,
                         "unit": "%",
                         "precision": 1,
@@ -312,7 +312,7 @@
                       "type": "widget",
                       "kind": "readout",
                       "props": {
-                        "label": "Deck 11\u201320",
+                        "label": "Deck 11–20",
                         "value": 97,
                         "unit": "%",
                         "precision": 1,
@@ -337,7 +337,7 @@
                       "type": "widget",
                       "kind": "readout",
                       "props": {
-                        "label": "Deck 21\u201330",
+                        "label": "Deck 21–30",
                         "value": 97,
                         "unit": "%",
                         "precision": 1,
@@ -362,7 +362,7 @@
                       "type": "widget",
                       "kind": "readout",
                       "props": {
-                        "label": "Deck 31\u201342",
+                        "label": "Deck 31–42",
                         "value": 97,
                         "unit": "%",
                         "precision": 1,
@@ -556,7 +556,7 @@
                         {
                           "do": "setSignal",
                           "signal": "hull",
-                          "delta": -36
+                          "delta": -39
                         }
                       ]
                     }
@@ -574,7 +574,7 @@
           "type": "widget",
           "kind": "text",
           "props": {
-            "text": "ALL ENGINEERING SYSTEMS NOMINAL \u00b7 CHIEF ENGINEER ON DUTY",
+            "text": "ALL ENGINEERING SYSTEMS NOMINAL · CHIEF ENGINEER ON DUTY",
             "size": "small",
             "tone": "secondary"
           },
@@ -582,21 +582,21 @@
             {
               "state": "yellow-alert",
               "props": {
-                "text": "YELLOW ALERT \u00b7 SHIELDS UP \u00b7 ALL DECKS STAND BY",
+                "text": "YELLOW ALERT · SHIELDS UP · ALL DECKS STAND BY",
                 "tone": "warning"
               }
             },
             {
               "state": "red-alert",
               "props": {
-                "text": "RED ALERT \u00b7 ALL HANDS TO BATTLE STATIONS",
+                "text": "RED ALERT · ALL HANDS TO BATTLE STATIONS",
                 "tone": "danger"
               }
             },
             {
               "state": "damaged",
               "props": {
-                "text": "HULL BREACH DECK 12 \u00b7 DAMAGE CONTROL TEAMS REPORT",
+                "text": "HULL BREACH DECK 12 · DAMAGE CONTROL TEAMS REPORT",
                 "tone": "danger"
               }
             }

@@ -14,5 +14,5 @@ export const video = defineWidget({
     muted: z.boolean().default(true).meta({ description: "Browsers only start videos on their own when muted" }),
     fit: z.enum(["contain", "cover"]).default("cover"),
   }),
-  example: { asset: "viewscreen.mp4" },
+  example: { asset: "viewscreen.webm" },
 });
