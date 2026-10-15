@@ -17,7 +17,7 @@ const ConnectedDisplay = ({ displayId }: { displayId: string }) => {
   // ?theme=base&variant=nemesis previews the show in another look on this display only.
   const [params] = useSearchParams();
   const themeId = params.get("theme") ?? snapshot?.show.theme.id ?? "base";
-  const playSound = useSounds(themeId, snapshot?.show.sounds ?? false, entered, snapshot?.show.states ?? NONE);
+  const playSound = useSounds(snapshot?.show.soundPack ?? themeId, snapshot?.show.sounds ?? false, entered, snapshot?.show.states ?? NONE);
   const showSignals = snapshot?.show.signals;
   const live = useMemo(
     () => ({ signals: showSignals ?? NONE, store: signals, media, press, playSound }),

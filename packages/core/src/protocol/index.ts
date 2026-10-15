@@ -56,6 +56,8 @@ export interface DisplaySnapshot {
     signals: SignalDef[];
     // Whether displays play theme sounds.
     sounds: boolean;
+    // The theme whose sounds play, when not the show's theme.
+    soundPack?: string;
   };
   // The current show state id; always one of show.states.
   state: string;

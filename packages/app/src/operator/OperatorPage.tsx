@@ -113,8 +113,10 @@ const OperatorConsole = ({ overview, connection, session }: Tools) => {
             <LookPicker
               theme={overview.show.theme}
               scale={overview.show.scale}
+              soundPack={overview.show.soundPack}
               onChange={(theme) => void run(api("PUT", "/api/show/theme", theme))}
               onScale={(scale) => void run(api("PUT", "/api/show/scale", { scale }))}
+              onSoundPack={(pack) => void run(api("PUT", "/api/show/sound-pack", { pack }))}
             />
           </section>
 
