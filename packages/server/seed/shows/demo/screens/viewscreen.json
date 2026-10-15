@@ -98,7 +98,7 @@
           "type": "widget",
           "kind": "video",
           "props": {
-            "asset": "viewscreen.mp4",
+            "asset": "viewscreen.webm",
             "autoplay": true,
             "loop": true,
             "muted": true,

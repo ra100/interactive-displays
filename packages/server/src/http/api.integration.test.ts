@@ -323,7 +323,7 @@ describe("assets", () => {
     expect(uploaded).toMatchObject({ status: 201, body: { asset: "warp-core.png" } });
 
     const list = await server.api<{ assets: Array<{ name: string; size: number }> }>("GET", "/api/assets");
-    expect(list.body.assets.map((asset) => asset.name)).toEqual(["schematic.svg", "viewscreen.mp4", "warp-core.png"]);
+    expect(list.body.assets.map((asset) => asset.name)).toEqual(["schematic.svg", "viewscreen.webm", "warp-core.png"]);
 
     const file = await fetch(`${server.url()}/media/warp-core.png`);
     expect(file.status).toBe(200);
