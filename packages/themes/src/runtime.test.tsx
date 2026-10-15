@@ -47,11 +47,37 @@ describe("ticker", () => {
 
   it("never moves a frozen ticker, so thumbnails stay still", () => {
     render(
-      <TickerContext.Provider value={frozenTicker(42)}>
+      <TickerContext.Provider value={frozenTicker(4200)}>
         <Now every={100} />
       </TickerContext.Provider>,
     );
-    expect(screen.getByTestId("now")).toHaveTextContent("42");
+    expect(screen.getByTestId("now")).toHaveTextContent("4200");
+  });
+
+  it("ticks on whole intervals of the wall clock and rounds the time down to one", () => {
+    vi.useFakeTimers();
+    let clock = 10_130;
+    const ticker = createTicker(() => clock);
+    const tick = vi.fn(() => clock);
+    ticker.subscribe(250, () => tick());
+    render(
+      <TickerContext.Provider value={ticker}>
+        <Now every={250} />
+      </TickerContext.Provider>,
+    );
+    // Two displays started at different moments both show the 10 000 ms slot.
+    expect(screen.getByTestId("now")).toHaveTextContent("10000");
+
+    clock = 10_250;
+    act(() => {
+      vi.advanceTimersByTime(119);
+    });
+    expect(tick).not.toHaveBeenCalled();
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(tick).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId("now")).toHaveTextContent("10250");
   });
 });
 
