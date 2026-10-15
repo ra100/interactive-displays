@@ -6,6 +6,65 @@ Docker smoke test); these steps are for a person with real displays.
 Report problems or ideas as a GitHub issue (label `v2`) or in the project thread, with the display type,
 browser, the URL you opened and a photo or screenshot if possible.
 
+## Phase 4: one-click generation
+
+### Setup
+
+Any Phase 3 data directory works; nothing new is seeded. A fresh one (`docker compose down -v`; from source,
+delete `data/`) gives the demo show's states and signals, which generated screens use for red alert and for the
+readings that follow a show value. You need a laptop for `/builder`, one display opened at `/d/<any-name>` and a
+phone for `/operator`.
+
+### The Phase 4 exit check
+
+"Choosing Weapons yields a plausible, on-style, touch-safe screen in one click; a reroll differs; locked parts
+survive."
+
+| # | Step | Expected |
+|---|---|---|
+| 1 | In `/builder`, press **Generate**, choose **Tactical** | Three takes appear at once, each on another layout, with a weapons title, nav buttons (Shields, Phasers, Torpedoes…) and panels about shields, phasers, torpedoes or alert status |
+| 2 | Press **Create and edit**, then **Publish**; assign the screen to your display in the operator console | The display shows it; every button is comfortably big enough to tap; numbers and gauges move by themselves |
+| 3 | Set **Red alert** in the operator console | Shield readings drop to their alert range and turn red, lights flash, a RED ALERT banner appears and the bottom line changes to an alert message |
+| 4 | Tap **Red alert**, **Yellow alert** or **Stand down** on the display (if the screen has the Alert status panel) | The whole show changes state |
+| 5 | Back in the editor, select the title, tick **Locked**, press **Regenerate** | Everything except the title changes; the layout stays; a message says Undo brings the old screen back |
+| 6 | Press **Undo** | The previous screen is back exactly |
+| 7 | Select a panel (click a panel heading, then Esc), press **Reroll** | Only that panel changes, in the same place |
+
+### Generate dialog
+
+| Step | Expected |
+|---|---|
+| Change **Section**, **Density**, **Aspect** | The three takes update at once; dense has more panels and buttons than sparse; 9:16 leads with a stacked layout |
+| Type a seed, or press **Roll** | The same seed always gives the same takes; Roll gives new ones |
+| Pick a state in the box next to "Pick one" | The takes show how they look in that state |
+| Tick **Also make a screen for each system**, create | The overview opens in the editor and the library shows one more screen per system; publish them all, put the overview on a display and tap its nav buttons: they move between the screens, and each system screen has an Overview button |
+
+### Placeholders
+
+1. In the editor, add a **Placeholder** from the Widgets list into the main area, and set its intent to a sentence
+   such as "torpedo loading controls".
+2. The Checks list says it is still a placeholder.
+3. Press **Regenerate**: the placeholder becomes a panel about the matching system (here, the torpedo bays) in the
+   same place.
+
+### Edge cases worth trying
+
+- Generate the same section twice: the second gets an id ending in `-2`.
+- Lock a whole panel, regenerate several times: it never changes. Lock one widget inside a panel: the widget is kept (as its own panel) and the rest of the panel is regenerated.
+- Lock the root (the whole screen): Regenerate leaves it alone.
+- Generate in a show without red alert or damaged states: there is no banner and nothing changes per state.
+- A screen whose section is not one of the nine (or none) has no Regenerate button.
+- Switch the preview theme to Base: generated screens still look sensible.
+
+### Known limitations (Phase 4)
+
+- Generation runs in the browser; the server and MCP get it in Phase 5.
+- One content pack (Starship). New sections are JSON files in `packages/content/src/trek/recipes/` and need a
+  rebuild; saving recipes from the tools or from AI comes with Phase 5.
+- Placeholders match by words, not meaning; AI fills them precisely in Phase 5.
+- Danger buttons do not ask for confirmation on displays.
+- Regenerating one screen of a suite keeps its nav wired only while the suite's screens keep their generated ids.
+
 ## Phase 3: living screens
 
 ### Setup

@@ -16,19 +16,25 @@ The v1 code is kept read-only under `legacy/` for reference; never import from i
 packages/
   core/     @interactive-displays/core    pure TS, no React, no Node APIs; runs in browser and server
             schema/   Zod schemas: ids, tones, archetypes and slots, node tree, Screen (draft revision and
-                      published revision), Show (states, signals, displays, settings), signals and bindings,
-                      actions, assets, theme manifest (with sounds)
+                      published revision, generator provenance), Show (states, signals, displays, settings),
+                      signals and bindings, actions, assets, theme manifest (with sounds and tone palettes),
+                      content packs (recipes, blocks, vocabulary)
             catalog/  defineWidget() registry (one file per widget) and defineDecor()
             tree/     walk/find nodes; nodeInState applies `when` overrides for a show state
             signals/  sample a signal at a moment (seeded walk, wave, clock), per-state sources, bindProps
             validate/ validateScreen: schema, unique ids, known kinds, props, slots, grid areas, decor
             ops/      the operation language (insert, remove, move, update, set, place, layout, replace,
                       meta): all-or-nothing, returns inverse ops for undo, can respect locks
+            generator/ seeded generator: generateScreen, generateVariants, generateSuite, regenerateOps (around
+                      locked parts and placeholders), rerollOps (one panel); blocks.ts fills a block from a system
             lint/     lintScreen: structural warnings (empty containers, missing main slot, long labels…)
             fields/   describeFields: inspector form fields from a props schema
             migrate/  migrateScreen: upgrades older screen documents on read
             protocol/ typed Socket.io events: hello (display, operator, builder) → snapshot or overview,
                       state, signals, video, identify, reload, watch → screen, press, error
+  content/  @interactive-displays/content
+            trek/     the Starship pack: recipes/<section>.json (9 sections), blocks.json, vocab.json; index.ts
+                      exports `packs` (schema-checked on load) and `findRecipe("trek/engineering")`
   themes/   @interactive-displays/themes
             ./manifest  pure data (server-safe): theme manifests, decor catalog
             ./react     browser only: widget, frame and decor renderers, CSS
@@ -51,7 +57,8 @@ packages/
             gallery/  /gallery (lazy): every frame, widget-by-slot and decor per theme, variant and effect
             operator/ /operator (lazy): state buttons, blackout, live value sliders, display switches,
                       display cards (assign, identify, QR, video transport, send back)
-            builder/  /builder (lazy): library/ (screens, templates, signals) and editor/ (session with undo
+            builder/  /builder (lazy): library/ (screens, templates, Generate dialog, signals), generation.ts
+                      (generator inputs from the show and theme, regenerate and reroll) and editor/ (session with undo
                       and rebase, outline, preview, inspector with live values and actions, history, assets,
                       send to display)
             tools/    shared by operator and builder: connection, token gate, API client, dialogs
@@ -60,7 +67,8 @@ data/       runtime data (gitignored): settings.json, shows/<id>/{show,runtime}.
             (drafts and .history/), shows/<id>/published/, shows/<id>/assets/
 ```
 
-**Import boundaries:** `core` imports only `zod`. Theme manifests import only `core` and `zod`. The server
+**Import boundaries:** `core` imports only `zod`. `content` imports only `core`. Theme manifests import only `core`
+and `zod`. The server
 imports `core` and `@interactive-displays/themes/manifest`. Only `app` imports `@interactive-displays/themes/react`.
 
 **Key ideas** (details in the plan):
@@ -79,6 +87,10 @@ imports `core` and `@interactive-displays/themes/manifest`. Only `app` imports `
 - Controls (button, button group, toggle, slider) carry `actions`: navigate and back (that display only),
   setState and setSignal (show-wide, behind the `displayGlobalActions` setting), video and sound (run on the
   display). A press goes to the server as `press { nodeId, value? }`; the server decides what it may do.
+- One-click generation: a content pack recipe (systems, readings with alert ranges, buttons, nav labels) plus a
+  seed, density and display shape gives a screen. The same inputs always give the same screen; locked nodes keep
+  their place, `placeholder` widgets are filled by matching their intent, and alert ranges become `byState` for the
+  show's alert and damaged states. Regenerate and Reroll are ordinary ops (one Undo).
 - Every change goes through the command layer (`showService.ts`) as validated ops with revision checks.
   Ops change a screen's draft; displays show its published copy until someone publishes (or the show is in
   live edit mode). The editor and operator console are clients of the same REST API and socket.
@@ -137,6 +149,13 @@ In a container without a matching Playwright browser, set `PLAYWRIGHT_CHROMIUM_E
 3. The contract tests render every widget in every slot, every frame and every decor piece in the new theme
    automatically; check it by eye at `/gallery?theme=<id>`.
 
+### Adding a ship section
+
+1. `packages/content/src/trek/recipes/<section>.json` (see `ContentPackSchema` in `core/src/schema/content.ts`) and
+   add it to `trek/pack.ts`. Name show signals in `signal` only if the demo show has them.
+2. `pnpm --filter @interactive-displays/content test`: the property tests generate it for every seed, density and
+   shape and must stay valid and lint-clean. Look at it in the Generate dialog.
+
 ## Workflow
 
 ### TDD (mandatory)
@@ -177,4 +196,5 @@ Date, Original Plan, What Changed, Justification and Impact.
 ## Skills
 
 Task-specific guidance lives in `.claude/skills/`: `widgets` (catalog and renderers), `themes` (theme packs,
-frames, decor, effects), `server` (command layer, REST API, data, protocol, deployment).
+frames, decor, effects), `server` (command layer, REST API, data, protocol, deployment), `content` (content packs,
+recipes, blocks and the generator).
