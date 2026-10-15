@@ -79,6 +79,20 @@ describe("lintScreen", () => {
     expect(rules(screen, { show })).toEqual(["unknown-state"]);
   });
 
+  it("flags buttons that run a cue the show does not have", () => {
+    const show = ShowSchema.parse({ schemaVersion: 1, id: "s", name: "S", theme: { id: "base" }, cues: [{ id: "go", label: "Go", state: "normal" }] });
+    const screen = screenWith({
+      id: "root",
+      type: "container",
+      layout: { kind: "stack", direction: "row" },
+      children: [
+        { node: { id: "a", type: "widget", kind: "button", props: { label: "A" }, actions: [{ do: "cue", cue: "go" }] } },
+        { node: { id: "b", type: "widget", kind: "button", props: { label: "B" }, actions: [{ do: "cue", cue: "gone" }] } },
+      ],
+    });
+    expect(lintScreen(screen, { show }).filter((issue) => issue.rule === "unknown-cue").map((issue) => issue.nodeId)).toEqual(["b"]);
+  });
+
   it("flags live values that change in states the show does not have", () => {
     const show = ShowSchema.parse({ schemaVersion: 1, id: "s", name: "S", theme: { id: "base" } });
     const gauge = {
