@@ -38,12 +38,16 @@ export const BaseGauge = ({ props }: WidgetRendererProps<WidgetPropsOf<"gauge">>
       <div className="base-gauge" data-variant="arc" data-tone={tone}>
         <svg className="base-gauge__arc" viewBox="0 0 100 56" aria-hidden="true">
           <path className="base-gauge__arc-track" d="M 8 50 A 42 42 0 0 1 92 50" pathLength={100} />
-          <path
-            className="base-gauge__arc-fill"
-            d="M 8 50 A 42 42 0 0 1 92 50"
-            pathLength={100}
-            strokeDasharray={`${fraction * 100} 100`}
-          />
+          {/* The gap is longer than the arc, so the dash never repeats as a dot at the far end; at zero there is
+              no fill at all, since a round cap would still draw one. */}
+          {fraction > 0 ? (
+            <path
+              className="base-gauge__arc-fill"
+              d="M 8 50 A 42 42 0 0 1 92 50"
+              pathLength={100}
+              strokeDasharray={`${fraction * 100} 101`}
+            />
+          ) : null}
         </svg>
         <span className="base-gauge__label">{props.label}</span>
         {value}

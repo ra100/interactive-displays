@@ -35,6 +35,18 @@ export const BaseBarGraph = ({ props, nodeId }: WidgetRendererProps<WidgetPropsO
 
 const SAMPLE_MS = 400;
 
+// How far the made-up history before the first live value strays from it.
+const LEAD_IN_SPREAD = 0.12;
+
+// What a bound sparkline shows before it has a history: a trace that wanders and arrives at the first value, so
+// a display that has just started (or a still thumbnail) looks like it has been tracking for a while.
+const leadIn = (seed: number, first: number, count: number): number[] =>
+  Array.from({ length: count }, (_, index) => {
+    const taper = 1 - index / count;
+    const offset = (wander(seed, index * 0.12) - 0.5) * 2 * LEAD_IN_SPREAD * taper;
+    return Math.min(1, Math.max(0, first + offset));
+  });
+
 // A bound sparkline traces its value over time; an unbound one draws a believable trace of its own.
 export const BaseSparkline = ({ props, nodeId }: WidgetRendererProps<WidgetPropsOf<"sparkline">>) => {
   const now = useNow(SAMPLE_MS);
@@ -49,7 +61,9 @@ export const BaseSparkline = ({ props, nodeId }: WidgetRendererProps<WidgetProps
   } else {
     if (now !== lastSample.current) {
       lastSample.current = now;
-      history.current = [...history.current, fractionOf(props.value, props.min, props.max)].slice(-props.points);
+      const value = fractionOf(props.value, props.min, props.max);
+      const before = history.current.length > 0 ? history.current : leadIn(seed, value, props.points - 1);
+      history.current = [...before, value].slice(-props.points);
     }
     values = history.current;
   }

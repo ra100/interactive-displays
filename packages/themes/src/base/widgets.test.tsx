@@ -4,7 +4,8 @@ import { describe, expect, it, vi } from "vitest";
 import { ShowStateInfoContext } from "../runtime.ts";
 import { bannerText, BaseAlertBanner } from "./BaseAlertBanner.tsx";
 import { BaseButtonGroup, BaseSlider, BaseToggle } from "./BaseControls.tsx";
-import { gaugeTone } from "./BaseData.tsx";
+import { BaseSparkline } from "./BaseAmbient.tsx";
+import { BaseGauge, gaugeTone } from "./BaseData.tsx";
 
 const propsOf = <Kind extends WidgetKind>(kind: Kind, overrides: Partial<WidgetPropsOf<Kind>> = {}): WidgetPropsOf<Kind> => {
   const definition = catalog.get(kind);
@@ -18,6 +19,24 @@ describe("gaugeTone", () => {
     expect(gaugeTone(gauge)).toBe("danger");
     expect(gaugeTone({ ...gauge, value: 60 })).toBe("primary");
     expect(gaugeTone({ ...gauge, value: 99, dangerAbove: 95 })).toBe("danger");
+  });
+});
+
+describe("arc gauge", () => {
+  it("draws no fill at zero and a fill that stops at the value otherwise", () => {
+    const { container, rerender } = render(<BaseGauge props={propsOf("gauge", { value: 0, variant: "arc" })} nodeId="g" />);
+    expect(container.querySelector(".base-gauge__arc-fill")).toBeNull();
+    rerender(<BaseGauge props={propsOf("gauge", { value: 40, variant: "arc" })} nodeId="g" />);
+    expect(container.querySelector(".base-gauge__arc-fill")).toHaveAttribute("stroke-dasharray", "40 101");
+  });
+});
+
+describe("sparkline", () => {
+  it("starts a live trace with a full history that ends at the first value", () => {
+    const { container } = render(<BaseSparkline props={propsOf("sparkline", { value: 50, points: 20 })} nodeId="trace" />);
+    const points = container.querySelector("polyline")?.getAttribute("points")?.split(" ") ?? [];
+    expect(points).toHaveLength(20);
+    expect(points.at(-1)).toBe("100.00,50.00");
   });
 });
 
