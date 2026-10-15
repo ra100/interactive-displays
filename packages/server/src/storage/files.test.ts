@@ -1,4 +1,4 @@
-import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -29,6 +29,24 @@ describe("writeJsonAtomic", () => {
 
     expect(await readJson(file)).toEqual({ index: 19 });
     expect(await readdir(dir)).toEqual(["x.json"]);
+  });
+
+  it("rejects only to its caller when a write fails, and the next write still runs", async () => {
+    const unhandled: unknown[] = [];
+    const track = (reason: unknown) => unhandled.push(reason);
+    process.on("unhandledRejection", track);
+    try {
+      const file = path.join(dir, "blocked.json");
+      await mkdir(path.join(file, "inside"), { recursive: true });
+      await expect(writeJsonAtomic(file, { a: 1 })).rejects.toThrow();
+      await rm(file, { recursive: true });
+      await writeJsonAtomic(file, { a: 2 });
+      expect(await readJson(file)).toEqual({ a: 2 });
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(unhandled).toEqual([]);
+    } finally {
+      process.off("unhandledRejection", track);
+    }
   });
 });
 
