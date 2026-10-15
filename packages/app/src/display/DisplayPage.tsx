@@ -6,6 +6,7 @@ import { getOrCreateDisplayId, rememberDisplayId } from "./displayId.ts";
 import { IdentifyOverlay } from "./IdentifyOverlay.tsx";
 import { StatusMessage } from "./StatusMessage.tsx";
 import { useDisplayConnection } from "./useDisplayConnection.ts";
+import { useKiosk } from "./useKiosk.ts";
 import { useSounds } from "./useSounds.ts";
 import "./display.css";
 
@@ -16,6 +17,8 @@ const ConnectedDisplay = ({ displayId }: { displayId: string }) => {
   const { status, snapshot, error, identify, entered, signals, media, press } = useDisplayConnection(displayId);
   // ?theme=base&variant=nemesis previews the show in another look on this display only.
   const [params] = useSearchParams();
+  // ?fullscreen goes fullscreen on the first touch.
+  useKiosk({ fullscreen: params.has("fullscreen") });
   const themeId = params.get("theme") ?? snapshot?.show.theme.id ?? "base";
   const playSound = useSounds(snapshot?.show.soundPack ?? themeId, snapshot?.show.sounds ?? false, entered, snapshot?.show.states ?? NONE);
   const showSignals = snapshot?.show.signals;
