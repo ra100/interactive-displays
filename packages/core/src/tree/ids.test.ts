@@ -55,6 +55,35 @@ describe("cloneWithFreshIds", () => {
     expect(copy.id).toBe("go-3");
   });
 
+  it("aims copied video controls at the copied video, and others where they were", () => {
+    const player: Node = {
+      id: "player",
+      type: "container",
+      layout: { kind: "stack", direction: "column", gap: "none" },
+      children: [
+        { node: { id: "feed", type: "widget", kind: "video", props: { src: "a.webm" } } },
+        {
+          node: {
+            id: "play",
+            type: "widget",
+            kind: "button",
+            props: { label: "Play" },
+            actions: [
+              { do: "video", target: "feed", command: "toggle" },
+              { do: "video", target: "main-feed", command: "pause" },
+            ],
+          },
+        },
+      ],
+    };
+    const copy = cloneWithFreshIds(player, takenIds(player));
+    const button = copy.type === "container" ? copy.children[1]?.node : undefined;
+    expect(button?.type === "widget" && button.actions).toEqual([
+      { do: "video", target: "feed-2", command: "toggle" },
+      { do: "video", target: "main-feed", command: "pause" },
+    ]);
+  });
+
   it("does not change the original", () => {
     const before = structuredClone(panel);
     cloneWithFreshIds(panel, takenIds(panel));

@@ -26,15 +26,28 @@ export const uniqueId = (stem: string, taken: ReadonlySet<string>): string => {
 };
 
 // A deep copy of a node with every id in it replaced by one that is free in `taken`, which it extends.
-// Used to duplicate parts of a screen and to drop blocks into one.
+// Used to duplicate parts of a screen and to drop blocks into one. Video controls in the copy that aimed at a
+// video in the copied part aim at that video's copy; ones aiming elsewhere on the screen stay as they are.
 export const cloneWithFreshIds = (node: Node, taken: Set<string>): Node => {
   const copy = structuredClone(node);
+  const renamed = new Map<string, string>();
   const rename = (current: Node) => {
-    current.id = uniqueId(current.id.replace(/-\d+$/, ""), taken);
-    taken.add(current.id);
+    const id = uniqueId(current.id.replace(/-\d+$/, ""), taken);
+    renamed.set(current.id, id);
+    current.id = id;
+    taken.add(id);
     if (current.type === "container") for (const child of current.children) rename(child.node);
   };
+  const retarget = (current: Node) => {
+    if (current.type === "widget") {
+      for (const action of current.actions ?? []) {
+        if (action.do === "video") action.target = renamed.get(action.target) ?? action.target;
+      }
+    }
+    if (current.type === "container") for (const child of current.children) retarget(child.node);
+  };
   rename(copy);
+  retarget(copy);
   return copy;
 };
 

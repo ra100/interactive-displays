@@ -265,6 +265,15 @@ describe("live values and controls", () => {
     expect(valueOf(container)).toBe("25");
   });
 
+  it("keeps a bound number a number on a readout whose own value is text, so its precision applies", () => {
+    const screen = makeScreen([
+      widget("shields", "readout", { label: "SHIELDS", value: "RAISED", precision: 1 }, { bind: { value: { signal: "shields" } } } as Partial<Node>),
+    ]);
+    const store = createSignalStore({ shields: 47.38291 });
+    const { container } = render(<ScreenView screen={screen} themeId="base" live={{ signals, store }} />);
+    expect(valueOf(container)).toBe("47.4");
+  });
+
   it("works a value out locally until the server sends one", () => {
     const { container } = render(
       <ScreenView screen={readout({ value: { signal: "shields" } })} themeId="base" live={{ signals }} />,
