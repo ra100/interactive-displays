@@ -67,6 +67,12 @@ export const ThemeManifestSchema = z.object({
   // "press" plays on every control; states and actions name others, such as "alert". Missing ones fall back
   // to the base theme's.
   sounds: z.record(IdSchema, SoundSchema).default({}),
+  // Other themes' decor this theme draws with one of its own pieces, so a re-skinned screen keeps its
+  // ornament: "lcars.bar" → { kind: "crt.rule", props: { style: "double" } }. The foreign piece's tone carries
+  // over when the stand-in has one. Unmapped foreign decor stays hidden.
+  decorStandIns: z
+    .record(z.string().regex(/^[a-z0-9-]+\.[a-z0-9-]+$/), z.object({ kind: z.string().min(1), props: z.record(z.string(), z.unknown()).default({}) }))
+    .default({}),
 });
 
 export type ThemeTokens = z.infer<typeof ThemeTokensSchema>;
@@ -86,7 +92,14 @@ export const defineTheme = (
   const prefix = `${data.id}.`;
   const foreign = decor.find((definition) => !definition.kind.startsWith(prefix));
   if (foreign) throw new Error(`Decor "${foreign.kind}" must be named "${prefix}<name>"`);
-  return { ...ThemeManifestSchema.parse(data), decor };
+  const parsed = ThemeManifestSchema.parse(data);
+  for (const [from, standIn] of Object.entries(parsed.decorStandIns)) {
+    if (from.startsWith(prefix)) throw new Error(`Decor "${from}" is this theme's own and needs no stand-in`);
+    const target = decor.find((definition) => definition.kind === standIn.kind);
+    if (!target) throw new Error(`Stand-in for "${from}" names "${standIn.kind}", which is not this theme's decor`);
+    if (!target.props.safeParse(standIn.props).success) throw new Error(`Stand-in props for "${from}" do not fit "${standIn.kind}"`);
+  }
+  return { ...parsed, decor };
 };
 
 export const applyTokenOverrides = (tokens: ThemeTokens, overrides: ThemeTokenOverrides | undefined): ThemeTokens =>

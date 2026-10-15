@@ -28,3 +28,17 @@ export const decorCatalog: DecorCatalog = new Map(
     theme.decor.map((definition): [string, AnyDecorDefinition] => [definition.kind, definition]),
   ),
 );
+
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
+
+// The decor a theme draws for a node: its own piece as it is, another theme's piece through the stand-in the
+// theme names for it (keeping the piece's tone when the stand-in takes one), or nothing.
+export const decorFor = (themeId: string, kind: string, props: unknown): { kind: string; props: unknown } | undefined => {
+  if (kind.startsWith(`${themeId}.`)) return { kind, props };
+  const theme = themeManifests.get(themeId);
+  const standIn = theme && Object.hasOwn(theme.decorStandIns, kind) ? theme.decorStandIns[kind] : undefined;
+  if (!standIn) return undefined;
+  const tone = isRecord(props) ? props["tone"] : undefined;
+  const toned = { ...standIn.props, tone };
+  return { kind: standIn.kind, props: tone !== undefined && decorCatalog.get(standIn.kind)?.props.safeParse(toned).success ? toned : standIn.props };
+};

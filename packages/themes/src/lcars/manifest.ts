@@ -94,4 +94,9 @@ export const lcars = defineTheme({
     },
   },
   decor: [elbow, bar, cap, bracket],
+  // Terminal ornament re-skinned: rules become capped bars, corner brackets a bracket. Radar and log go.
+  decorStandIns: {
+    "crt.rule": { kind: "lcars.bar", props: { caps: "both" } },
+    "crt.brackets": { kind: "lcars.bracket" },
+  },
 });
