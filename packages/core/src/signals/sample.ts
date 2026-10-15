@@ -74,7 +74,7 @@ export const sampleSource = (source: Source, seed: number, now: number): SignalV
     case "clock":
       return formatClock(source.format, now);
     case "manual":
-      return source.initial;
+      return manualStart(source);
   }
 };
 
@@ -122,7 +122,18 @@ export const isSettable = (signal: Pick<SignalDef, "scope" | "source">): boolean
 export const isServerOwned = (signal: Pick<SignalDef, "scope" | "source">): boolean =>
   isSettable(signal) || isTicking(signal);
 
-// Applies a setSignal to a manual signal: clamped to its range and snapped to its step.
+type ManualSource = Extract<Source, { kind: "manual" }>;
+
+const snapToStep = (source: ManualSource, raw: number): number => {
+  const snapped = source.min + Math.round((raw - source.min) / source.step) * source.step;
+  return Math.min(source.max, Math.max(source.min, Number(snapped.toFixed(6))));
+};
+
+// A manual signal's value before anyone sets it: its initial value, kept in its range and on its step.
+export const manualStart = (source: ManualSource): number => snapToStep(source, source.initial);
+
+// Applies a setSignal to a manual signal: clamped to its range and snapped to its step. A delta moves by
+// whole steps and always at least one in its direction, so "up by 1" on a signal stepping by 5 still moves.
 export const nextManualValue = (
   signal: Pick<SignalDef, "source">,
   current: number,
@@ -130,9 +141,10 @@ export const nextManualValue = (
 ): number | undefined => {
   const { source } = signal;
   if (source.kind !== "manual") return undefined;
-  const raw = change.value ?? current + (change.delta ?? 0);
-  const snapped = source.min + Math.round((raw - source.min) / source.step) * source.step;
-  return Math.min(source.max, Math.max(source.min, Number(snapped.toFixed(6))));
+  if (change.value !== undefined) return snapToStep(source, change.value);
+  const delta = change.delta ?? 0;
+  const steps = delta === 0 ? 0 : Math.sign(delta) * Math.max(1, Math.round(Math.abs(delta) / source.step));
+  return snapToStep(source, snapToStep(source, current) + steps * source.step);
 };
 
 // Rounded for the wire and for change detection: two decimals are plenty for anything on a screen.

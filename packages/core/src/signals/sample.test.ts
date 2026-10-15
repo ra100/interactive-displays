@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { SignalDefSchema, SourceSchema } from "../schema/signal.ts";
+import { ManualSourceSchema, SignalDefSchema, SourceSchema } from "../schema/signal.ts";
 import {
   formatClock,
   isServerOwned,
   isSettable,
   isTicking,
+  manualStart,
   nextManualValue,
   roundValue,
   sampleAmbient,
@@ -119,6 +120,24 @@ describe("nextManualValue", () => {
     expect(nextManualValue(shields, 50, { delta: -10 })).toBe(40);
     expect(nextManualValue(shields, 95, { delta: 20 })).toBe(100);
     expect(nextManualValue(shields, 5, { value: -3 })).toBe(0);
+  });
+
+  it("moves by whole steps, at least one, in the delta's direction", () => {
+    expect(nextManualValue(shields, 50, { delta: 1 })).toBe(55);
+    expect(nextManualValue(shields, 50, { delta: -1 })).toBe(45);
+    expect(nextManualValue(shields, 50, { delta: 2.5 })).toBe(55);
+    expect(nextManualValue(shields, 50, { delta: -2.5 })).toBe(45);
+    expect(nextManualValue(shields, 50, { delta: 7 })).toBe(55);
+    expect(nextManualValue(shields, 50, { delta: 0 })).toBe(50);
+    expect(nextManualValue(shields, 0, { delta: -1 })).toBe(0);
+  });
+
+  it("starts from the initial value kept in range and on the step", () => {
+    const start = (source: object) => manualStart(ManualSourceSchema.parse({ kind: "manual", ...source }));
+    expect(start({ initial: 0, min: 20, max: 100 })).toBe(20);
+    expect(start({ initial: 500, min: 0, max: 100, step: 5 })).toBe(100);
+    expect(start({ initial: 42, min: 0, max: 100, step: 5 })).toBe(40);
+    expect(sampleSource(ManualSourceSchema.parse({ kind: "manual", initial: 0, min: 20, max: 40 }), 0, 0)).toBe(20);
   });
 
   it("does nothing for other sources", () => {
