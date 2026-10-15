@@ -1,18 +1,18 @@
 import type { DecorNode } from "@interactive-displays/core";
 import { decorCatalog } from "@interactive-displays/themes/manifest";
-import { resolveDecorRenderer } from "@interactive-displays/themes/react";
+import { resolveDecor } from "@interactive-displays/themes/react";
 import { useMemo } from "react";
 import { useThemeId } from "./context.ts";
 import { WidgetFallback } from "./WidgetFallback.tsx";
 
-// Decor is ornament for one theme. Containers already skip decor from other themes; this renders the rest
-// with validated props, like widgets.
+// Decor is ornament for one theme. Containers already skip decor the theme cannot draw; this renders the rest,
+// or the theme's stand-in for another theme's piece, with validated props, like widgets.
 export const DecorView = ({ node }: { node: DecorNode }) => {
   const themeId = useThemeId();
-  const parsed = useMemo(() => decorCatalog.get(node.kind)?.props.safeParse(node.props), [node]);
-  const Renderer = resolveDecorRenderer(themeId, node.kind);
+  const shown = useMemo(() => resolveDecor(themeId, node.kind, node.props), [themeId, node]);
+  const parsed = useMemo(() => shown && decorCatalog.get(shown.kind)?.props.safeParse(shown.props), [shown]);
 
-  if (!Renderer) return null;
+  if (!shown) return null;
   if (!parsed?.success) return <WidgetFallback kind={node.kind} reason="Invalid props" />;
-  return <Renderer props={parsed.data} nodeId={node.id} />;
+  return <shown.Renderer props={parsed.data} nodeId={node.id} />;
 };

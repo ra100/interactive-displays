@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { defineDecor } from "../catalog/defineDecor.ts";
 import { defineTheme, resolveTokens, themeCssVariables } from "./theme.ts";
+import { ToneSchema } from "./tone.ts";
 
 const palette = {
   primary: "#111111",
@@ -48,6 +49,21 @@ describe("defineTheme", () => {
     const mono = defineTheme({ ...manifest, tones: { nav: ["primary"], panels: ["primary"] } });
     expect(mono.tones).toEqual({ nav: ["primary"], panels: ["primary"] });
     expect(() => defineTheme({ ...manifest, tones: { nav: [], panels: ["primary"] } })).toThrow();
+  });
+
+  it("checks decor stand-ins against the theme's own decor", () => {
+    const rule = defineDecor({
+      kind: "test.rule",
+      label: "Rule",
+      description: "A line.",
+      props: z.strictObject({ style: z.enum(["single", "double"]).default("single"), tone: ToneSchema.default("primary") }),
+      example: {},
+    });
+    const themed = defineTheme({ ...manifest, decor: [rule], decorStandIns: { "other.bar": { kind: "test.rule", props: { style: "double" } } } });
+    expect(themed.decorStandIns["other.bar"]).toEqual({ kind: "test.rule", props: { style: "double" } });
+    expect(() => defineTheme({ ...manifest, decor: [rule], decorStandIns: { "other.bar": { kind: "test.missing" } } })).toThrow(/not this theme's decor/);
+    expect(() => defineTheme({ ...manifest, decor: [rule], decorStandIns: { "other.bar": { kind: "test.rule", props: { style: "wavy" } } } })).toThrow(/do not fit/);
+    expect(() => defineTheme({ ...manifest, decor: [rule], decorStandIns: { "test.rule": { kind: "test.rule" } } })).toThrow(/own/);
   });
 });
 

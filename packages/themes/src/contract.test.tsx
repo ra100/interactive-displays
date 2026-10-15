@@ -2,7 +2,7 @@ import { ARCHETYPE_IDS, archetypeSlots, catalog, SLOTS } from "@interactive-disp
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { decorCatalog, themeManifests } from "./manifest.ts";
-import { resolveDecorRenderer, resolveFrameRenderer, resolveWidgetRenderer } from "./react.ts";
+import { resolveDecor, resolveDecorRenderer, resolveFrameRenderer, resolveWidgetRenderer } from "./react.ts";
 
 const themeIds = [...themeManifests.keys()];
 const slots = [undefined, ...SLOTS];
@@ -82,6 +82,28 @@ describe("theme contract: decor", () => {
 
   it("returns undefined for unknown decor in its own theme", () => {
     expect(resolveDecorRenderer("lcars", "lcars.warp-core")).toBeUndefined();
+  });
+
+  it("draws another theme's piece with the theme's stand-in, keeping its tone", () => {
+    const standIn = resolveDecor("crt", "lcars.bar", { caps: "right", tone: "danger" });
+    expect(standIn?.kind).toBe("crt.rule");
+    expect(standIn?.props).toEqual({ style: "double", tone: "danger" });
+    expect(resolveDecor("lcars", "crt.rule", { label: "SYS" })?.props).toEqual({ caps: "both" });
+  });
+
+  it("hides another theme's piece that has no stand-in", () => {
+    expect(resolveDecor("crt", "lcars.cap", {})).toBeUndefined();
+    expect(resolveDecor("lcars", "crt.radar", {})).toBeUndefined();
+    expect(resolveDecor("base", "lcars.bar", {})).toBeUndefined();
+  });
+
+  it("gives every stand-in props its decor accepts", () => {
+    for (const [themeId, theme] of themeManifests)
+      for (const [from, standIn] of Object.entries(theme.decorStandIns)) {
+        expect(decorCatalog.has(from), `${themeId}: ${from}`).toBe(true);
+        const shown = resolveDecor(themeId, from, decorCatalog.get(from)?.example);
+        expect(shown && decorCatalog.get(standIn.kind)?.props.safeParse(shown.props).success).toBe(true);
+      }
   });
 });
 

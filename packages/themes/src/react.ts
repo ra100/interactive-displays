@@ -3,6 +3,7 @@ import { baseRenderers } from "./base/renderers.ts";
 import { crtRenderers } from "./crt/renderers.ts";
 import type { AnyDecorRenderer, FrameRenderer, ThemeRenderers, WidgetRendererProps } from "./contract.ts";
 import { lcarsRenderers } from "./lcars/renderers.ts";
+import { decorFor } from "./manifest.ts";
 import "./tones.css";
 
 export type {
@@ -40,6 +41,17 @@ export const resolveFrameRenderer = (themeId: string, archetype: string): FrameR
 // Decor belongs to one theme ("lcars.elbow") and is hidden everywhere else.
 export const resolveDecorRenderer = (themeId: string, kind: string): AnyDecorRenderer | undefined =>
   kind.startsWith(`${themeId}.`) ? (lookup(themeRenderers.get(themeId)?.decor ?? {}, kind) as AnyDecorRenderer | undefined) : undefined;
+
+// A decor node as the theme draws it: its own renderer, or a stand-in for another theme's piece.
+export const resolveDecor = (
+  themeId: string,
+  kind: string,
+  props: unknown,
+): { Renderer: AnyDecorRenderer; kind: string; props: unknown } | undefined => {
+  const shown = decorFor(themeId, kind, props);
+  const Renderer = shown && resolveDecorRenderer(themeId, shown.kind);
+  return shown && Renderer ? { Renderer, ...shown } : undefined;
+};
 
 // The runtime's side of renderer context: show state, shared time and media commands.
 export { bannerText } from "./base/BaseAlertBanner.tsx";
