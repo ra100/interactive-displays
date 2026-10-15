@@ -41,7 +41,13 @@
           "props": {
             "label": "Warp core",
             "tone": "primary"
-          }
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
         }
       },
       {
@@ -85,6 +91,12 @@
                 "label": "Damage control",
                 "tone": "danger"
               }
+            }
+          ],
+          "actions": [
+            {
+              "do": "navigate",
+              "screen": "schematic"
             }
           ]
         }
@@ -135,7 +147,83 @@
                     }
                   },
                   {
+                    "weight": 1,
+                    "node": {
+                      "id": "core-banner",
+                      "type": "widget",
+                      "kind": "alert-banner",
+                      "props": {
+                        "tone": "danger"
+                      },
+                      "hidden": true,
+                      "when": [
+                        {
+                          "state": "yellow-alert",
+                          "hidden": false
+                        },
+                        {
+                          "state": "red-alert",
+                          "hidden": false
+                        },
+                        {
+                          "state": "damaged",
+                          "hidden": false
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "weight": 1.4,
+                    "node": {
+                      "id": "core-output",
+                      "type": "widget",
+                      "kind": "gauge",
+                      "props": {
+                        "label": "Core output",
+                        "value": 94,
+                        "min": 0,
+                        "max": 110,
+                        "unit": "%",
+                        "variant": "segmented",
+                        "dangerAbove": 102
+                      },
+                      "bind": {
+                        "value": {
+                          "signal": "warp.output"
+                        }
+                      },
+                      "when": [
+                        {
+                          "state": "damaged",
+                          "props": {
+                            "dangerBelow": 60
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
                     "weight": 2,
+                    "node": {
+                      "id": "core-trace",
+                      "type": "widget",
+                      "kind": "sparkline",
+                      "props": {
+                        "label": "Output trace",
+                        "min": 30,
+                        "max": 110,
+                        "points": 60,
+                        "tone": "accent"
+                      },
+                      "bind": {
+                        "value": {
+                          "signal": "warp.output"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "weight": 1.2,
                     "node": {
                       "id": "core-text",
                       "type": "widget",
@@ -196,166 +284,155 @@
                     "weight": 1,
                     "node": {
                       "id": "eps-1",
-                      "type": "container",
-                      "layout": {
-                        "kind": "stack",
-                        "direction": "row",
-                        "gap": "small"
+                      "type": "widget",
+                      "kind": "readout",
+                      "props": {
+                        "label": "Deck 1\u201310",
+                        "value": 97,
+                        "unit": "%",
+                        "precision": 1,
+                        "tone": "secondary"
                       },
-                      "children": [
-                        {
-                          "weight": 3,
-                          "node": {
-                            "id": "eps-1-label",
-                            "type": "widget",
-                            "kind": "text",
-                            "props": {
-                              "text": "Deck 1\u201310",
-                              "size": "small",
-                              "tone": "neutral"
-                            }
-                          }
-                        },
-                        {
-                          "weight": 2,
-                          "node": {
-                            "id": "eps-1-value",
-                            "type": "widget",
-                            "kind": "text",
-                            "props": {
-                              "text": "98%",
-                              "size": "small",
-                              "tone": "secondary"
-                            }
+                      "bind": {
+                        "value": {
+                          "ambient": {
+                            "kind": "walk",
+                            "min": 94,
+                            "max": 99.5,
+                            "volatility": 0.5
                           }
                         }
-                      ]
+                      }
                     }
                   },
                   {
                     "weight": 1,
                     "node": {
                       "id": "eps-2",
-                      "type": "container",
-                      "layout": {
-                        "kind": "stack",
-                        "direction": "row",
-                        "gap": "small"
+                      "type": "widget",
+                      "kind": "readout",
+                      "props": {
+                        "label": "Deck 11\u201320",
+                        "value": 97,
+                        "unit": "%",
+                        "precision": 1,
+                        "tone": "secondary"
                       },
-                      "children": [
-                        {
-                          "weight": 3,
-                          "node": {
-                            "id": "eps-2-label",
-                            "type": "widget",
-                            "kind": "text",
-                            "props": {
-                              "text": "Deck 11\u201320",
-                              "size": "small",
-                              "tone": "neutral"
-                            }
-                          }
-                        },
-                        {
-                          "weight": 2,
-                          "node": {
-                            "id": "eps-2-value",
-                            "type": "widget",
-                            "kind": "text",
-                            "props": {
-                              "text": "97%",
-                              "size": "small",
-                              "tone": "secondary"
-                            }
+                      "bind": {
+                        "value": {
+                          "ambient": {
+                            "kind": "walk",
+                            "min": 94,
+                            "max": 99.5,
+                            "volatility": 0.5
                           }
                         }
-                      ]
+                      }
                     }
                   },
                   {
                     "weight": 1,
                     "node": {
                       "id": "eps-3",
-                      "type": "container",
-                      "layout": {
-                        "kind": "stack",
-                        "direction": "row",
-                        "gap": "small"
+                      "type": "widget",
+                      "kind": "readout",
+                      "props": {
+                        "label": "Deck 21\u201330",
+                        "value": 97,
+                        "unit": "%",
+                        "precision": 1,
+                        "tone": "secondary"
                       },
-                      "children": [
-                        {
-                          "weight": 3,
-                          "node": {
-                            "id": "eps-3-label",
-                            "type": "widget",
-                            "kind": "text",
-                            "props": {
-                              "text": "Deck 21\u201330",
-                              "size": "small",
-                              "tone": "neutral"
-                            }
-                          }
-                        },
-                        {
-                          "weight": 2,
-                          "node": {
-                            "id": "eps-3-value",
-                            "type": "widget",
-                            "kind": "text",
-                            "props": {
-                              "text": "99%",
-                              "size": "small",
-                              "tone": "secondary"
-                            }
+                      "bind": {
+                        "value": {
+                          "ambient": {
+                            "kind": "walk",
+                            "min": 94,
+                            "max": 99.5,
+                            "volatility": 0.5
                           }
                         }
-                      ]
+                      }
                     }
                   },
                   {
                     "weight": 1,
                     "node": {
                       "id": "eps-4",
-                      "type": "container",
-                      "layout": {
-                        "kind": "stack",
-                        "direction": "row",
-                        "gap": "small"
+                      "type": "widget",
+                      "kind": "readout",
+                      "props": {
+                        "label": "Deck 31\u201342",
+                        "value": 97,
+                        "unit": "%",
+                        "precision": 1,
+                        "tone": "secondary"
                       },
-                      "children": [
-                        {
-                          "weight": 3,
-                          "node": {
-                            "id": "eps-4-label",
-                            "type": "widget",
-                            "kind": "text",
-                            "props": {
-                              "text": "Deck 31\u201342",
-                              "size": "small",
-                              "tone": "neutral"
-                            }
-                          }
-                        },
-                        {
-                          "weight": 2,
-                          "node": {
-                            "id": "eps-4-value",
-                            "type": "widget",
-                            "kind": "text",
-                            "props": {
-                              "text": "96%",
-                              "size": "small",
-                              "tone": "secondary"
-                            }
+                      "bind": {
+                        "value": {
+                          "ambient": {
+                            "kind": "walk",
+                            "min": 90,
+                            "max": 99.5,
+                            "volatility": 0.5
                           }
                         }
-                      ],
+                      },
                       "when": [
                         {
                           "state": "damaged",
-                          "hidden": true
+                          "props": {
+                            "tone": "danger"
+                          }
                         }
                       ]
+                    }
+                  },
+                  {
+                    "weight": 1.2,
+                    "node": {
+                      "id": "eps-load",
+                      "type": "widget",
+                      "kind": "gauge",
+                      "props": {
+                        "label": "Grid load",
+                        "value": 60,
+                        "unit": "%",
+                        "variant": "bar",
+                        "tone": "info",
+                        "dangerAbove": 90
+                      },
+                      "bind": {
+                        "value": {
+                          "signal": "eps.load"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "weight": 4,
+                    "node": {
+                      "id": "eps-cascade",
+                      "type": "widget",
+                      "kind": "data-cascade",
+                      "props": {
+                        "columns": 4,
+                        "speed": "normal",
+                        "tone": "secondary"
+                      }
+                    }
+                  },
+                  {
+                    "weight": 1.2,
+                    "node": {
+                      "id": "eps-clock",
+                      "type": "widget",
+                      "kind": "clock",
+                      "props": {
+                        "label": "Stardate",
+                        "format": "stardate",
+                        "tone": "info"
+                      }
                     }
                   }
                 ]
@@ -384,39 +461,56 @@
                 },
                 "children": [
                   {
+                    "area": {
+                      "col": 1,
+                      "row": 1,
+                      "rowSpan": 2
+                    },
                     "node": {
-                      "id": "sys-impulse",
+                      "id": "sys-plasma",
                       "type": "widget",
-                      "kind": "button",
+                      "kind": "bar-graph",
                       "props": {
-                        "label": "Impulse",
-                        "tone": "secondary"
+                        "label": "Plasma flow",
+                        "bars": 10,
+                        "activity": "busy",
+                        "tone": "primary"
                       }
                     }
                   },
                   {
+                    "area": {
+                      "col": 2,
+                      "row": 1,
+                      "rowSpan": 2
+                    },
                     "node": {
-                      "id": "sys-deflector",
+                      "id": "sys-relays",
                       "type": "widget",
-                      "kind": "button",
+                      "kind": "status-matrix",
                       "props": {
-                        "label": "Deflector",
+                        "label": "Relays",
+                        "columns": 6,
+                        "rows": 4,
+                        "activity": "calm",
                         "tone": "info"
-                      }
+                      },
+                      "when": [
+                        {
+                          "state": "damaged",
+                          "props": {
+                            "tone": "danger",
+                            "activity": "busy"
+                          }
+                        }
+                      ]
                     }
                   },
                   {
-                    "node": {
-                      "id": "sys-sif",
-                      "type": "widget",
-                      "kind": "button",
-                      "props": {
-                        "label": "Integrity field",
-                        "tone": "accent"
-                      }
-                    }
-                  },
-                  {
+                    "area": {
+                      "col": 3,
+                      "row": 1
+                    },
                     "node": {
                       "id": "sys-life",
                       "type": "widget",
@@ -424,21 +518,20 @@
                       "props": {
                         "label": "Life support",
                         "tone": "success"
-                      }
+                      },
+                      "actions": [
+                        {
+                          "do": "sound",
+                          "sound": "confirm"
+                        }
+                      ]
                     }
                   },
                   {
-                    "node": {
-                      "id": "sys-transporter",
-                      "type": "widget",
-                      "kind": "button",
-                      "props": {
-                        "label": "Transporters",
-                        "tone": "neutral"
-                      }
-                    }
-                  },
-                  {
+                    "area": {
+                      "col": 3,
+                      "row": 2
+                    },
                     "node": {
                       "id": "sys-eject",
                       "type": "widget",
@@ -453,6 +546,17 @@
                           "props": {
                             "tone": "danger"
                           }
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "do": "setState",
+                          "state": "damaged"
+                        },
+                        {
+                          "do": "setSignal",
+                          "signal": "hull",
+                          "delta": -36
                         }
                       ]
                     }

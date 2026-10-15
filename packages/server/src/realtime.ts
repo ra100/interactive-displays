@@ -2,11 +2,13 @@ import {
   type ClientToServerEvents,
   type DisplaySnapshot,
   HelloSchema,
+  PressSchema,
   PROTOCOL_VERSION,
   type Role,
   type ScreenUpdate,
   type ServerToClientEvents,
   type ShowOverview,
+  type SignalValues,
   WatchSchema,
 } from "@interactive-displays/core";
 import type { Server, Socket } from "socket.io";
@@ -28,6 +30,8 @@ type ClientSocket = Socket<ClientToServerEvents, ServerToClientEvents, Record<st
 const displayRoom = (displayId: string) => `display:${displayId}`;
 const screenRoom = (screenId: string) => `screen:${screenId}`;
 const OVERVIEW_ROOMS = ["operators", "builders"];
+// Shared signal changes go out at most this often, merged.
+const SIGNALS_EVERY_MS = 100;
 
 export const buildSnapshot = (service: ShowService, displayId: string): DisplaySnapshot | null => {
   const loaded = service.loaded();
@@ -37,11 +41,20 @@ export const buildSnapshot = (service: ShowService, displayId: string): DisplayS
   const { screen, preview } = service.screenForDisplay(displayId);
   return {
     protocol: PROTOCOL_VERSION,
-    show: { id: show.id, name: show.name, theme: show.theme, states: show.states },
+    show: {
+      id: show.id,
+      name: show.name,
+      theme: show.theme,
+      states: show.states,
+      signals: show.signals,
+      sounds: show.settings.sounds,
+    },
     state: service.state(),
+    signals: service.signalValues(),
     display: definition?.name ? { id: displayId, name: definition.name } : { id: displayId },
     screen,
     preview,
+    navigated: !preview && service.navigated(displayId) !== null,
   };
 };
 
@@ -91,6 +104,24 @@ export const attachRealtime = (
       const current = overview();
       if (current) io.to(OVERVIEW_ROOMS).emit("overview", current);
     });
+  };
+
+  // Signal changes from ticks, sliders and buttons go out together, at most ten times a second.
+  let pendingSignals: SignalValues = {};
+  let signalsTimer: NodeJS.Timeout | undefined;
+  let signalsSentAt = 0;
+  const sendSignals = () => {
+    signalsTimer = undefined;
+    signalsSentAt = Date.now();
+    const values = pendingSignals;
+    pendingSignals = {};
+    io.emit("signals", { values });
+  };
+  const queueSignals = (values: SignalValues) => {
+    pendingSignals = { ...pendingSignals, ...values };
+    if (signalsTimer) return;
+    signalsTimer = setTimeout(sendSignals, Math.max(0, SIGNALS_EVERY_MS - (Date.now() - signalsSentAt)));
+    signalsTimer.unref();
   };
 
   const welcomeDisplay = (socket: ClientSocket, displayId: string) => {
@@ -146,6 +177,14 @@ export const attachRealtime = (
       socket.emit("screen", screenUpdate(service, screenId));
     });
 
+    // A display control was used; the server runs the actions that are its to run.
+    socket.on("press", (payload) => {
+      const press = PressSchema.safeParse(payload);
+      const displayId = socket.data.displayId;
+      if (socket.data.role !== "display" || !displayId || !press.success) return;
+      service.press(displayId, press.data).catch(() => undefined);
+    });
+
     socket.on("disconnect", () => {
       if (socket.data.role === "display") queueOverview();
     });
@@ -186,8 +225,15 @@ export const attachRealtime = (
         io.to(screenRoom(event.screenId)).emit("screen", screenUpdate(service, event.screenId));
         queueOverview();
         return;
-      case "settings":
+      case "show":
+        snapshotDisplays(() => true);
         queueOverview();
+        return;
+      case "signals":
+        queueSignals(event.values);
+        return;
+      case "video":
+        io.to(displayRoom(event.displayId)).emit("video", { target: event.target, command: event.command });
         return;
     }
   });

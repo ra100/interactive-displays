@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ActionsSchema } from "../schema/action.ts";
 import { IdSchema } from "../schema/ids.ts";
 import {
   ChildSchema,
@@ -10,6 +11,7 @@ import {
   WhenSchema,
 } from "../schema/node.ts";
 import { ProfileSchema } from "../schema/screen.ts";
+import { BindingsSchema } from "../schema/signal.ts";
 
 // Every change to a screen is an operation. Editor, generator, operator API and AI all speak this language,
 // so one code path validates, persists, broadcasts and undoes changes for all of them.
@@ -36,6 +38,9 @@ export const OpSchema = z.discriminatedUnion("op", [
     locked: z.boolean().nullable().optional(),
     hidden: z.boolean().nullable().optional(),
     when: WhenSchema.nullable().optional(),
+    // Widgets only: live values and what a control does.
+    bind: BindingsSchema.nullable().optional(),
+    actions: ActionsSchema.nullable().optional(),
   }),
   // Where a node sits in its parent.
   z.object({

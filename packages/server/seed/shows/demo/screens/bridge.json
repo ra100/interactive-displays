@@ -53,7 +53,13 @@
           "props": {
             "label": "Tactical",
             "tone": "danger"
-          }
+          },
+          "actions": [
+            {
+              "do": "navigate",
+              "screen": "tactical"
+            }
+          ]
         }
       },
       {
@@ -65,7 +71,13 @@
           "props": {
             "label": "Engineering",
             "tone": "secondary"
-          }
+          },
+          "actions": [
+            {
+              "do": "navigate",
+              "screen": "engineering"
+            }
+          ]
         }
       },
       {
@@ -142,46 +154,24 @@
                     },
                     "node": {
                       "id": "hull",
-                      "type": "container",
-                      "layout": {
-                        "kind": "stack",
-                        "direction": "row",
-                        "gap": "small"
+                      "type": "widget",
+                      "kind": "readout",
+                      "props": {
+                        "label": "Hull integrity",
+                        "value": 100,
+                        "unit": "%",
+                        "tone": "secondary"
                       },
-                      "children": [
+                      "bind": {
+                        "value": {
+                          "signal": "hull"
+                        }
+                      },
+                      "when": [
                         {
-                          "weight": 3,
-                          "node": {
-                            "id": "hull-label",
-                            "type": "widget",
-                            "kind": "text",
-                            "props": {
-                              "text": "Hull integrity",
-                              "size": "small",
-                              "tone": "neutral"
-                            }
-                          }
-                        },
-                        {
-                          "weight": 2,
-                          "node": {
-                            "id": "hull-value",
-                            "type": "widget",
-                            "kind": "text",
-                            "props": {
-                              "text": "100%",
-                              "size": "small",
-                              "tone": "secondary"
-                            },
-                            "when": [
-                              {
-                                "state": "damaged",
-                                "props": {
-                                  "text": "64%",
-                                  "tone": "danger"
-                                }
-                              }
-                            ]
+                          "state": "damaged",
+                          "props": {
+                            "tone": "danger"
                           }
                         }
                       ]
@@ -194,53 +184,30 @@
                     },
                     "node": {
                       "id": "shields",
-                      "type": "container",
-                      "layout": {
-                        "kind": "stack",
-                        "direction": "row",
-                        "gap": "small"
+                      "type": "widget",
+                      "kind": "readout",
+                      "props": {
+                        "label": "Shields",
+                        "value": 0,
+                        "unit": "%",
+                        "tone": "secondary"
                       },
-                      "children": [
+                      "bind": {
+                        "value": {
+                          "signal": "shields"
+                        }
+                      },
+                      "when": [
                         {
-                          "weight": 3,
-                          "node": {
-                            "id": "shields-label",
-                            "type": "widget",
-                            "kind": "text",
-                            "props": {
-                              "text": "Shields",
-                              "size": "small",
-                              "tone": "neutral"
-                            }
+                          "state": "yellow-alert",
+                          "props": {
+                            "tone": "warning"
                           }
                         },
                         {
-                          "weight": 2,
-                          "node": {
-                            "id": "shields-value",
-                            "type": "widget",
-                            "kind": "text",
-                            "props": {
-                              "text": "Standby",
-                              "size": "small",
-                              "tone": "secondary"
-                            },
-                            "when": [
-                              {
-                                "state": "yellow-alert",
-                                "props": {
-                                  "text": "Raised",
-                                  "tone": "warning"
-                                }
-                              },
-                              {
-                                "state": "red-alert",
-                                "props": {
-                                  "text": "Raised",
-                                  "tone": "danger"
-                                }
-                              }
-                            ]
+                          "state": "red-alert",
+                          "props": {
+                            "tone": "danger"
                           }
                         }
                       ]
@@ -253,40 +220,19 @@
                     },
                     "node": {
                       "id": "warp",
-                      "type": "container",
-                      "layout": {
-                        "kind": "stack",
-                        "direction": "row",
-                        "gap": "small"
+                      "type": "widget",
+                      "kind": "readout",
+                      "props": {
+                        "label": "Warp factor",
+                        "value": 6.2,
+                        "precision": 1,
+                        "tone": "secondary"
                       },
-                      "children": [
-                        {
-                          "weight": 3,
-                          "node": {
-                            "id": "warp-label",
-                            "type": "widget",
-                            "kind": "text",
-                            "props": {
-                              "text": "Warp factor",
-                              "size": "small",
-                              "tone": "neutral"
-                            }
-                          }
-                        },
-                        {
-                          "weight": 2,
-                          "node": {
-                            "id": "warp-value",
-                            "type": "widget",
-                            "kind": "text",
-                            "props": {
-                              "text": "6.2",
-                              "size": "small",
-                              "tone": "secondary"
-                            }
-                          }
+                      "bind": {
+                        "value": {
+                          "signal": "warp.factor"
                         }
-                      ]
+                      }
                     }
                   },
                   {
@@ -296,40 +242,13 @@
                     },
                     "node": {
                       "id": "course",
-                      "type": "container",
-                      "layout": {
-                        "kind": "stack",
-                        "direction": "row",
-                        "gap": "small"
-                      },
-                      "children": [
-                        {
-                          "weight": 3,
-                          "node": {
-                            "id": "course-label",
-                            "type": "widget",
-                            "kind": "text",
-                            "props": {
-                              "text": "Heading",
-                              "size": "small",
-                              "tone": "neutral"
-                            }
-                          }
-                        },
-                        {
-                          "weight": 2,
-                          "node": {
-                            "id": "course-value",
-                            "type": "widget",
-                            "kind": "text",
-                            "props": {
-                              "text": "127 mark 4",
-                              "size": "small",
-                              "tone": "secondary"
-                            }
-                          }
-                        }
-                      ]
+                      "type": "widget",
+                      "kind": "readout",
+                      "props": {
+                        "label": "Heading",
+                        "value": "127 mark 4",
+                        "tone": "secondary"
+                      }
                     }
                   },
                   {
@@ -339,40 +258,13 @@
                     },
                     "node": {
                       "id": "crew",
-                      "type": "container",
-                      "layout": {
-                        "kind": "stack",
-                        "direction": "row",
-                        "gap": "small"
-                      },
-                      "children": [
-                        {
-                          "weight": 3,
-                          "node": {
-                            "id": "crew-label",
-                            "type": "widget",
-                            "kind": "text",
-                            "props": {
-                              "text": "Crew complement",
-                              "size": "small",
-                              "tone": "neutral"
-                            }
-                          }
-                        },
-                        {
-                          "weight": 2,
-                          "node": {
-                            "id": "crew-value",
-                            "type": "widget",
-                            "kind": "text",
-                            "props": {
-                              "text": "1,014",
-                              "size": "small",
-                              "tone": "secondary"
-                            }
-                          }
-                        }
-                      ]
+                      "type": "widget",
+                      "kind": "readout",
+                      "props": {
+                        "label": "Crew complement",
+                        "value": "1,014",
+                        "tone": "secondary"
+                      }
                     }
                   },
                   {
@@ -382,40 +274,13 @@
                     },
                     "node": {
                       "id": "stardate",
-                      "type": "container",
-                      "layout": {
-                        "kind": "stack",
-                        "direction": "row",
-                        "gap": "small"
-                      },
-                      "children": [
-                        {
-                          "weight": 3,
-                          "node": {
-                            "id": "stardate-label",
-                            "type": "widget",
-                            "kind": "text",
-                            "props": {
-                              "text": "Stardate",
-                              "size": "small",
-                              "tone": "neutral"
-                            }
-                          }
-                        },
-                        {
-                          "weight": 2,
-                          "node": {
-                            "id": "stardate-value",
-                            "type": "widget",
-                            "kind": "text",
-                            "props": {
-                              "text": "47634.4",
-                              "size": "small",
-                              "tone": "secondary"
-                            }
-                          }
-                        }
-                      ]
+                      "type": "widget",
+                      "kind": "clock",
+                      "props": {
+                        "label": "Stardate",
+                        "format": "stardate",
+                        "tone": "secondary"
+                      }
                     }
                   }
                 ]
@@ -451,10 +316,17 @@
                       "props": {
                         "label": "Open channel",
                         "tone": "accent"
-                      }
+                      },
+                      "actions": [
+                        {
+                          "do": "sound",
+                          "sound": "hail"
+                        }
+                      ]
                     }
                   },
                   {
+                    "weight": 1,
                     "node": {
                       "id": "act-alert",
                       "type": "widget",
@@ -463,20 +335,88 @@
                         "label": "Yellow alert",
                         "tone": "warning"
                       },
+                      "actions": [
+                        {
+                          "do": "setState",
+                          "state": "yellow-alert"
+                        },
+                        {
+                          "do": "setSignal",
+                          "signal": "shields",
+                          "value": 100
+                        }
+                      ],
                       "when": [
                         {
                           "state": "yellow-alert",
-                          "props": {
-                            "label": "Red alert",
-                            "tone": "danger"
-                          }
+                          "hidden": true
                         },
                         {
                           "state": "red-alert",
-                          "props": {
-                            "label": "Stand down",
-                            "tone": "secondary"
-                          }
+                          "hidden": true
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "weight": 1,
+                    "node": {
+                      "id": "act-red",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Red alert",
+                        "tone": "danger"
+                      },
+                      "actions": [
+                        {
+                          "do": "setState",
+                          "state": "red-alert"
+                        },
+                        {
+                          "do": "setSignal",
+                          "signal": "shields",
+                          "value": 100
+                        }
+                      ],
+                      "when": [
+                        {
+                          "state": "red-alert",
+                          "hidden": true
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "weight": 1,
+                    "node": {
+                      "id": "act-stand-down",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Stand down",
+                        "tone": "success"
+                      },
+                      "hidden": true,
+                      "actions": [
+                        {
+                          "do": "setState",
+                          "state": "normal"
+                        },
+                        {
+                          "do": "setSignal",
+                          "signal": "shields",
+                          "value": 0
+                        }
+                      ],
+                      "when": [
+                        {
+                          "state": "yellow-alert",
+                          "hidden": false
+                        },
+                        {
+                          "state": "red-alert",
+                          "hidden": false
                         }
                       ]
                     }
@@ -507,7 +447,7 @@
           "type": "widget",
           "kind": "text",
           "props": {
-            "text": "STARDATE 47634.4 \u00b7 ALL SYSTEMS NOMINAL",
+            "text": "ALL SYSTEMS NOMINAL \u00b7 HOLDING COURSE",
             "size": "small",
             "tone": "secondary"
           },

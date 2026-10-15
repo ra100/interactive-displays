@@ -1,5 +1,5 @@
 import type { DecorCatalog } from "../catalog/defineDecor.ts";
-import type { ContainerNode, Node } from "../schema/node.ts";
+import type { ContainerNode, Node, WidgetNode } from "../schema/node.ts";
 import type { Screen } from "../schema/screen.ts";
 import type { Show } from "../schema/show.ts";
 import { walkNodes } from "../tree/tree.ts";
@@ -16,6 +16,8 @@ export interface LintIssue {
 export interface LintContext {
   decor?: DecorCatalog;
   show?: Show;
+  // Ids of the show's screens, for checking where navigate actions go.
+  screens?: ReadonlySet<string>;
 }
 
 const MAX_STACK_CHILDREN = 12;
@@ -91,9 +93,44 @@ const lintContainer = (node: ContainerNode, issues: LintIssue[]) => {
   }
 };
 
+// Bindings and actions that point at things the show does not have.
+const lintLiveParts = (node: WidgetNode, videos: ReadonlySet<string>, context: LintContext, issues: LintIssue[]) => {
+  const { show, screens } = context;
+  const warn = (rule: string, message: string) => issues.push({ level: "warning", rule, nodeId: node.id, message });
+
+  for (const [prop, binding] of Object.entries(node.bind ?? {})) {
+    if ("signal" in binding && show && !show.signals.some((signal) => signal.id === binding.signal)) {
+      warn("unknown-signal", `${prop} follows "${binding.signal}", which the show does not have`);
+    }
+  }
+
+  for (const action of node.actions ?? []) {
+    if (action.do === "setState" && show && !show.states.some((state) => state.id === action.state)) {
+      warn("unknown-state", `The show has no state "${action.state}"`);
+    }
+    if (action.do === "navigate" && screens && !screens.has(action.screen)) {
+      warn("unknown-screen", `There is no screen "${action.screen}" to go to`);
+    }
+    if (action.do === "video" && !videos.has(action.target)) {
+      warn("video-target", `"${action.target}" is not a video on this screen`);
+    }
+    if (action.do === "setSignal" && show) {
+      const signal = show.signals.find((each) => each.id === action.signal);
+      if (!signal) warn("unknown-signal", `The show has no signal "${action.signal}"`);
+      else if (signal.scope !== "shared" || signal.source.kind !== "manual") {
+        warn("signal-not-settable", `"${action.signal}" is not a shared manual signal, so controls cannot set it`);
+      }
+    }
+  }
+};
+
 export const lintScreen = (screen: Screen, context: LintContext = {}): LintIssue[] => {
   const issues: LintIssue[] = [];
   const states = context.show ? new Set(context.show.states.map((state) => state.id)) : undefined;
+  const videos = new Set<string>();
+  walkNodes(screen.root, (node) => {
+    if (node.type === "widget" && node.kind === "video") videos.add(node.id);
+  });
 
   walkNodes(screen.root, (node) => {
     if (node.type === "container") lintContainer(node, issues);
@@ -106,6 +143,8 @@ export const lintScreen = (screen: Screen, context: LintContext = {}): LintIssue
         message: `Decor "${node.kind}" belongs to another theme and is hidden`,
       });
     }
+
+    if (node.type === "widget") lintLiveParts(node, videos, context, issues);
 
     for (const override of node.when ?? []) {
       if (states && !states.has(override.state)) {

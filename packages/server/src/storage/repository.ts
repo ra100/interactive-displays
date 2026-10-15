@@ -12,6 +12,7 @@ import {
   type Screen,
   type Show,
   ShowSchema,
+  SignalIdSchema,
   validateScreen,
 } from "@interactive-displays/core";
 import type { FastifyBaseLogger } from "fastify";
@@ -24,7 +25,7 @@ type Log = Pick<FastifyBaseLogger, "info" | "warn" | "error">;
  * data/
  *   settings.json                                { schemaVersion, activeShow }
  *   shows/<showId>/show.json                     theme, states, displays, settings
- *   shows/<showId>/runtime.json                  current state, displays seen (written by the server)
+ *   shows/<showId>/runtime.json                  current state, displays seen, manual signal values
  *   shows/<showId>/screens/<screenId>.json       the draft
  *   shows/<showId>/screens/.history/<screenId>/<revision>.json
  *   shows/<showId>/screens/.trash/<screenId>-<time>.json
@@ -41,6 +42,8 @@ export const RuntimeSchema = z.object({
   state: IdSchema.optional(),
   // displayId -> ISO time it last said hello
   seen: z.record(IdSchema, z.string()).default({}),
+  // Values of shared manual signals, so a shield level set during a take survives a restart.
+  signals: z.record(SignalIdSchema, z.number()).default({}),
 });
 
 export type Runtime = z.infer<typeof RuntimeSchema>;
@@ -152,12 +155,12 @@ const loadPublished = async (
 };
 
 const loadRuntime = async (file: string, log: Log): Promise<Runtime> => {
-  if (!(await exists(file))) return { schemaVersion: 1, seen: {} };
+  if (!(await exists(file))) return { schemaVersion: 1, seen: {}, signals: {} };
   try {
     return RuntimeSchema.parse(await readJson(file));
   } catch (error) {
     log.warn({ file, err: error }, "Ignoring unreadable runtime state");
-    return { schemaVersion: 1, seen: {} };
+    return { schemaVersion: 1, seen: {}, signals: {} };
   }
 };
 

@@ -1,6 +1,8 @@
 import { z } from "zod";
+import { ActionsSchema } from "./action.ts";
 import { SLOTS } from "./archetypes.ts";
 import { IdSchema } from "./ids.ts";
+import { BindingsSchema } from "./signal.ts";
 
 export const SpaceSchema = z.enum(["none", "small", "medium", "large"]);
 
@@ -76,6 +78,10 @@ export const WidgetNodeSchema = z.object({
   kind: z.string().min(1).max(64),
   // Validated against the catalog definition for `kind` by validateScreen.
   props: z.record(z.string(), z.unknown()).default({}),
+  // Props that follow a live value instead of their fixed one, e.g. { value: { signal: "warp.output" } }.
+  bind: BindingsSchema.optional(),
+  // What a control does when an actor uses it.
+  actions: ActionsSchema.optional(),
 });
 
 // Theme-specific ornament without meaning, such as an LCARS elbow. Kinds are "<theme>.<name>".

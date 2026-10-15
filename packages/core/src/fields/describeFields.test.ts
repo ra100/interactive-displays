@@ -54,8 +54,27 @@ describe("describeFields", () => {
     ]);
   });
 
+  it("describes lists, number lists, tables and number-or-text values", () => {
+    const fields = describeFields(
+      z.object({
+        items: z.array(z.string()).max(8),
+        levels: z.array(z.number().min(0).max(100)).optional(),
+        rows: z.array(z.array(z.string())),
+        value: z.union([z.number(), z.string()]).default(0),
+      }),
+    );
+    expect(fields).toEqual([
+      { key: "items", label: "Items", required: true, type: "list", maxItems: 8 },
+      { key: "levels", label: "Levels", required: false, type: "numbers", min: 0, max: 100 },
+      { key: "rows", label: "Rows", required: true, type: "table" },
+      { key: "value", label: "Value", required: false, type: "value", default: 0 },
+    ]);
+  });
+
   it("falls back to JSON for nested values", () => {
-    const fields = describeFields(z.object({ area: z.object({ col: z.number() }).optional(), list: z.array(z.string()) }));
+    const fields = describeFields(
+      z.object({ area: z.object({ col: z.number() }).optional(), deep: z.array(z.object({ a: z.number() })) }),
+    );
     expect(fields.map((field) => field.type)).toEqual(["json", "json"]);
   });
 

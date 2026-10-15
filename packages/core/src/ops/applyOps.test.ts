@@ -183,4 +183,31 @@ describe("applyOps", () => {
       expect(result.ok).toBe(true);
     });
   });
+
+  describe("live values and actions", () => {
+    it("sets and clears a widget's actions, and undoes it", () => {
+      expectRoundTrip(ops({ op: "set", id: "a", actions: [{ do: "navigate", screen: "schematic" }] }));
+      const forward = apply(base(), ops({ op: "set", id: "a", actions: [{ do: "back" }] }));
+      expect(findNode(forward.screen.root, "a")?.node).toMatchObject({ actions: [{ do: "back" }] });
+      const cleared = apply(forward.screen, ops({ op: "set", id: "a", actions: null }));
+      expect(findNode(cleared.screen.root, "a")?.node).not.toHaveProperty("actions");
+    });
+
+    it("refuses a binding on a prop that cannot follow a live value", () => {
+      const result = applyOps(base(), ops({ op: "set", id: "a", bind: { label: { signal: "status" } } }), { catalog });
+      expect(result.ok).toBe(false);
+    });
+
+    it("refuses bindings and actions on containers", () => {
+      const result = applyOps(base(), ops({ op: "set", id: "row", actions: [{ do: "back" }] }), { catalog });
+      expect(result.ok).toBe(false);
+    });
+
+    it("refuses actions on a widget that is not a control", () => {
+      const result = applyOps(base(), ops({ op: "set", id: "title", actions: [{ do: "back" }] }), { catalog });
+      expect(result.ok ? [] : result.issues.map((issue) => issue.message)).toEqual([
+        "title is not a control and cannot have actions",
+      ]);
+    });
+  });
 });

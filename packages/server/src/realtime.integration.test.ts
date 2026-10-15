@@ -119,6 +119,132 @@ describe("displays", () => {
   });
 });
 
+describe("live values and controls", () => {
+  it("sends displays the show's signals, their values and its sound setting", async () => {
+    await boot();
+    const { snapshot } = await server.display("test");
+
+    expect(snapshot.show.signals.map((signal) => signal.id)).toContain("shields");
+    expect(snapshot.show.sounds).toBe(false);
+    expect(snapshot.signals).toMatchObject({ shields: 0, hull: 100 });
+    expect(snapshot.navigated).toBe(false);
+  });
+
+  it("broadcasts a signal set by the operator to displays and operators", async () => {
+    await boot();
+    const display = await server.display("tactical-1");
+    const operator = await server.tool("operator");
+    const toDisplay = eventMatching(display.client, "signals", (update) => update.values["shields"] !== undefined);
+    const toOperator = eventMatching(operator.client, "signals", (update) => update.values["shields"] !== undefined);
+
+    expect(await server.api("PUT", "/api/signals/shields/value", { value: 75 })).toMatchObject({
+      status: 200,
+      body: { id: "shields", value: 75 },
+    });
+
+    expect((await toDisplay).values["shields"]).toBe(75);
+    expect((await toOperator).values["shields"]).toBe(75);
+  });
+
+  it("streams ticking signals at most ten times a second", async () => {
+    await boot();
+    const { client } = await server.display("engineering-1");
+    const times: number[] = [];
+    client.on("signals", (update) => {
+      if (update.values["warp.output"] !== undefined) times.push(performance.now());
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 1300));
+
+    expect(times.length).toBeGreaterThanOrEqual(3);
+    for (const [index, time] of times.entries()) {
+      if (index > 0) expect(time - (times[index - 1] ?? 0)).toBeGreaterThan(90);
+    }
+  });
+
+  it("navigates the display whose control was pressed, and only that one", async () => {
+    await boot();
+    const pressed = await server.display("test");
+    const other = await server.display("bridge-2");
+    let otherMoved = false;
+    other.client.on("snapshot", () => {
+      otherMoved = true;
+    });
+
+    const moved = nextEvent(pressed.client, "snapshot");
+    pressed.client.emit("press", { nodeId: "nav-engineering" });
+    expect(await moved).toMatchObject({ navigated: true, screen: { id: "engineering" } });
+
+    const back = nextEvent(pressed.client, "snapshot");
+    pressed.client.emit("press", { nodeId: "tool-damage" });
+    expect(await back).toMatchObject({ navigated: true, screen: { id: "schematic" } });
+    expect(otherMoved).toBe(false);
+  });
+
+  it("changes the show state from a display button", async () => {
+    await boot();
+    const pressed = await server.display("test");
+    const other = await server.display("engineering-1");
+    const changed = nextEvent(other.client, "state");
+
+    pressed.client.emit("press", { nodeId: "act-red" });
+
+    expect(await changed).toEqual({ state: "red-alert" });
+  });
+
+  it("ignores presses from operators and malformed presses", async () => {
+    await boot();
+    const display = await server.display("test");
+    const operator = await server.tool("operator");
+    let changed = false;
+    display.client.on("state", () => {
+      changed = true;
+    });
+
+    operator.client.emit("press", { nodeId: "act-red" });
+    (display.client.emit as (event: string, payload: unknown) => void)("press", { nodeId: 42 });
+    await new Promise((resolve) => setTimeout(resolve, 150));
+
+    expect(changed).toBe(false);
+  });
+
+  it("sends a video command to the display it is for", async () => {
+    await boot();
+    const { client } = await server.display("viewscreen-1");
+    const command = nextEvent(client, "video");
+
+    expect((await server.api("POST", "/api/displays/viewscreen-1/video", { target: "feed", command: "restart" })).status).toBe(200);
+    expect(await command).toEqual({ target: "feed", command: "restart" });
+  });
+
+  it("re-sends every display its snapshot when the show's sound setting changes", async () => {
+    await boot();
+    const { client } = await server.display("test");
+    const next = nextEvent(client, "snapshot");
+
+    await server.api("PUT", "/api/show/settings", { sounds: true });
+
+    expect((await next).show.sounds).toBe(true);
+  });
+
+  it("tells operators where displays navigated and which videos they show", async () => {
+    await boot();
+    const display = await server.display("test");
+    await server.display("viewscreen-1");
+    const operator = await server.tool("operator");
+    const navigated = eventMatching(operator.client, "overview", (overview) =>
+      overview.displays.some((each) => each.id === "test" && each.navigated === "engineering"),
+    );
+
+    display.client.emit("press", { nodeId: "nav-engineering" });
+
+    const overview = await navigated;
+    expect(overview.displays.find((each) => each.id === "test")).toMatchObject({ showing: "engineering", navigated: "engineering" });
+    expect(overview.displays.find((each) => each.id === "viewscreen-1")).toMatchObject({ videos: ["feed"], navigated: null });
+    expect(overview.signals).toMatchObject({ shields: 0 });
+  });
+});
+
 describe("operators and builders", () => {
   it("gives an operator the show overview", async () => {
     await boot();
@@ -127,7 +253,13 @@ describe("operators and builders", () => {
     expect(overview.protocol).toBe(PROTOCOL_VERSION);
     expect(overview.state).toBe("normal");
     expect(overview.screens.find((screen) => screen.id === "bridge")).toMatchObject({ revision: 0, published: 0 });
-    expect(overview.displays.map((display) => display.id)).toEqual(["corridor-1", "engineering-1", "tactical-1", "test"]);
+    expect(overview.displays.map((display) => display.id)).toEqual([
+      "corridor-1",
+      "engineering-1",
+      "tactical-1",
+      "test",
+      "viewscreen-1",
+    ]);
   });
 
   it("updates the overview when displays connect and disconnect and when the state changes", async () => {

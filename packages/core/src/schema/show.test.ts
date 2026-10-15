@@ -19,9 +19,23 @@ describe("ShowSchema", () => {
     expect(parsed.displays).toEqual([]);
   });
 
-  it("defaults to drafts that wait for Publish", () => {
+  it("defaults to drafts that wait for Publish, display controls on and sounds off", () => {
     const parsed = ShowSchema.parse({ schemaVersion: 1, id: "s", name: "S", theme: { id: "base" } });
-    expect(parsed.settings).toEqual({ liveEdit: false });
+    expect(parsed.settings).toEqual({ liveEdit: false, displayGlobalActions: true, sounds: false });
+    expect(parsed.signals).toEqual([]);
+  });
+
+  it("fills in new settings for a show saved before they existed", () => {
+    const parsed = ShowSchema.parse({ schemaVersion: 1, id: "s", name: "S", theme: { id: "base" }, settings: { liveEdit: true } });
+    expect(parsed.settings).toEqual({ liveEdit: true, displayGlobalActions: true, sounds: false });
+  });
+
+  it("takes signals and rejects duplicate signal ids", () => {
+    const signal = { id: "warp.output", label: "Warp output", source: { kind: "walk", min: 90, max: 99 } };
+    const parsed = ShowSchema.parse({ schemaVersion: 1, id: "s", name: "S", theme: { id: "base" }, signals: [signal] });
+    expect(parsed.signals[0]).toEqual({ ...signal, scope: "ambient", source: { kind: "walk", min: 90, max: 99, volatility: 0.3 } });
+    const twice = ShowSchema.safeParse({ schemaVersion: 1, id: "s", name: "S", theme: { id: "base" }, signals: [signal, signal] });
+    expect(twice.success).toBe(false);
   });
 
   it("rejects an unsupported schema version", () => {

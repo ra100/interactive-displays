@@ -88,4 +88,59 @@ describe("lintScreen", () => {
     });
     expect(rules(screen, { decor: new Map() })).toEqual(["foreign-decor"]);
   });
+
+  describe("live values and actions", () => {
+    const show = ShowSchema.parse({
+      schemaVersion: 1,
+      id: "demo",
+      name: "Demo",
+      theme: { id: "base" },
+      states: [{ id: "normal", label: "Normal" }],
+      signals: [
+        { id: "shields", label: "Shields", scope: "shared", source: { kind: "manual" } },
+        { id: "warp", label: "Warp", scope: "shared", source: { kind: "walk", min: 0, max: 1 } },
+      ],
+    });
+
+    const control = (bind: unknown, actions: unknown[]) =>
+      screenWith({
+        id: "root",
+        type: "container",
+        layout: { kind: "stack", direction: "column" },
+        children: [
+          { node: { id: "go", type: "widget", kind: "slider", props: { label: "GO" }, bind, actions } },
+          { node: { id: "clip", type: "widget", kind: "video", props: { asset: "a.mp4" } } },
+        ],
+      });
+
+    it("is quiet when everything exists", () => {
+      const screen = control({ value: { signal: "shields" } }, [
+        { do: "setSignal", signal: "shields" },
+        { do: "setState", state: "normal" },
+        { do: "navigate", screen: "bridge" },
+        { do: "video", target: "clip", command: "play" },
+      ]);
+      expect(rules(screen, { show, screens: new Set(["bridge"]) })).toEqual([]);
+    });
+
+    it("flags missing signals, states, screens and videos", () => {
+      const screen = control({ value: { signal: "nope" } }, [
+        { do: "setState", state: "red-alert" },
+        { do: "navigate", screen: "nowhere" },
+        { do: "video", target: "go", command: "play" },
+        { do: "setSignal", signal: "missing" },
+      ]);
+      expect(rules(screen, { show, screens: new Set(["bridge"]) })).toEqual([
+        "unknown-signal",
+        "unknown-state",
+        "unknown-screen",
+        "video-target",
+        "unknown-signal",
+      ]);
+    });
+
+    it("flags controls that try to set a signal nobody can set", () => {
+      expect(rules(control(undefined, [{ do: "setSignal", signal: "warp" }]), { show })).toEqual(["signal-not-settable"]);
+    });
+  });
 });

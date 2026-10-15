@@ -102,13 +102,18 @@ const applyOne = (screen: Screen, op: Op, options: ApplyOptions): Op => {
       // Locking and unlocking itself is always allowed for people; the generator never sends it.
       if (options.respectLocks) assertUnlocked(root, op.id, options);
       const { node } = locate(root, op.id);
+      const widgetOnly = [op.bind, op.actions].some((value) => value !== undefined && value !== null);
+      if (widgetOnly && node.type !== "widget") {
+        fail(`Only widgets have live values and actions; "${op.id}" is a ${node.type}`);
+      }
       const inverse: Extract<Op, { op: "set" }> = { op: "set", id: op.id };
-      for (const key of ["locked", "hidden", "when"] as const) {
+      const fields = node as Record<string, unknown>;
+      for (const key of ["locked", "hidden", "when", "bind", "actions"] as const) {
         if (!(key in op) || op[key] === undefined) continue;
-        inverse[key] = (node[key] ?? null) as never;
+        inverse[key] = (fields[key] ?? null) as never;
         const value = op[key];
-        if (value === null) delete node[key];
-        else (node as Record<string, unknown>)[key] = structuredClone(value);
+        if (value === null) delete fields[key];
+        else fields[key] = structuredClone(value);
       }
       return inverse;
     }

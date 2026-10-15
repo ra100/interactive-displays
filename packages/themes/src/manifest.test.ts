@@ -1,6 +1,8 @@
 import { resolveTokens } from "@interactive-displays/core";
 import { describe, expect, it } from "vitest";
-import { decorCatalog, getThemeManifest, themeManifests } from "./manifest.ts";
+import { base } from "./base/manifest.ts";
+import { lcars } from "./lcars/manifest.ts";
+import { decorCatalog, getThemeManifest, getThemeSound, themeManifests, themeSoundIds } from "./manifest.ts";
 
 describe("theme manifests", () => {
   it("registers the base and LCARS themes", () => {
@@ -45,5 +47,21 @@ describe("LCARS tokens", () => {
 
   it("leaves tokens alone for effects the theme does not restyle", () => {
     expect(resolveTokens(lcars, undefined, "blackout")).toEqual(lcars.tokens);
+  });
+});
+
+describe("theme sounds", () => {
+  it("plays a theme's own sound before the base one", () => {
+    expect(getThemeSound("lcars", "alert")).toEqual(lcars.sounds["alert"]);
+    expect(getThemeSound("lcars", "alert")).not.toEqual(base.sounds["alert"]);
+  });
+
+  it("falls back to the base sound of the same name", () => {
+    expect(getThemeSound("lcars", "confirm")).toEqual(base.sounds["confirm"]);
+    expect(getThemeSound("lcars", "no-such-sound")).toBeUndefined();
+  });
+
+  it("lists a theme's sounds together with the base ones", () => {
+    expect(themeSoundIds("lcars")).toEqual(["alert", "confirm", "hail", "press", "warning"]);
   });
 });

@@ -31,4 +31,22 @@ export const base = defineTheme({
     damaged: { tokens: { palette: { primary: "#6b7480", secondary: "#59616b", accent: "#7a6a55" } } },
   },
   archetypes: ["sidebar", "header-main", "dashboard"],
+  sounds: {
+    press: { steps: [{ freq: 1200, ms: 25, wave: "triangle", gain: 0.12 }] },
+    confirm: { steps: [{ freq: 660, to: 990, ms: 120, gain: 0.15 }] },
+    warning: {
+      steps: [
+        { freq: 740, ms: 160, wave: "triangle", gain: 0.15 },
+        { freq: 740, ms: 120, gain: 0 },
+      ],
+      repeat: 2,
+    },
+    alert: {
+      steps: [
+        { freq: 880, ms: 220, wave: "square", gain: 0.06 },
+        { freq: 660, ms: 220, wave: "square", gain: 0.06 },
+      ],
+      repeat: 2,
+    },
+  },
 });

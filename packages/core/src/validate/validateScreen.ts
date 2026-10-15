@@ -112,6 +112,21 @@ export const validateScreen = (input: unknown, catalog: Catalog, decor?: DecorCa
       if (!merged.success) issues.push(...toIssues(merged.error, [...path, "when", index, "props"]));
     });
 
+    const bindable: readonly string[] = definition.bindable ?? [];
+    for (const prop of Object.keys(node.bind ?? {})) {
+      if (!bindable.includes(prop)) {
+        issues.push({
+          path: formatPath([...path, "bind", prop]),
+          message: bindable.length > 0
+            ? `"${prop}" cannot follow a live value; ${node.kind} can bind ${bindable.join(", ")}`
+            : `${node.kind} has no props that can follow a live value`,
+        });
+      }
+    }
+    if (node.actions && node.actions.length > 0 && !definition.interactive) {
+      issues.push({ path: formatPath([...path, "actions"]), message: `${node.kind} is not a control and cannot have actions` });
+    }
+
     return { ...node, props: props.data };
   };
 

@@ -1,11 +1,13 @@
 import { z } from "zod";
 import type { LintIssue } from "../lint/lintScreen.ts";
+import type { VideoCommand } from "../schema/action.ts";
 import { IdSchema } from "../schema/ids.ts";
 import type { Profile, Screen } from "../schema/screen.ts";
 import type { Show, StateDef } from "../schema/show.ts";
+import type { SignalDef, SignalValue } from "../schema/signal.ts";
 
 // Bumped on any breaking change to events or payloads; a display reloads when the server's differs.
-export const PROTOCOL_VERSION = 3;
+export const PROTOCOL_VERSION = 4;
 
 const ProtocolSchema = z.number().int();
 const TokenSchema = z.string().min(1).max(200).optional();
@@ -26,17 +28,39 @@ export const WatchSchema = z.object({ screenId: IdSchema.nullable() });
 
 export type Watch = z.infer<typeof WatchSchema>;
 
+// An actor used a control on a display. The server looks the node up on the screen that display shows and runs
+// the actions that are the server's to run (navigation, show state, shared signals); the display runs the rest.
+// `value` is the control's own value: the slider position, the chosen option, 1 or 0 for a toggle.
+export const PressSchema = z.object({ nodeId: IdSchema, value: z.number().finite().optional() });
+
+export type Press = z.infer<typeof PressSchema>;
+
+// Shared signal values by id; updates carry only what changed.
+export type SignalValues = Record<string, SignalValue>;
+
 // Everything a display needs to render, sent on every hello so a reconnect misses nothing.
 // It is sent again whenever the display's screen or assignment changes.
 export interface DisplaySnapshot {
   protocol: number;
-  show: { id: string; name: string; theme: Show["theme"]; states: StateDef[] };
+  show: {
+    id: string;
+    name: string;
+    theme: Show["theme"];
+    states: StateDef[];
+    signals: SignalDef[];
+    // Whether displays play theme sounds.
+    sounds: boolean;
+  };
   // The current show state id; always one of show.states.
   state: string;
+  // Current values of the server-owned shared signals.
+  signals: SignalValues;
   display: { id: string; name?: string };
   screen: Screen | null;
   // True while the display shows a draft sent from the editor instead of the published screen.
   preview: boolean;
+  // True when a control took this display to another screen, so a back action has somewhere to go.
+  navigated: boolean;
 }
 
 export interface ScreenSummary {
@@ -58,6 +82,10 @@ export interface DisplayStatus {
   showing: string | null;
   // The screen whose draft the display is previewing, if any.
   preview: string | null;
+  // The screen a control on the display navigated to, if any (it shows that instead of its own).
+  navigated: string | null;
+  // Ids of the video widgets on the screen it shows, for the operator's transport controls.
+  videos: string[];
   connected: boolean;
   lastSeen: string | null;
 }
@@ -67,6 +95,7 @@ export interface ShowOverview {
   protocol: number;
   show: Show;
   state: string;
+  signals: SignalValues;
   screens: ScreenSummary[];
   displays: DisplayStatus[];
 }
@@ -110,10 +139,15 @@ export interface ServerToClientEvents {
   reload: () => void;
   overview: (overview: ShowOverview) => void;
   screen: (update: ScreenUpdate) => void;
+  // Changed shared signal values, batched to at most ten updates a second.
+  signals: (update: { values: SignalValues }) => void;
+  // From the operator: play, pause or restart a video widget on this display.
+  video: (command: { target: string; command: VideoCommand }) => void;
   error: (error: ProtocolError) => void;
 }
 
 export interface ClientToServerEvents {
   hello: (hello: Hello) => void;
   watch: (watch: Watch) => void;
+  press: (press: Press) => void;
 }

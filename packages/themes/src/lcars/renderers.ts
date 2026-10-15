@@ -1,6 +1,8 @@
 import { decorRenderer, defineRenderers, type ThemeRenderers } from "../contract.ts";
 import { bar, bracket, cap, elbow } from "./decor.ts";
 import { LcarsButton } from "./LcarsButton.tsx";
+import { LcarsButtonGroup } from "./LcarsControls.tsx";
+import { LcarsAlertBanner, LcarsDataCascade, LcarsGauge, LcarsReadout } from "./LcarsData.tsx";
 import { LcarsBar, LcarsBracket, LcarsCap, LcarsElbow } from "./LcarsDecor.tsx";
 import { LcarsDashboardFrame, LcarsHeaderMainFrame, LcarsSidebarFrame } from "./LcarsFrames.tsx";
 import { LcarsText } from "./LcarsText.tsx";
@@ -15,6 +17,11 @@ export const lcarsRenderers: ThemeRenderers = defineRenderers({
     title: LcarsTitle,
     text: LcarsText,
     button: LcarsButton,
+    "button-group": LcarsButtonGroup,
+    readout: LcarsReadout,
+    gauge: LcarsGauge,
+    "data-cascade": LcarsDataCascade,
+    "alert-banner": LcarsAlertBanner,
   },
   frames: {
     sidebar: LcarsSidebarFrame,

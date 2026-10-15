@@ -105,7 +105,13 @@
                       "props": {
                         "label": "Target lock",
                         "tone": "warning"
-                      }
+                      },
+                      "actions": [
+                        {
+                          "do": "sound",
+                          "sound": "confirm"
+                        }
+                      ]
                     }
                   },
                   {
@@ -123,20 +129,45 @@
               }
             },
             {
-              "weight": 1,
+              "weight": 2,
               "node": {
-                "id": "weapons-text",
+                "id": "contacts",
                 "type": "widget",
-                "kind": "text",
+                "kind": "data-grid",
                 "props": {
-                  "text": "Phaser banks charged. 250 torpedoes in the magazine.",
-                  "size": "small"
+                  "columns": [
+                    "Contact",
+                    "Bearing",
+                    "Range",
+                    "Status"
+                  ],
+                  "rows": [
+                    [
+                      "Bird-of-Prey",
+                      "042 m 3",
+                      "12,000 km",
+                      "Cloaked"
+                    ],
+                    [
+                      "Freighter",
+                      "311 m 0",
+                      "80,000 km",
+                      "Neutral"
+                    ],
+                    [
+                      "Probe",
+                      "187 m 12",
+                      "3,400 km",
+                      "Unknown"
+                    ]
+                  ],
+                  "tone": "secondary"
                 },
                 "when": [
                   {
                     "state": "red-alert",
                     "props": {
-                      "text": "Weapons armed. Firing solution ready.",
+                      "highlight": 1,
                       "tone": "danger"
                     }
                   }
@@ -158,7 +189,7 @@
           },
           "children": [
             {
-              "weight": 1.5,
+              "weight": 1.2,
               "node": {
                 "id": "shields-title",
                 "type": "widget",
@@ -170,188 +201,94 @@
               }
             },
             {
-              "weight": 1,
+              "weight": 4,
               "node": {
-                "id": "sh-fwd",
-                "type": "container",
-                "layout": {
-                  "kind": "stack",
-                  "direction": "row",
-                  "gap": "small"
+                "id": "sh-strength",
+                "type": "widget",
+                "kind": "gauge",
+                "props": {
+                  "label": "Strength",
+                  "value": 0,
+                  "unit": "%",
+                  "variant": "arc",
+                  "tone": "info",
+                  "dangerBelow": 25
                 },
-                "children": [
-                  {
-                    "weight": 3,
-                    "node": {
-                      "id": "sh-fwd-label",
-                      "type": "widget",
-                      "kind": "text",
-                      "props": {
-                        "text": "Forward",
-                        "size": "small",
-                        "tone": "neutral"
-                      }
-                    }
-                  },
-                  {
-                    "weight": 2,
-                    "node": {
-                      "id": "sh-fwd-value",
-                      "type": "widget",
-                      "kind": "text",
-                      "props": {
-                        "text": "100%",
-                        "size": "small",
-                        "tone": "success"
-                      }
-                    }
+                "bind": {
+                  "value": {
+                    "signal": "shields"
                   }
-                ]
-              }
-            },
-            {
-              "weight": 1,
-              "node": {
-                "id": "sh-aft",
-                "type": "container",
-                "layout": {
-                  "kind": "stack",
-                  "direction": "row",
-                  "gap": "small"
-                },
-                "children": [
-                  {
-                    "weight": 3,
-                    "node": {
-                      "id": "sh-aft-label",
-                      "type": "widget",
-                      "kind": "text",
-                      "props": {
-                        "text": "Aft",
-                        "size": "small",
-                        "tone": "neutral"
-                      }
-                    }
-                  },
-                  {
-                    "weight": 2,
-                    "node": {
-                      "id": "sh-aft-value",
-                      "type": "widget",
-                      "kind": "text",
-                      "props": {
-                        "text": "100%",
-                        "size": "small",
-                        "tone": "success"
-                      }
-                    }
-                  }
-                ]
-              }
-            },
-            {
-              "weight": 1,
-              "node": {
-                "id": "sh-port",
-                "type": "container",
-                "layout": {
-                  "kind": "stack",
-                  "direction": "row",
-                  "gap": "small"
-                },
-                "children": [
-                  {
-                    "weight": 3,
-                    "node": {
-                      "id": "sh-port-label",
-                      "type": "widget",
-                      "kind": "text",
-                      "props": {
-                        "text": "Port",
-                        "size": "small",
-                        "tone": "neutral"
-                      }
-                    }
-                  },
-                  {
-                    "weight": 2,
-                    "node": {
-                      "id": "sh-port-value",
-                      "type": "widget",
-                      "kind": "text",
-                      "props": {
-                        "text": "100%",
-                        "size": "small",
-                        "tone": "success"
-                      }
-                    }
-                  }
-                ]
-              }
-            },
-            {
-              "weight": 1,
-              "node": {
-                "id": "sh-stbd",
-                "type": "container",
-                "layout": {
-                  "kind": "stack",
-                  "direction": "row",
-                  "gap": "small"
-                },
-                "children": [
-                  {
-                    "weight": 3,
-                    "node": {
-                      "id": "sh-stbd-label",
-                      "type": "widget",
-                      "kind": "text",
-                      "props": {
-                        "text": "Starboard",
-                        "size": "small",
-                        "tone": "neutral"
-                      }
-                    }
-                  },
-                  {
-                    "weight": 2,
-                    "node": {
-                      "id": "sh-stbd-value",
-                      "type": "widget",
-                      "kind": "text",
-                      "props": {
-                        "text": "100%",
-                        "size": "small",
-                        "tone": "success"
-                      }
-                    }
-                  }
-                ]
+                }
               }
             },
             {
               "weight": 1.5,
               "node": {
-                "id": "shields-mode",
+                "id": "sh-hull",
                 "type": "widget",
-                "kind": "button",
+                "kind": "gauge",
                 "props": {
-                  "label": "Raise shields",
-                  "tone": "info"
+                  "label": "Hull",
+                  "value": 100,
+                  "unit": "%",
+                  "variant": "segmented",
+                  "tone": "secondary",
+                  "dangerBelow": 40
                 },
-                "when": [
+                "bind": {
+                  "value": {
+                    "signal": "hull"
+                  }
+                }
+              }
+            },
+            {
+              "weight": 1.6,
+              "node": {
+                "id": "sh-controls",
+                "type": "container",
+                "layout": {
+                  "kind": "stack",
+                  "direction": "row",
+                  "gap": "small"
+                },
+                "children": [
                   {
-                    "state": "yellow-alert",
-                    "props": {
-                      "label": "Shields up",
-                      "tone": "warning"
+                    "weight": 1,
+                    "node": {
+                      "id": "shields-mode",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Raise shields",
+                        "tone": "info"
+                      },
+                      "actions": [
+                        {
+                          "do": "setSignal",
+                          "signal": "shields",
+                          "value": 100
+                        }
+                      ]
                     }
                   },
                   {
-                    "state": "red-alert",
-                    "props": {
-                      "label": "Shields up",
-                      "tone": "danger"
+                    "weight": 1,
+                    "node": {
+                      "id": "shields-lower",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Lower",
+                        "tone": "neutral"
+                      },
+                      "actions": [
+                        {
+                          "do": "setSignal",
+                          "signal": "shields",
+                          "value": 0
+                        }
+                      ]
                     }
                   }
                 ]

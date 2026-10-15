@@ -1,22 +1,29 @@
 import {
+  type Action,
   applyOps,
   catalog,
   type DecorCatalog,
   type DisplayDef,
+  findSignal,
   findState,
   lintScreen,
   type LintIssue,
   type Op,
   OpListSchema,
+  type Press,
   resolveScreenId,
   type Screen,
   type ShowSettings,
+  type SignalDef,
+  SignalListSchema,
+  type SignalValues,
   slugify,
   uniqueId,
   validateScreen,
   type ValidationIssue,
   type AssetInfo,
   type RevisionInfo,
+  type VideoCommand,
 } from "@interactive-displays/core";
 import type { FastifyBaseLogger } from "fastify";
 import {
@@ -32,6 +39,8 @@ import {
   saveShow,
   trashScreen,
 } from "./storage/repository.ts";
+import { pressTarget, videoIds } from "./press.ts";
+import { createSignals, isSettable } from "./signals.ts";
 
 type Log = Pick<FastifyBaseLogger, "info" | "warn" | "error">;
 
@@ -47,7 +56,11 @@ export type ShowEvent =
   | { type: "preview"; displayId: string }
   | { type: "identify"; displayId: string; label: string }
   | { type: "reload"; displayId: string }
-  | { type: "settings" };
+  // Show-wide definitions every display renders with changed: settings or signal definitions.
+  | { type: "show" }
+  // Shared signal values changed; only the changed ones.
+  | { type: "signals"; values: SignalValues }
+  | { type: "video"; displayId: string; target: string; command: VideoCommand };
 
 export type Failure = {
   ok: false;
@@ -72,7 +85,8 @@ const noScreen = (screenId: string): Failure => ({
   message: `Screen "${screenId}" does not exist`,
 });
 
-const SEEN_WRITE_DELAY_MS = 2000;
+// Runtime state that changes often (displays seen, a slider dragged) is written at most this often.
+const RUNTIME_WRITE_DELAY_MS = 2000;
 
 // Runs writes one at a time, so two edits based on the same revision can never both pass the
 // revision check while the first is still saving.
@@ -111,21 +125,97 @@ export const createShowService = ({
 
   const serialize = createWriteQueue();
   let state = loaded ? initialState(loaded) : "normal";
-  let seenTimer: NodeJS.Timeout | undefined;
+  let runtimeTimer: NodeJS.Timeout | undefined;
   // displayId -> screenId whose draft it previews. Kept in memory: a restart ends every preview.
   const previews = new Map<string, string>();
+  // displayId -> screens a control on it navigated to, oldest first. In memory too: a restart sends displays home.
+  const navigation = new Map<string, string[]>();
+  const signals = createSignals(loaded?.runtime.signals ?? {});
 
   const persistRuntime = async (current: LoadedShow) => {
-    current.runtime = { ...current.runtime, state };
+    current.runtime = { ...current.runtime, state, signals: signals.saved(current.show) };
     await saveRuntime(dataDir, current.show.id, current.runtime);
   };
 
-  const lint = (screen: Screen): LintIssue[] => lintScreen(screen, { decor, ...(loaded ? { show: loaded.show } : {}) });
+  const persistRuntimeSoon = (current: LoadedShow) => {
+    if (runtimeTimer) return;
+    runtimeTimer = setTimeout(() => {
+      runtimeTimer = undefined;
+      persistRuntime(current).catch((error: unknown) => log.warn({ err: error }, "Could not save runtime state"));
+    }, RUNTIME_WRITE_DELAY_MS);
+    runtimeTimer.unref();
+  };
+
+  const lint = (screen: Screen): LintIssue[] =>
+    lintScreen(screen, { decor, ...(loaded ? { show: loaded.show, screens: new Set(loaded.screens.keys()) } : {}) });
+
+  const navigatedTo = (displayId: string): string | undefined => navigation.get(displayId)?.at(-1);
+
+  // The published screen a display shows when it is not previewing: where a control took it, or its own.
+  const publishedScreenId = (current: LoadedShow, displayId: string): string | undefined =>
+    navigatedTo(displayId) ?? resolveScreenId(current.show, displayId);
+
+  // What a display shows: the draft it previews, or the published copy of where it navigated to or of its
+  // assigned (or default) screen.
+  const screenFor = (current: LoadedShow, displayId: string): { screen: Screen | null; preview: boolean } => {
+    const previewId = previews.get(displayId);
+    const draft = previewId ? current.screens.get(previewId) : undefined;
+    if (draft) return { screen: draft, preview: true };
+    const screenId = publishedScreenId(current, displayId);
+    return { screen: (screenId && current.published.get(screenId)) || null, preview: false };
+  };
 
   // Displays that show a screen's published copy (or would, once it is published); previews aside.
   const displaysShowing = (current: LoadedShow, screenId: string): string[] => {
     const ids = new Set([...current.show.displays.map((display) => display.id), ...Object.keys(current.runtime.seen)]);
-    return [...ids].filter((id) => !previews.has(id) && resolveScreenId(current.show, id) === screenId);
+    return [...ids].filter((id) => !previews.has(id) && publishedScreenId(current, id) === screenId);
+  };
+
+  // Sends a display home: forgets where its controls took it. True when it had gone anywhere.
+  const clearNavigation = (displayId: string): boolean => navigation.delete(displayId);
+
+  const navigate = (current: LoadedShow, displayId: string, screenId: string): boolean => {
+    if (!current.published.has(screenId) || screenFor(current, displayId).screen?.id === screenId) return false;
+    navigation.set(displayId, [...(navigation.get(displayId) ?? []), screenId]);
+    emit({ type: "display", displayId });
+    return true;
+  };
+
+  const back = (displayId: string): boolean => {
+    const stack = navigation.get(displayId);
+    if (!stack?.length) return false;
+    const rest = stack.slice(0, -1);
+    if (rest.length > 0) navigation.set(displayId, rest);
+    else navigation.delete(displayId);
+    emit({ type: "display", displayId });
+    return true;
+  };
+
+  const setState = async (stateId: string): Promise<CommandResult<string>> => {
+    if (!loaded) return NO_SHOW;
+    if (!findState(loaded.show, stateId)) {
+      return { ok: false, status: 404, message: `The show has no state "${stateId}"` };
+    }
+    state = stateId;
+    // Broadcast first: the 100 ms budget is for displays, the disk can follow.
+    emit({ type: "state", state });
+    await persistRuntime(loaded);
+    return { ok: true, value: state };
+  };
+
+  const setSignal = (signalId: string, change: { value?: number; delta?: number }): CommandResult<number> => {
+    if (!loaded) return NO_SHOW;
+    const signal = findSignal(loaded.show, signalId);
+    if (!signal) return { ok: false, status: 404, message: `The show has no signal "${signalId}"` };
+    if (!isSettable(signal)) {
+      return { ok: false, status: 409, message: `Signal "${signalId}" is not a shared manual signal, so it cannot be set` };
+    }
+    const next = signals.set(signal, change);
+    if (next !== undefined) {
+      emit({ type: "signals", values: { [signal.id]: next } });
+      persistRuntimeSoon(loaded);
+    }
+    return { ok: true, value: next ?? signals.current(signal) };
   };
 
   const publishDraft = async (current: LoadedShow, draft: Screen): Promise<Screen> => {
@@ -175,15 +265,11 @@ export const createShowService = ({
       return () => listeners.delete(listener);
     },
 
-    // What a display shows: the draft it previews, or the published copy of its assigned (or default) screen.
-    screenForDisplay: (displayId: string): { screen: Screen | null; preview: boolean } => {
-      if (!loaded) return { screen: null, preview: false };
-      const previewId = previews.get(displayId);
-      const draft = previewId ? loaded.screens.get(previewId) : undefined;
-      if (draft) return { screen: draft, preview: true };
-      const screenId = resolveScreenId(loaded.show, displayId);
-      return { screen: (screenId && loaded.published.get(screenId)) || null, preview: false };
-    },
+    screenForDisplay: (displayId: string): { screen: Screen | null; preview: boolean } =>
+      loaded ? screenFor(loaded, displayId) : { screen: null, preview: false },
+
+    // The screen a control took this display to, if any.
+    navigated: (displayId: string): string | null => navigatedTo(displayId) ?? null,
 
     displaysShowing: (screenId: string): string[] => (loaded ? displaysShowing(loaded, screenId) : []),
 
@@ -292,6 +378,13 @@ export const createShowService = ({
           previews.delete(displayId);
           emit({ type: "preview", displayId });
         }
+        for (const [displayId, stack] of navigation) {
+          if (!stack.includes(screenId)) continue;
+          const rest = stack.filter((each) => each !== screenId);
+          if (rest.length > 0) navigation.set(displayId, rest);
+          else navigation.delete(displayId);
+          emit({ type: "display", displayId });
+        }
         emit({ type: "deleted", screenId });
         return { ok: true, value: screenId };
       }),
@@ -314,26 +407,83 @@ export const createShowService = ({
       return old ? { ok: true, value: old } : { ok: false, status: 404, message: `Revision ${revision} is not in the history` };
     },
 
-    setState: async (stateId: string): Promise<CommandResult<string>> => {
-      if (!loaded) return NO_SHOW;
-      if (!findState(loaded.show, stateId)) {
-        return { ok: false, status: 404, message: `The show has no state "${stateId}"` };
-      }
-      state = stateId;
-      // Broadcast first: the 100 ms budget is for displays, the disk can follow.
-      emit({ type: "state", state });
-      await persistRuntime(loaded);
-      return { ok: true, value: state };
-    },
+    setState,
 
     updateSettings: (patch: Partial<ShowSettings>): Promise<CommandResult<ShowSettings>> =>
       serialize(async () => {
         if (!loaded) return NO_SHOW;
         loaded.show = { ...loaded.show, settings: { ...loaded.show.settings, ...patch } };
         await saveShow(dataDir, loaded.show);
-        emit({ type: "settings" });
+        emit({ type: "show" });
         return { ok: true, value: loaded.show.settings };
       }),
+
+    // Replaces the show's signal definitions. Values of signals that are gone, or no longer manual, are dropped.
+    defineSignals: (input: unknown): Promise<CommandResult<SignalDef[]>> =>
+      serialize(async () => {
+        if (!loaded) return NO_SHOW;
+        const parsed = SignalListSchema.safeParse(input);
+        if (!parsed.success) {
+          return {
+            ok: false,
+            status: 422,
+            message: "Signals are not valid",
+            issues: parsed.error.issues.map((issue) => ({ path: issue.path.join("."), message: issue.message })),
+          };
+        }
+        loaded.show = { ...loaded.show, signals: parsed.data };
+        signals.prune(loaded.show);
+        await saveShow(dataDir, loaded.show);
+        await persistRuntime(loaded);
+        emit({ type: "show" });
+        return { ok: true, value: parsed.data };
+      }),
+
+    // Sets a shared manual signal to a value or moves it by a delta, within its range and step.
+    setSignal,
+
+    // Current values of every server-owned signal.
+    signalValues: (now: number = Date.now()): SignalValues => (loaded ? signals.values(loaded.show, state, now) : {}),
+
+    // Called a few times a second: moves shared walk and wave signals on and broadcasts what changed.
+    tickSignals: (now: number = Date.now()): void => {
+      if (!loaded) return;
+      const changed = signals.tick(loaded.show, state, now);
+      if (Object.keys(changed).length > 0) emit({ type: "signals", values: changed });
+    },
+
+    // An actor used a control on a display. Runs the actions that are the server's: navigation for that display
+    // (not while it previews a draft), and show state and shared signals while the show allows displays to change
+    // them. The display plays its own sounds and videos. Returns what ran.
+    press: async (displayId: string, input: Press): Promise<Action["do"][]> => {
+      if (!loaded) return [];
+      const { screen, preview } = screenFor(loaded, displayId);
+      const node = screen ? pressTarget(screen, input.nodeId, state) : undefined;
+      const ran: Action["do"][] = [];
+      const global = loaded.show.settings.displayGlobalActions;
+      for (const action of node?.actions ?? []) {
+        if (action.do === "navigate" && !preview && navigate(loaded, displayId, action.screen)) ran.push(action.do);
+        if (action.do === "back" && !preview && back(displayId)) ran.push(action.do);
+        if (action.do === "setState" && global && (await setState(action.state)).ok) ran.push(action.do);
+        if (action.do === "setSignal" && global) {
+          // A fixed value or delta from the action, or else the control's own value.
+          const value = action.value ?? (action.delta === undefined ? input.value : undefined);
+          const change = action.delta === undefined ? (value === undefined ? undefined : { value }) : { delta: action.delta };
+          if (change && setSignal(action.signal, change).ok) ran.push(action.do);
+        }
+      }
+      return ran;
+    },
+
+    // Plays, pauses or restarts a video widget on the screen a display shows.
+    video: (displayId: string, target: string, command: VideoCommand): CommandResult<string> => {
+      if (!loaded) return NO_SHOW;
+      if (!videoIds(screenFor(loaded, displayId).screen).includes(target)) {
+        return { ok: false, status: 404, message: `Display "${displayId}" shows no video "${target}"` };
+      }
+      emit({ type: "video", displayId, target, command });
+      return { ok: true, value: target };
+    },
 
     updateDisplay: (displayId: string, patch: DisplayPatch): Promise<CommandResult<DisplayDef>> =>
       serialize(async () => {
@@ -349,6 +499,8 @@ export const createShowService = ({
         if (patch.screen !== undefined) {
           if (patch.screen === null) delete next.screen;
           else next.screen = patch.screen;
+          // A new assignment wins over wherever the display's own controls took it.
+          clearNavigation(displayId);
         }
 
         loaded.show = {
@@ -370,6 +522,7 @@ export const createShowService = ({
         loaded.runtime = { ...loaded.runtime, seen };
         loaded.show = { ...loaded.show, displays: loaded.show.displays.filter((display) => display.id !== displayId) };
         previews.delete(displayId);
+        clearNavigation(displayId);
         await saveShow(dataDir, loaded.show);
         await persistRuntime(loaded);
         emit({ type: "display", displayId });
@@ -382,6 +535,8 @@ export const createShowService = ({
       if (screenId !== null && !loaded.screens.has(screenId)) return noScreen(screenId);
       if (screenId === null) previews.delete(displayId);
       else previews.set(displayId, screenId);
+      // Starting or ending a preview starts the display afresh on its own screen.
+      clearNavigation(displayId);
       emit({ type: "preview", displayId });
       return { ok: true, value: screenId };
     },
@@ -423,17 +578,12 @@ export const createShowService = ({
     markSeen: (displayId: string): void => {
       if (!loaded) return;
       loaded.runtime = { ...loaded.runtime, seen: { ...loaded.runtime.seen, [displayId]: new Date().toISOString() } };
-      if (seenTimer) return;
-      seenTimer = setTimeout(() => {
-        seenTimer = undefined;
-        persistRuntime(loaded).catch((error: unknown) => log.warn({ err: error }, "Could not save runtime state"));
-      }, SEEN_WRITE_DELAY_MS);
-      seenTimer.unref();
+      persistRuntimeSoon(loaded);
     },
 
     flush: async (): Promise<void> => {
-      if (seenTimer) clearTimeout(seenTimer);
-      seenTimer = undefined;
+      if (runtimeTimer) clearTimeout(runtimeTimer);
+      runtimeTimer = undefined;
       if (loaded) await persistRuntime(loaded);
     },
   };

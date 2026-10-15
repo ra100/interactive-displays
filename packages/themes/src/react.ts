@@ -38,3 +38,17 @@ export const resolveFrameRenderer = (themeId: string, archetype: string): FrameR
 // Decor belongs to one theme ("lcars.elbow") and is hidden everywhere else.
 export const resolveDecorRenderer = (themeId: string, kind: string): AnyDecorRenderer | undefined =>
   kind.startsWith(`${themeId}.`) ? (lookup(themeRenderers.get(themeId)?.decor ?? {}, kind) as AnyDecorRenderer | undefined) : undefined;
+
+// The runtime's side of renderer context: show state, shared time and media commands.
+export { bannerText } from "./base/BaseAlertBanner.tsx";
+export {
+  createMediaBus,
+  createTicker,
+  frozenTicker,
+  type MediaBus,
+  MediaBusContext,
+  type ShowStateInfo,
+  ShowStateInfoContext,
+  type Ticker,
+  TickerContext,
+} from "./runtime.ts";
