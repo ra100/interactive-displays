@@ -7,6 +7,7 @@ import { decorCatalog } from "@interactive-displays/themes/manifest";
 import Fastify, { type FastifyInstance } from "fastify";
 import { Server } from "socket.io";
 import type { Config } from "./config.ts";
+import { createAssistant } from "./assistant.ts";
 import { createGeneration } from "./generation.ts";
 import { registerApi } from "./http/api.ts";
 import { registerMcp } from "./mcp/route.ts";
@@ -51,7 +52,8 @@ export const buildServer = async (config: Config): Promise<FastifyInstance> => {
   }));
 
   const generation = await createGeneration({ service, dataDir: config.dataDir, log: app.log });
-  registerApi(app, service, generation, io, { editorToken: config.editorToken, publicUrl: config.publicUrl });
+  const assistant = config.ai ? createAssistant({ service, ...config.ai, log: app.log }) : undefined;
+  registerApi(app, service, generation, io, { editorToken: config.editorToken, publicUrl: config.publicUrl, assistant });
   registerMcp(app, { service, generation, connected: () => connectedDisplayIds(io) }, { editorToken: config.editorToken });
 
   // Show assets. Uploads can be SVG, so the files are sandboxed: opened directly they cannot run scripts.

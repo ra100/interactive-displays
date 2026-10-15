@@ -13,6 +13,8 @@ services:
       LOG_LEVEL: info
       EDITOR_TOKEN: ${EDITOR_TOKEN:-}  # protects /operator, /builder and every change; displays never need it
       PUBLIC_URL: ${PUBLIC_URL:-}      # e.g. http://192.168.1.20:3010, for QR codes
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}  # optional: turns on Fill with AI in the editor
+      AI_MODEL: ${AI_MODEL:-}
 
 volumes:
   displays-data:

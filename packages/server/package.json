@@ -11,6 +11,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.134.0",
     "@fastify/static": "^10.1.4",
     "@interactive-displays/content": "workspace:*",
     "@interactive-displays/core": "workspace:*",

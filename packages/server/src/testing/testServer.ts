@@ -35,7 +35,7 @@ export const createTestServer = () => {
     return config;
   };
 
-  const setup = async (options: Pick<Config, "editorToken" | "publicUrl"> = {}) => {
+  const setup = async (options: Pick<Config, "editorToken" | "publicUrl" | "ai"> = {}) => {
     root = await mkdtemp(path.join(tmpdir(), "displays-app-"));
     const appDist = path.join(root, "dist");
     await mkdir(path.join(appDist, "assets"), { recursive: true });

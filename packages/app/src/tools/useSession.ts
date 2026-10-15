@@ -5,6 +5,8 @@ export interface Session {
   tokenRequired: boolean;
   tokenValid: boolean;
   publicUrl: string | null;
+  // The built-in Fill with AI, when the server has an API key.
+  ai?: { model: string } | null;
 }
 
 // What the server says about this browser: does it need the editor token, and is the one it has right.

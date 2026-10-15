@@ -12,6 +12,7 @@ import {
 } from "@interactive-displays/core";
 import type { FastifyInstance, FastifyReply } from "fastify";
 import { z } from "zod";
+import type { Assistant } from "../assistant.ts";
 import { bearerToken, tokenAccepted } from "../auth.ts";
 import { catalogInfo } from "../catalogInfo.ts";
 import { buildOverview } from "../overview.ts";
@@ -70,6 +71,7 @@ export const GenerateBody = z
     suite: z.boolean().optional().describe("Also one screen per system, linked by nav buttons"),
   })
   .strict();
+const FillBody = z.object({ baseRevision: z.number().int().min(0), brief: z.string().trim().min(1).max(2000) }).strict();
 export const RegenerateBody = z
   .object({
     baseRevision: z.number().int().min(0),
@@ -112,7 +114,11 @@ export const registerApi = (
   service: ShowService,
   generation: Generation,
   io: RealtimeServer,
-  { editorToken, publicUrl }: { editorToken?: string | undefined; publicUrl?: string | undefined } = {},
+  {
+    editorToken,
+    publicUrl,
+    assistant,
+  }: { editorToken?: string | undefined; publicUrl?: string | undefined; assistant?: Assistant | undefined } = {},
 ) => {
   app.addHook("onRequest", async (request, reply) => {
     if (!request.url.startsWith("/api/") || isRead(request.method)) return;
@@ -132,6 +138,7 @@ export const registerApi = (
     tokenRequired: Boolean(editorToken),
     tokenValid: tokenAccepted(editorToken, bearerToken(request.headers.authorization)),
     publicUrl: publicUrl ?? null,
+    ai: assistant ? { model: assistant.model } : null,
   }));
 
   app.get("/api/catalog", async () => catalogInfo());
@@ -156,6 +163,16 @@ export const registerApi = (
     if (!body.success) return badRequest(reply, body.error);
     const result = await generation.generate(toGenerateRequest(body.data));
     return send(reply, result, (screens) => ({ screens, lint: screens.map((screen) => service.lint(screen)) }), 201);
+  });
+
+  // Fill with AI: a proposal the editor applies as ordinary ops if the person accepts. Nothing is saved here.
+  app.post("/api/screens/:id/fill", async (request, reply) => {
+    if (!assistant) return reply.code(503).send({ error: "Fill with AI needs ANTHROPIC_API_KEY on the server" });
+    const params = IdParams.safeParse(request.params);
+    if (!params.success) return badRequest(reply, params.error);
+    const body = FillBody.safeParse(request.body);
+    if (!body.success) return badRequest(reply, body.error);
+    return send(reply, await assistant.fill(params.data.id, body.data), (proposal) => proposal);
   });
 
   app.post("/api/screens/:id/regenerate", async (request, reply) => {
