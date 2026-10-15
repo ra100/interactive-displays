@@ -64,6 +64,11 @@ export const lcars = defineTheme({
     },
   },
   archetypes: ["sidebar", "header-main", "dashboard"],
+  // Flush blocks of colour: the nav column runs through the whole palette, panels never repeat their neighbour.
+  tones: {
+    nav: ["primary", "secondary", "accent", "info", "neutral"],
+    panels: ["primary", "info", "accent", "secondary", "neutral"],
+  },
   // Made-up tones in the spirit of the show, synthesised in the browser.
   sounds: {
     press: {
