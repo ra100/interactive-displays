@@ -15,6 +15,7 @@ export const buildOverview = (service: ShowService, connected: ReadonlySet<strin
     protocol: PROTOCOL_VERSION,
     show,
     state: service.state(),
+    cue: service.lastCue(),
     signals: service.signalValues(),
     screens: [...screens.values()]
       .map(({ id, name, section, tags, profile, revision, published }) => ({

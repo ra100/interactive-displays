@@ -104,6 +104,8 @@ export interface ShowOverview {
   protocol: number;
   show: Show;
   state: string;
+  // The last cue run (GO runs the one after it), or null before the first.
+  cue: string | null;
   signals: SignalValues;
   screens: ScreenSummary[];
   displays: DisplayStatus[];

@@ -47,6 +47,8 @@ export const RuntimeSchema = z.object({
   seen: z.record(IdSchema, z.string()).default({}),
   // Values of shared manual signals, so a shield level set during a take survives a restart.
   signals: z.record(SignalIdSchema, z.number()).default({}),
+  // The last cue run, so GO carries on from there after a restart.
+  cue: IdSchema.optional(),
 });
 
 export type Runtime = z.infer<typeof RuntimeSchema>;
