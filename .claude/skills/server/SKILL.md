@@ -93,7 +93,7 @@ and test both (`mcp.integration.test.ts` uses the SDK client).
   `list_displays`, `list_recipes`, `list_blocks`.
 - Make and edit: `generate_screen`, `generate_suite`, `regenerate`, `apply_ops` (always `respectLocks`),
   `create_screen`, `lint_screen`, `save_recipe`, `save_block`.
-- Gated: `publish_screen` needs `settings.aiPublish`; `assign_screen`, `set_state`, `set_signal` need
+- Gated: `publish_screen` needs `settings.aiPublish`; `assign_screen`, `set_state`, `set_signal`, `video_command` need
   `settings.aiLiveControl`. Refusals are tool errors naming the operator switch.
 - Resources: `interactive-displays://guide` (design rules, `src/mcp/guide.ts`), `://catalog`, `://recipes`,
   `://screens/{id}`. Prompts: `design-screen`, `fill-placeholders`, `new-section-recipe`.
@@ -126,7 +126,7 @@ shows/<showId>/screens/.history/<id>/<rev>.json  replaced revisions, last 50 kep
 shows/<showId>/screens/.trash/<id>-<time>.json   deleted drafts
 shows/<showId>/published/<screenId>.json         what displays show
 shows/<showId>/assets/<name>                     uploaded images and video, served at /media/<name>
-shows/<showId>/content/<packId>.json              the show's own recipes and blocks for a content pack
+shows/<showId>/content/<packId>.json             the show's own recipes and blocks for a content pack
 ```
 
 A data directory without `settings.json` is seeded from `packages/server/seed/` once; existing files are never
