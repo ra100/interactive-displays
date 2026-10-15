@@ -937,3 +937,13 @@
   gap: 8px;
   font-size: 13px;
 }
+
+.action-add {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.action-add .tool-field {
+  flex: 1;
+}

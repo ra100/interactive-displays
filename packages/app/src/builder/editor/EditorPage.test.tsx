@@ -306,16 +306,60 @@ describe("live values and actions", () => {
     await waitFor(() => expect(lastOps()).toEqual([{ op: "set", id: "shields", bind: null }]));
   });
 
+  it("offers values that move by themselves only for props that take any number", async () => {
+    draft = liveBridge();
+    await open(withSignals);
+    await selectInOutline(/Button group/);
+    const select = section("Live value").getByRole("combobox", { name: "Selected" });
+    expect(within(select).getByRole("option", { name: "Shields (shared)" })).toBeInTheDocument();
+    expect(within(select).queryByRole("option", { name: "Wanders" })).toBeNull();
+  });
+
+  it("moves a shared value by the signal's step, and shows a refused range as it was", async () => {
+    draft = liveBridge();
+    const stepped = sampleOverview({
+      show: ShowSchema.parse({
+        ...base.show,
+        signals: [{ id: "shields", label: "Shields", scope: "shared", source: { kind: "manual", initial: 30, step: 5 } }],
+      }),
+    });
+    await open(stepped);
+    await selectInOutline(/Button · HELM/);
+    await userEvent.selectOptions(section("When used").getByRole("combobox", { name: "New action" }), "Set a shared value");
+    await userEvent.click(section("When used").getByRole("button", { name: "Add" }));
+    await userEvent.selectOptions(await section("When used").findByRole("combobox", { name: "How" }), "Up or down by");
+    await waitFor(() => expect(lastOps()).toEqual([{ op: "set", id: "helm", actions: [{ do: "setSignal", signal: "shields", delta: 5 }] }]));
+
+    await selectInOutline(/Gauge · SHIELDS/);
+    await userEvent.selectOptions(section("Live value").getByRole("combobox", { name: "Value" }), "Wanders");
+    const lowest = await section("Live value").findByRole("spinbutton", { name: "Lowest" });
+    await userEvent.clear(lowest);
+    await userEvent.type(lowest, "200{Enter}");
+    expect(await screen.findByText("The lowest value must be below the highest")).toBeInTheDocument();
+    expect(lowest).toHaveValue(0);
+  });
+
   it("gives a control actions, and removes them", async () => {
     draft = liveBridge();
     await open(withSignals);
     await selectInOutline(/Button · HELM/);
     const actions = () => section("When used");
 
-    await userEvent.selectOptions(actions().getByRole("combobox", { name: "Add" }), "Go to screen");
+    const add = async (label: string) => {
+      await userEvent.selectOptions(actions().getByRole("combobox", { name: "New action" }), label);
+      await userEvent.click(actions().getByRole("button", { name: "Add" }));
+    };
+
+    // Choosing alone adds nothing: arrowing through the list must not add actions.
+    await userEvent.selectOptions(actions().getByRole("combobox", { name: "New action" }), "Go back");
+    expect(opsSent()).toHaveLength(0);
+    await userEvent.selectOptions(actions().getByRole("combobox", { name: "New action" }), "Choose…");
+    expect(actions().getByRole("button", { name: "Add" })).toBeDisabled();
+
+    await add("Go to screen");
     await waitFor(() => expect(lastOps()).toEqual([{ op: "set", id: "helm", actions: [{ do: "navigate", screen: "engineering" }] }]));
 
-    await userEvent.selectOptions(actions().getByRole("combobox", { name: "Add" }), "Set a shared value");
+    await add("Set a shared value");
     await waitFor(() =>
       expect(lastOps()).toEqual([
         {
@@ -341,7 +385,7 @@ describe("live values and actions", () => {
     draft = liveBridge();
     await open();
     await selectInOutline(/Button · HELM/);
-    const add = section("When used").getByRole("combobox", { name: "Add" });
+    const add = section("When used").getByRole("combobox", { name: "New action" });
     expect(within(add).getByRole("option", { name: "Set a shared value" })).toBeDisabled();
     expect(within(add).getByRole("option", { name: "Control a video" })).toBeDisabled();
     expect(within(add).getByRole("option", { name: "Play a sound" })).toBeEnabled();

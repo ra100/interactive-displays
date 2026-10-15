@@ -8,6 +8,7 @@ import {
 } from "@interactive-displays/core";
 import { useEffect, useId, useState } from "react";
 import type { ApiResult } from "../../tools/api.ts";
+import { plainNumber } from "../editor/fieldText.ts";
 import { Dialog } from "../../tools/Dialog.tsx";
 
 const SOURCE_LABELS: Record<Source["kind"], string> = {
@@ -76,14 +77,49 @@ const NumberField = ({
   );
 };
 
+// A fixed number or text, typed freely and read when the field is left: "6.2" is a number, "007" stays text.
+const StaticValue = ({ value, onCommit }: { value: number | string; onCommit: (value: number | string) => void }) => {
+  const [draft, setDraft] = useState(String(value));
+  useEffect(() => setDraft(String(value)), [value]);
+  const commit = () => {
+    const next = plainNumber(draft) ?? draft;
+    if (next !== value) onCommit(next);
+  };
+  return (
+    <label className="tool-field">
+      <span className="tool-label">Fixed value</span>
+      <input
+        className="tool-input"
+        value={draft}
+        maxLength={80}
+        onChange={(event) => setDraft(event.target.value)}
+        onBlur={commit}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") commit();
+        }}
+      />
+    </label>
+  );
+};
+
+const between = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
+
 const SourceFields = ({ source, onChange }: { source: Source; onChange: (source: Source) => void }) => {
   switch (source.kind) {
     case "manual":
       return (
         <>
           <NumberField label="Starts at" value={source.initial} onCommit={(initial) => onChange({ ...source, initial })} />
-          <NumberField label="Lowest" value={source.min} onCommit={(min) => onChange({ ...source, min })} />
-          <NumberField label="Highest" value={source.max} onCommit={(max) => onChange({ ...source, max })} />
+          <NumberField
+            label="Lowest"
+            value={source.min}
+            onCommit={(min) => onChange({ ...source, min, initial: between(source.initial, min, source.max) })}
+          />
+          <NumberField
+            label="Highest"
+            value={source.max}
+            onCommit={(max) => onChange({ ...source, max, initial: between(source.initial, source.min, max) })}
+          />
           <NumberField label="Step" value={source.step} onCommit={(step) => onChange({ ...source, step })} />
         </>
       );
@@ -108,21 +144,7 @@ const SourceFields = ({ source, onChange }: { source: Source; onChange: (source:
         </>
       );
     case "static":
-      return (
-        <label className="tool-field">
-          <span className="tool-label">Value</span>
-          <input
-            className="tool-input"
-            value={String(source.value)}
-            maxLength={80}
-            onChange={(event) => {
-              const text = event.target.value;
-              const number = Number(text);
-              onChange({ ...source, value: text.trim() !== "" && Number.isFinite(number) ? number : text });
-            }}
-          />
-        </label>
-      );
+      return <StaticValue value={source.value} onCommit={(value) => onChange({ ...source, value })} />;
     case "clock":
       return (
         <label className="tool-field">
@@ -195,10 +217,12 @@ const SignalForm = ({ signal, onChange }: { signal: SignalDef; onChange: (signal
             type="radio"
             name={`scope-${signal.id}`}
             checked={signal.scope === "ambient"}
+            disabled={signal.source.kind === "manual"}
             onChange={() => onChange({ ...signal, scope: "ambient" })}
           />
           Its own value (no network)
         </label>
+        {signal.source.kind === "manual" ? <p className="tool-field__hint">A value the operator sets is always shared.</p> : null}
       </fieldset>
       <div className="signal-form__row">
         <label className="tool-field">
@@ -230,7 +254,10 @@ const SignalForm = ({ signal, onChange }: { signal: SignalDef; onChange: (signal
 
 const problemOf = (signals: SignalDef[]): string | undefined => {
   const result = SignalListSchema.safeParse(signals);
-  if (result.success) return undefined;
+  if (result.success) {
+    const outside = signals.find(({ source }) => source.kind === "manual" && (source.initial < source.min || source.initial > source.max));
+    return outside ? `${outside.label || outside.id}: Starts at must be between Lowest and Highest` : undefined;
+  }
   const issue = result.error.issues[0];
   if (!issue) return "Check the signals";
   const index = typeof issue.path[0] === "number" ? issue.path[0] : undefined;

@@ -29,6 +29,12 @@ export const formatField = (field: TextField, value: unknown): string => {
 const tooMany = (field: TextField, count: number): string | undefined =>
   "maxItems" in field && field.maxItems !== undefined && count > field.maxItems ? `At most ${field.maxItems}` : undefined;
 
+// Text that reads as a plain decimal number. Codes such as "007", "0x3F" or "1e3" stay text, as written.
+export const plainNumber = (text: string): number | undefined => {
+  const trimmed = text.trim();
+  return /^-?(0|[1-9]\d*)(\.\d+)?$/.test(trimmed) ? Number(trimmed) : undefined;
+};
+
 // Empty text means "not set" (the default), unless the prop is required.
 export const parseField = (field: TextField, text: string): Parsed => {
   if (text.trim() === "") {
@@ -36,11 +42,8 @@ export const parseField = (field: TextField, text: string): Parsed => {
     return { value: undefined };
   }
   switch (field.type) {
-    case "value": {
-      const trimmed = text.trim();
-      const number = Number(trimmed);
-      return { value: Number.isFinite(number) ? number : trimmed };
-    }
+    case "value":
+      return { value: plainNumber(text) ?? text.trim() };
     case "list": {
       const items = lines(text);
       const problem = tooMany(field, items.length);

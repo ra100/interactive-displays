@@ -8,6 +8,10 @@ describe("text-edited fields", () => {
     const field = { ...base, type: "value" as const };
     expect(parseField(field, " 6.2 ")).toEqual({ value: 6.2 });
     expect(parseField(field, "NOMINAL")).toEqual({ value: "NOMINAL" });
+    expect(parseField(field, "-12")).toEqual({ value: -12 });
+    expect(parseField(field, "0x3F")).toEqual({ value: "0x3F" });
+    expect(parseField(field, "007")).toEqual({ value: "007" });
+    expect(parseField(field, "1e3")).toEqual({ value: "1e3" });
     expect(parseField(field, "")).toEqual({ value: undefined });
     expect(formatField(field, 6.2)).toBe("6.2");
   });

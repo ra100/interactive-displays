@@ -14,20 +14,24 @@ export const Dialog = ({
 }) => {
   const titleId = useId();
   const panel = useRef<HTMLDivElement>(null);
+  // Callers pass a new onClose on every render; focus moves in on open and back out on close only, so a
+  // parent re-rendering (an overview update) never pulls focus away from what someone is typing.
+  const close = useRef(onClose);
+  close.current = onClose;
 
   useEffect(() => {
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const first = panel.current?.querySelector<HTMLElement>("input, select, textarea, button:not(.dialog__close)");
     (first ?? panel.current)?.focus();
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") close.current();
     };
     window.addEventListener("keydown", onKey);
     return () => {
       window.removeEventListener("keydown", onKey);
       previous?.focus();
     };
-  }, [onClose]);
+  }, []);
 
   return (
     <div className="dialog-backdrop" onPointerDown={(event) => event.target === event.currentTarget && onClose()}>

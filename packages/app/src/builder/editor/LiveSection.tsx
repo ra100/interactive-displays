@@ -3,6 +3,8 @@ import {
   type Binding,
   type Bindings,
   catalog,
+  describeFields,
+  type Field,
   humanize,
   isSettable,
   VIDEO_COMMANDS,
@@ -10,6 +12,7 @@ import {
   widgetIds,
 } from "@interactive-displays/core";
 import { themeSoundIds } from "@interactive-displays/themes/manifest";
+import { useState } from "react";
 import { useEditor } from "./EditorContext.ts";
 import { NumberBox, Section } from "./inspectorParts.tsx";
 
@@ -27,12 +30,17 @@ const rangeOf = (node: WidgetNode): { min: number; max: number } => {
   return max > min ? { min, max } : { min, max: min + 100 };
 };
 
-const BindingRow = ({ node, prop }: { node: WidgetNode; prop: string }) => {
+// A value that wanders or swings is a number in a range, so it is only offered for props that take any number.
+const movesOnItsOwn = (field: Field | undefined): boolean =>
+  field?.type === "value" || (field?.type === "number" && !field.integer);
+
+const BindingRow = ({ node, prop, wanders }: { node: WidgetNode; prop: string; wanders: boolean }) => {
   const { overview, apply, notify } = useEditor();
   const signals = overview.show.signals;
   const binding = node.bind?.[prop];
   const mode = modeOf(binding);
   const missing = binding && "signal" in binding && !signals.some((signal) => signal.id === binding.signal);
+  const ambient = binding && "ambient" in binding ? binding.ambient : undefined;
 
   const set = (next: Binding | undefined) => {
     const bind: Bindings = { ...node.bind };
@@ -48,12 +56,15 @@ const BindingRow = ({ node, prop }: { node: WidgetNode; prop: string }) => {
     set({ ambient: next === "wave" ? { kind: "wave", min, max, periodMs: 4000 } : { kind: "walk", min, max, volatility: 0.3 } });
   };
 
-  const ambient = binding && "ambient" in binding ? binding.ambient : undefined;
-  const setRange = (key: "min" | "max") => (value: number | undefined) => {
-    if (!ambient || value === undefined) return;
+  const setRange = (key: "min" | "max") => (value: number | undefined): boolean => {
+    if (!ambient || value === undefined) return false;
     const next = { ...ambient, [key]: value };
-    if (next.min >= next.max) return notify("The lowest value must be below the highest", "danger");
+    if (next.min >= next.max) {
+      notify("The lowest value must be below the highest", "danger");
+      return false;
+    }
     set({ ambient: next });
+    return true;
   };
 
   return (
@@ -73,10 +84,12 @@ const BindingRow = ({ node, prop }: { node: WidgetNode; prop: string }) => {
             </optgroup>
           ) : null}
           {missing ? <option value={mode}>{binding.signal} (missing)</option> : null}
-          <optgroup label="On its own">
-            <option value="walk">Wanders</option>
-            <option value="wave">Swings back and forth</option>
-          </optgroup>
+          {wanders || ambient ? (
+            <optgroup label="On its own">
+              <option value="walk">Wanders</option>
+              <option value="wave">Swings back and forth</option>
+            </optgroup>
+          ) : null}
         </select>
       </label>
       {ambient ? (
@@ -110,12 +123,14 @@ const BindingRow = ({ node, prop }: { node: WidgetNode; prop: string }) => {
 
 // Which props follow a live value instead of their own: a show signal, or a value that moves by itself.
 export const LiveValues = ({ node }: { node: WidgetNode }) => {
-  const bindable = catalog.get(node.kind)?.bindable ?? [];
-  if (bindable.length === 0) return null;
+  const definition = catalog.get(node.kind);
+  const bindable = definition?.bindable ?? [];
+  if (!definition || bindable.length === 0) return null;
+  const fields = describeFields(definition.props);
   return (
     <Section title="Live value">
       {bindable.map((prop) => (
-        <BindingRow key={prop} node={node} prop={prop} />
+        <BindingRow key={prop} node={node} prop={prop} wanders={movesOnItsOwn(fields.find((field) => field.key === prop))} />
       ))}
       <p className="panel-note">Shared signals show the same value on every display; the operator sets them.</p>
     </Section>
@@ -200,6 +215,8 @@ const ActionFields = ({
     case "setSignal": {
       const mode = signalMode(action);
       const { value: _value, delta: _delta, ...rest } = action;
+      const source = show.signals.find((signal) => signal.id === action.signal)?.source;
+      const step = source?.kind === "manual" ? source.step : 1;
       return (
         <>
           <Select
@@ -217,14 +234,17 @@ const ActionFields = ({
               { value: "by", label: "Up or down by" },
             ]}
             onChange={(next) =>
-              onChange(next === "to" ? { ...rest, value: 0 } : next === "by" ? { ...rest, delta: 1 } : rest)
+              onChange(next === "to" ? { ...rest, value: 0 } : next === "by" ? { ...rest, delta: step } : rest)
             }
           />
           {mode === "to" ? (
             <NumberBox label="Value" value={action.value} step={0.1} onCommit={(value) => onChange({ ...rest, value: value ?? 0 })} />
           ) : null}
           {mode === "by" ? (
-            <NumberBox label="By" value={action.delta} step={0.1} onCommit={(delta) => onChange({ ...rest, delta: delta ?? 0 })} />
+            <>
+              <NumberBox label="By" value={action.delta} step={step} onCommit={(delta) => onChange({ ...rest, delta: delta ?? step })} />
+              <p className="panel-note">Moves in whole steps of {step}; a negative number moves down.</p>
+            </>
           ) : null}
         </>
       );
@@ -262,6 +282,8 @@ const ActionFields = ({
 // display buttons run the show.
 export const ActionsEditor = ({ node }: { node: WidgetNode }) => {
   const { overview, screen, apply } = useEditor();
+  // Chosen first and added with a button, so arrowing through the list does not add actions.
+  const [adding, setAdding] = useState<Action["do"] | "">("");
   if (!catalog.get(node.kind)?.interactive) return null;
   const show = overview.show;
   const actions = node.actions ?? [];
@@ -292,6 +314,8 @@ export const ActionsEditor = ({ node }: { node: WidgetNode }) => {
     }
   };
 
+  const next = adding ? starter(adding) : undefined;
+
   return (
     <Section title="When used">
       {actions.length === 0 ? <p className="panel-note">Nothing yet: it flashes and, with sounds on, beeps.</p> : null}
@@ -314,24 +338,31 @@ export const ActionsEditor = ({ node }: { node: WidgetNode }) => {
         ))}
       </ol>
       {actions.length < 8 ? (
-        <label className="tool-field">
-          <span className="field__label">Add</span>
-          <select
-            className="tool-select"
-            value=""
-            onChange={(event) => {
-              const next = starter(event.target.value as Action["do"]);
-              if (next) save([...actions, next]);
+        <div className="action-add">
+          <label className="tool-field">
+            <span className="field__label">New action</span>
+            <select className="tool-select" value={adding} onChange={(event) => setAdding(event.target.value as Action["do"] | "")}>
+              <option value="">Choose…</option>
+              {ACTION_KINDS.map((kind) => (
+                <option key={kind} value={kind} disabled={!starter(kind)}>
+                  {ACTION_LABELS[kind]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="button"
+            className="tool-button tool-button--small"
+            disabled={!next}
+            onClick={() => {
+              if (!next) return;
+              save([...actions, next]);
+              setAdding("");
             }}
           >
-            <option value="">Add an action…</option>
-            {ACTION_KINDS.map((kind) => (
-              <option key={kind} value={kind} disabled={!starter(kind)}>
-                {ACTION_LABELS[kind]}
-              </option>
-            ))}
-          </select>
-        </label>
+            Add
+          </button>
+        </div>
       ) : null}
       {actions.some((action) => action.do === "setState" || action.do === "setSignal") && !show.settings.displayGlobalActions ? (
         <p className="panel-note">The operator has display buttons switched off, so show-wide actions do nothing for now.</p>
