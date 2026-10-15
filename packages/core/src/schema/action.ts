@@ -24,6 +24,8 @@ export const ActionSchema = z.discriminatedUnion("do", [
       delta: z.number().optional(),
     })
     .refine((action) => action.value === undefined || action.delta === undefined, "Use value or delta, not both"),
+  // Show-wide: runs a cue from the show's running order, e.g. a "Hit" button that sets the whole beat.
+  z.strictObject({ do: z.literal("cue"), cue: IdSchema }),
   // Controls a video widget on the same screen, by its node id.
   z.strictObject({ do: z.literal("video"), target: IdSchema, command: VideoCommandSchema }),
   // Plays a sound from the theme, such as "alert".
@@ -33,7 +35,7 @@ export const ActionSchema = z.discriminatedUnion("do", [
 export const ActionsSchema = z.array(ActionSchema).max(8);
 
 // Actions the server runs, because they change more than the display that was touched.
-export const GLOBAL_ACTIONS = ["setState", "setSignal"] as const;
+export const GLOBAL_ACTIONS = ["setState", "setSignal", "cue"] as const;
 // Actions the server runs for that display only: it decides what each display shows.
 export const DISPLAY_ACTIONS = ["navigate", "back"] as const;
 

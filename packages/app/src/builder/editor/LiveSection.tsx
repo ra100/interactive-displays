@@ -151,6 +151,7 @@ const ACTION_LABELS: Record<Action["do"], string> = {
   back: "Go back",
   setState: "Change show state",
   setSignal: "Set a shared value",
+  cue: "Run a cue",
   video: "Control a video",
   sound: "Play a sound",
 };
@@ -219,6 +220,15 @@ const ActionFields = ({
           value={action.state}
           options={show.states.map((state) => ({ value: state.id, label: state.label }))}
           onChange={(value) => onChange({ ...action, state: value })}
+        />
+      );
+    case "cue":
+      return (
+        <Select
+          label="Cue"
+          value={action.cue}
+          options={show.cues.map((cue) => ({ value: cue.id, label: cue.label }))}
+          onChange={(value) => onChange({ ...action, cue: value })}
         />
       );
     case "setSignal": {
@@ -314,6 +324,8 @@ export const ActionsEditor = ({ node }: { node: WidgetNode }) => {
       }
       case "setSignal":
         return settable ? { do: "setSignal", signal: settable.id, ...(HAS_VALUE.has(node.kind) ? {} : { value: 0 }) } : undefined;
+      case "cue":
+        return show.cues[0] ? { do: "cue", cue: show.cues[0].id } : undefined;
       case "video":
         return video ? { do: "video", target: video, command: "play" } : undefined;
       case "sound": {
@@ -373,7 +385,7 @@ export const ActionsEditor = ({ node }: { node: WidgetNode }) => {
           </button>
         </div>
       ) : null}
-      {actions.some((action) => action.do === "setState" || action.do === "setSignal") && !show.settings.displayGlobalActions ? (
+      {actions.some((action) => action.do === "setState" || action.do === "setSignal" || action.do === "cue") && !show.settings.displayGlobalActions ? (
         <p className="panel-note">The operator has display buttons switched off, so show-wide actions do nothing for now.</p>
       ) : null}
     </Section>
