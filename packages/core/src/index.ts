@@ -8,6 +8,7 @@ export * from "./schema/node.ts";
 export * from "./schema/screen.ts";
 export * from "./schema/show.ts";
 export * from "./schema/theme.ts";
+export * from "./schema/content.ts";
 export * from "./catalog/defineWidget.ts";
 export * from "./catalog/defineDecor.ts";
 export * from "./catalog/index.ts";

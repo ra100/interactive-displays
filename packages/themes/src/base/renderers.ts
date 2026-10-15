@@ -6,6 +6,7 @@ import { BaseButtonGroup, BaseSlider, BaseToggle } from "./BaseControls.tsx";
 import { BaseClock, BaseDataGrid, BaseGauge, BaseReadout, BaseStatusLight } from "./BaseData.tsx";
 import { BaseFrame } from "./BaseFrame.tsx";
 import { BaseImage } from "./BaseImage.tsx";
+import { BasePlaceholder } from "./BasePlaceholder.tsx";
 import { BaseText } from "./BaseText.tsx";
 import { BaseTitle } from "./BaseTitle.tsx";
 import { BaseVideo } from "./BaseVideo.tsx";
@@ -32,6 +33,7 @@ export const baseRenderers: BaseThemeRenderers = defineRenderers({
     "alert-banner": BaseAlertBanner,
     image: BaseImage,
     video: BaseVideo,
+    placeholder: BasePlaceholder,
   },
   frames: {
     sidebar: BaseFrame,
