@@ -1,4 +1,5 @@
 import { type DisplaySnapshot, PROTOCOL_VERSION, ScreenSchema, SignalDefSchema } from "@interactive-displays/core";
+import { getThemeSound } from "@interactive-displays/themes/manifest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -380,6 +381,13 @@ describe("live values and controls", () => {
     serverSends("snapshot", liveSnapshot({ show: { ...base.show, sounds: true }, state: "normal" }));
     serverSends("snapshot", liveSnapshot({ show: { ...base.show, sounds: true }, state: "yellow-alert" }));
     expect(oscillators).toHaveBeenCalledTimes(2);
+
+    // A show can play another theme's sound pack.
+    const warning = getThemeSound("crt", "warning");
+    const tones = warning ? warning.steps.filter((step) => step.gain > 0).length * warning.repeat : 0;
+    serverSends("snapshot", liveSnapshot({ show: { ...base.show, sounds: true, soundPack: "crt" }, state: "normal" }));
+    serverSends("state", { state: "yellow-alert" });
+    expect(oscillators).toHaveBeenCalledTimes(2 + tones);
   });
 });
 
