@@ -274,3 +274,71 @@
 .toast[data-tone="danger"] {
   border-color: var(--tool-danger);
 }
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(0 0 0 / 60%);
+}
+
+.dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: min(440px, 100%);
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  padding: 20px;
+  border: 1px solid var(--tool-border);
+  border-radius: 14px;
+  background: var(--tool-panel);
+  box-shadow: 0 16px 48px rgb(0 0 0 / 60%);
+}
+
+.dialog--wide {
+  width: min(760px, 100%);
+}
+
+.dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dialog__header h2 {
+  font-size: 20px;
+}
+
+.dialog__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--tool-muted);
+}
+
+.dialog__body p {
+  margin: 0;
+}
+
+.dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.tool-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tool-field__hint {
+  color: var(--tool-muted);
+  font-size: 12px;
+}

@@ -6,6 +6,8 @@ import { StatusMessage } from "./display/StatusMessage.tsx";
 // Tools load on demand, so a display downloads only what it renders.
 const GalleryPage = lazy(async () => ({ default: (await import("./gallery/GalleryPage.tsx")).GalleryPage }));
 const OperatorPage = lazy(async () => ({ default: (await import("./operator/OperatorPage.tsx")).OperatorPage }));
+const LibraryPage = lazy(async () => ({ default: (await import("./builder/library/LibraryPage.tsx")).LibraryPage }));
+const EditorPage = lazy(async () => ({ default: (await import("./builder/editor/EditorPage.tsx")).EditorPage }));
 
 const loading = <StatusMessage title="LOADING" />;
 
@@ -27,6 +29,22 @@ export const App = () => (
       element={
         <Suspense fallback={loading}>
           <OperatorPage />
+        </Suspense>
+      }
+    />
+    <Route
+      path="/builder"
+      element={
+        <Suspense fallback={loading}>
+          <LibraryPage />
+        </Suspense>
+      }
+    />
+    <Route
+      path="/builder/:screenId"
+      element={
+        <Suspense fallback={loading}>
+          <EditorPage />
         </Suspense>
       }
     />

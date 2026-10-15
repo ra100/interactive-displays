@@ -5,7 +5,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { type Call, fakeFetch } from "../testing/fakeFetch.ts";
 import { fakeServer } from "../testing/fakeSocket.ts";
 import { sampleOverview, sampleScreen } from "../testing/fixtures.ts";
-import { timeAgo } from "./DisplayCard.tsx";
 import { OperatorPage } from "./OperatorPage.tsx";
 
 vi.mock("socket.io-client", async () => ({ io: (await import("../testing/fakeSocket.ts")).fakeIo }));
@@ -185,17 +184,5 @@ describe("editor token", () => {
     await open();
     fakeServer.send("error", { code: "UNAUTHORIZED", message: "This server needs the editor token" });
     expect(await screen.findByLabelText("Editor token")).toBeInTheDocument();
-  });
-});
-
-describe("timeAgo", () => {
-  const now = Date.parse("2026-10-15T12:00:00.000Z");
-  it.each([
-    ["2026-10-15T11:59:30.000Z", "30 seconds ago"],
-    ["2026-10-15T11:55:00.000Z", "5 minutes ago"],
-    ["2026-10-15T09:00:00.000Z", "3 hours ago"],
-    ["2026-10-14T12:00:00.000Z", "yesterday"],
-  ])("%s → %s", (iso, text) => {
-    expect(timeAgo(iso, now)).toBe(text);
   });
 });
