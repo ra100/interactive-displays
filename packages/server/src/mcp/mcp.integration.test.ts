@@ -77,6 +77,7 @@ describe("MCP endpoint", () => {
         "publish_screen",
         "assign_screen",
         "set_state",
+        "set_theme",
         "set_signal",
         "video_command",
       ]),
@@ -168,6 +169,7 @@ describe("MCP endpoint", () => {
 
     await settings({ aiLiveControl: true });
     expect((await call(client, "set_state", { state: "red-alert" })).data).toEqual({ state: "red-alert" });
+    expect((await call(client, "set_theme", { id: "hud", variant: "amber" })).data).toEqual({ theme: { id: "hud", variant: "amber" } });
     expect((await server.api<{ state: string }>("GET", "/health")).body.state).toBe("red-alert");
     expect((await call(client, "set_signal", { signal: "shields", value: 40 })).data).toEqual({ signal: "shields", value: 40 });
     expect((await call(client, "set_signal", { signal: "shields" })).isError).toBe(true);
