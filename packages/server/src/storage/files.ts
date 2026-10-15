@@ -25,9 +25,12 @@ export const writeFileAtomic = (file: string, data: string | Buffer): Promise<vo
       await rename(temp, file);
     });
   pending.set(file, next);
-  void next.finally(() => {
+  // Cleans up whether the write worked or not; a failure reaches the caller through `next` only (a bare
+  // finally() would re-throw it as an unhandled rejection, which stops Node).
+  const settle = () => {
     if (pending.get(file) === next) pending.delete(file);
-  });
+  };
+  next.then(settle, settle);
   return next;
 };
 

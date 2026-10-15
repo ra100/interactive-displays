@@ -204,6 +204,14 @@ export const createShowService = ({
     return { ok: true, value: state };
   };
 
+  // A display's state change has gone out once setState broadcasts it, so a failed save is logged and the rest
+  // of the press still runs.
+  const stateFromDisplay = (stateId: string): Promise<CommandResult<string>> =>
+    setState(stateId).catch((error: unknown) => {
+      log.warn({ err: error }, "Could not save runtime state");
+      return { ok: true, value: stateId };
+    });
+
   const setSignal = (signalId: string, change: { value?: number; delta?: number }): CommandResult<number> => {
     if (!loaded) return NO_SHOW;
     const signal = findSignal(loaded.show, signalId);
@@ -465,7 +473,7 @@ export const createShowService = ({
       for (const action of node?.actions ?? []) {
         if (action.do === "navigate" && !preview && navigate(loaded, displayId, action.screen)) ran.push(action.do);
         if (action.do === "back" && !preview && back(displayId)) ran.push(action.do);
-        if (action.do === "setState" && global && (await setState(action.state)).ok) ran.push(action.do);
+        if (action.do === "setState" && global && (await stateFromDisplay(action.state)).ok) ran.push(action.do);
         if (action.do === "setSignal" && global) {
           // A fixed value or delta from the action, or else the control's own value.
           const value = action.value ?? (action.delta === undefined ? input.value : undefined);

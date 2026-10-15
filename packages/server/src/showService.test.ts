@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { decorCatalog } from "@interactive-displays/themes/manifest";
@@ -512,6 +512,20 @@ describe("controls on displays", () => {
     expect(await service.press("test", { nodeId: "act-alert" })).toEqual([]);
     expect(await service.press("test", { nodeId: "act-stand-down" })).toEqual(["setState", "setSignal"]);
     expect(service.state()).toBe("normal");
+  });
+
+  it("runs the rest of a press when the runtime file cannot be saved", async () => {
+    const service = await open();
+    // A directory where runtime.json should be makes every save fail, even for root.
+    const runtime = path.join(dataDir, "shows/demo/runtime.json");
+    await rm(runtime, { force: true });
+    await mkdir(path.join(runtime, "blocked"), { recursive: true });
+    log.warn.mockClear();
+
+    expect(await service.press("test", { nodeId: "act-alert" })).toEqual(["setState", "setSignal"]);
+    expect(service.state()).toBe("yellow-alert");
+    expect(service.signalValues(0)["shields"]).toBe(100);
+    expect(log.warn).toHaveBeenCalledWith(expect.objectContaining({ err: expect.anything() }), "Could not save runtime state");
   });
 
   it("applies relative signal changes from actions", async () => {
