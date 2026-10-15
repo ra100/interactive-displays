@@ -1,21 +1,24 @@
 import { expect, type Page, test } from "@playwright/test";
 import { assignDisplay, identify, setState } from "./support/api.ts";
 
-// Resolves with the wall-clock time at which this page's screen switched to the given effect.
-const watchEffect = (page: Page, effect: string) =>
-  page.evaluate(
-    (expected) =>
-      new Promise<number>((resolve) => {
-        const observer = new MutationObserver(() => {
-          if (document.querySelector(".screen")?.getAttribute("data-effect") === expected) {
-            observer.disconnect();
-            resolve(Date.now());
-          }
-        });
-        observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ["data-effect"] });
-      }),
-    effect,
-  );
+type Watched = Window & { switchedAt?: Promise<number> };
+
+// Starts watching this page's screen for the given effect and, once the observer is in place, returns a function
+// that resolves with the wall-clock time of the switch. Watching first means a fast switch cannot be missed.
+const watchEffect = async (page: Page, effect: string): Promise<() => Promise<number>> => {
+  await page.evaluate((expected) => {
+    (window as Watched).switchedAt = new Promise<number>((resolve) => {
+      const observer = new MutationObserver(() => {
+        if (document.querySelector(".screen")?.getAttribute("data-effect") === expected) {
+          observer.disconnect();
+          resolve(Date.now());
+        }
+      });
+      observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ["data-effect"] });
+    });
+  }, effect);
+  return () => page.evaluate(() => (window as Watched).switchedAt ?? Promise.reject(new Error("not watching")));
+};
 
 test.describe("show state", () => {
   test.afterEach(async ({ request }) => {
@@ -32,10 +35,10 @@ test.describe("show state", () => {
       }),
     );
 
-    const switched = pages.map((page) => watchEffect(page, "alert"));
+    const switched = await Promise.all(pages.map((page) => watchEffect(page, "alert")));
     const sent = Date.now();
     await setState(request, "red-alert");
-    const delays = (await Promise.all(switched)).map((at) => at - sent);
+    const delays = (await Promise.all(switched.map((at) => at()))).map((at) => at - sent);
 
     expect(Math.max(...delays)).toBeLessThan(100);
     await Promise.all(pages.map((page) => page.close()));
