@@ -1,6 +1,7 @@
 import {
   isSettable,
   isTicking,
+  manualStart,
   nextManualValue,
   roundValue,
   sampleSource,
@@ -22,7 +23,7 @@ export const createSignals = (saved: Readonly<Record<string, number>>) => {
   const manualValue = (signal: SignalDef): number => {
     const stored = manual.get(signal.id);
     if (signal.source.kind !== "manual") return 0;
-    return stored === undefined ? signal.source.initial : (nextManualValue(signal, stored, { value: stored }) ?? stored);
+    return stored === undefined ? manualStart(signal.source) : (nextManualValue(signal, stored, { value: stored }) ?? stored);
   };
 
   const tickedValue = (signal: SignalDef, state: string, now: number): SignalValue =>

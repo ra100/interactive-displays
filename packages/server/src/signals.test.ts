@@ -46,6 +46,15 @@ describe("server signals", () => {
     expect(createSignals({ shields: 140 }).values(show, "normal", 0)["shields"]).toBe(100);
   });
 
+  it("starts an unset manual value from its initial value kept in range", () => {
+    const narrow: Show = {
+      ...show,
+      signals: [{ id: "shields", label: "Shields", scope: "shared", source: { kind: "manual", initial: 0, min: 20, max: 100, step: 5 } }],
+    };
+    expect(createSignals({}).values(narrow, "normal", 0)["shields"]).toBe(20);
+    expect(createSignals({}).set(signal("shields"), { delta: 1 })).toBe(5);
+  });
+
   it("sets manual values within range and step, and says when nothing changed", () => {
     const signals = createSignals({});
     expect(signals.set(signal("shields"), { value: 42 })).toBe(40);
