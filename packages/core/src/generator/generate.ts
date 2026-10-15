@@ -1,7 +1,7 @@
 import { catalog } from "../catalog/index.ts";
 import type { Op } from "../ops/ops.ts";
 import { ARCHETYPE_IDS, type ArchetypeId, archetypeSlots, isArchetype, type SlotName } from "../schema/archetypes.ts";
-import type { ContentPack, Recipe, System } from "../schema/content.ts";
+import { BLOCK_SIZES, type ContentPack, type Recipe, type System } from "../schema/content.ts";
 import type { ChildEntry, GridArea, Node, WidgetNode } from "../schema/node.ts";
 import { type Density, type GeneratorInfo, type Profile, SCREEN_SCHEMA_VERSION, type Screen } from "../schema/screen.ts";
 import { collectIds, findNode, lockedParts, walkNodes } from "../tree/tree.ts";
@@ -177,8 +177,8 @@ const panels = (
     const system = systems.shift() ?? random.pick(context.recipe.systems);
     plans.push({ system });
   }
-  return plans.flatMap((plan, index) => {
-    if (plan.kept) return [plan.kept];
+  const made = plans.flatMap((plan, index): { node: Node; rank: number }[] => {
+    if (plan.kept) return [{ node: plan.kept, rank: -1 }];
     const system = plan.system ?? random.pick(context.recipe.systems);
     const panelRandom = random.fork(`${slot}-${index}`);
     const block =
@@ -190,8 +190,11 @@ const panels = (
     if (!block) return [];
     used.add(block.id);
     const node = buildBlock(block, system, toneAt(context.tones.panels, toneOffset + index), toneOffset + index, context, panelRandom);
-    return node ? [node] : [];
+    return node ? [{ node, rank: BLOCK_SIZES.indexOf(block.size) }] : [];
   });
+  // The first cell of the main grid is the biggest, so the biggest panel goes there, unless kept parts hold their places.
+  if (slot === "main" && kept.length === 0) made.sort((a, b) => b.rank - a.rank);
+  return made.map((each) => each.node);
 };
 
 const buttons = (

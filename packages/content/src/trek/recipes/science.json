@@ -1,0 +1,56 @@
+{
+  "id": "science",
+  "label": "Science",
+  "description": "Sensors, scans and analysis.",
+  "code": "SCI",
+  "archetypes": { "dashboard": 3, "header-main": 2, "sidebar": 1 },
+  "titles": ["SCIENCE STATION", "SENSOR ANALYSIS", "ASTROMETRICS"],
+  "nav": ["LONG RANGE", "SHORT RANGE", "LIFEFORMS", "SPECTRUM", "ANOMALY", "LIBRARY", "PROBES", "LOGS"],
+  "status": ["SENSOR SWEEP COMPLETE", "ANALYSING SUBSPACE SIGNATURE", "PROBE LAUNCH READY"],
+  "systems": [
+    {
+      "id": "sensors",
+      "label": "SENSOR ARRAY",
+      "short": "SENSORS",
+      "metrics": [
+        { "id": "range", "label": "SCAN RANGE", "unit": "ly", "range": [14, 18], "precision": 1, "prefer": ["readout"] },
+        { "id": "resolution", "label": "RESOLUTION", "unit": "%", "range": [85, 96], "alertRange": [30, 55], "prefer": ["gauge"] },
+        { "id": "noise", "label": "BACKGROUND NOISE", "range": [2, 8], "motion": "wave", "prefer": ["sparkline"] }
+      ],
+      "actions": [{ "label": "FULL SWEEP" }, { "label": "FOCUS ARRAY" }, { "label": "PASSIVE SCAN" }],
+      "notes": ["Lateral array compensating for nebula interference"]
+    },
+    {
+      "id": "anomaly",
+      "label": "ANOMALY",
+      "metrics": [
+        { "id": "flux", "label": "TETRYON FLUX", "range": [100, 400], "alertRange": [800, 1200], "motion": "wave", "prefer": ["sparkline", "gauge"] },
+        { "id": "distance", "label": "DISTANCE", "unit": "km", "range": [9000, 12000], "prefer": ["readout"] },
+        { "id": "gravimetric", "label": "GRAVIMETRIC SHEAR", "range": [1, 3], "alertRange": [6, 9], "precision": 1 }
+      ],
+      "actions": [{ "label": "LAUNCH PROBE" }, { "label": "RECORD DATA" }]
+    },
+    {
+      "id": "lifeforms",
+      "label": "LIFEFORMS",
+      "metrics": [
+        { "id": "count", "label": "LIFE SIGNS", "range": [1000, 1015], "prefer": ["readout"] },
+        { "id": "biosig", "label": "BIO-SIGNATURE", "unit": "%", "range": [60, 90], "motion": "wave", "prefer": ["sparkline"] }
+      ],
+      "actions": [{ "label": "ISOLATE SIGNAL" }]
+    },
+    {
+      "id": "spectrum",
+      "label": "SPECTRAL ANALYSIS",
+      "short": "SPECTRUM",
+      "metrics": [
+        { "id": "em", "label": "EM BAND", "unit": "THz", "range": [400, 700], "prefer": ["sparkline"] },
+        { "id": "match", "label": "LIBRARY MATCH", "unit": "%", "range": [10, 40], "prefer": ["gauge"] }
+      ],
+      "actions": []
+    }
+  ],
+  "blocks": { "prefer": ["telemetry", "trend-panel", "data-log"], "avoid": [] },
+  "alert": { "banner": true, "emphasise": ["flux", "gravimetric"], "status": ["GRAVIMETRIC SHEAR EXCEEDING LIMITS", "SENSORS OVERLOADED"] },
+  "tags": ["scan", "sensors", "analysis", "anomaly"]
+}

@@ -1,0 +1,67 @@
+{
+  "id": "engineering",
+  "label": "Engineering",
+  "description": "Warp core, power distribution and structural systems.",
+  "code": "ENG",
+  "archetypes": { "sidebar": 3, "dashboard": 2, "header-main": 1 },
+  "titles": ["MAIN ENGINEERING", "ENGINEERING STATUS", "WARP PROPULSION", "POWER SYSTEMS"],
+  "nav": ["WARP CORE", "EPS GRID", "IMPULSE", "STRUCTURAL", "DAMAGE CTRL", "COOLANT", "DILITHIUM", "DIAGNOSTICS", "LOGS"],
+  "status": ["ALL SYSTEMS NOMINAL", "WARP CORE ONLINE · ANTIMATTER FLOW STABLE", "LEVEL 4 DIAGNOSTIC IN PROGRESS"],
+  "systems": [
+    {
+      "id": "warp",
+      "label": "WARP CORE",
+      "metrics": [
+        { "id": "output", "label": "CORE OUTPUT", "unit": "%", "range": [62, 78], "alertRange": [88, 99], "prefer": ["gauge"], "signal": "warp.output" },
+        { "id": "matter", "label": "MATTER FLOW", "unit": "kg/s", "range": [1.2, 1.8], "motion": "wave" },
+        { "id": "containment", "label": "CONTAINMENT", "unit": "%", "range": [94, 100], "alertRange": [40, 70], "prefer": ["gauge", "readout"] },
+        { "id": "factor", "label": "WARP FACTOR", "range": [5, 7], "precision": 1, "prefer": ["readout"], "signal": "warp.factor" }
+      ],
+      "actions": [
+        { "label": "EJECT CORE", "danger": true, "actions": [{ "do": "setState", "state": "red-alert" }] },
+        { "label": "STABILISE", "actions": [{ "do": "setState", "state": "normal" }] },
+        { "label": "PURGE PLASMA" }
+      ],
+      "notes": ["Dilithium matrix at 97% efficiency", "Antimatter injectors synchronised", "Magnetic constriction segments aligned"]
+    },
+    {
+      "id": "eps",
+      "label": "EPS GRID",
+      "short": "EPS",
+      "metrics": [
+        { "id": "load", "label": "GRID LOAD", "unit": "%", "range": [40, 60], "alertRange": [85, 100], "signal": "eps.load" },
+        { "id": "taps", "label": "PLASMA TAPS", "unit": "MW", "range": [300, 420] },
+        { "id": "conduit", "label": "CONDUIT PRESSURE", "unit": "kPa", "range": [180, 220], "motion": "wave" }
+      ],
+      "actions": [{ "label": "REROUTE POWER" }, { "label": "ISOLATE DECK 7", "danger": true }],
+      "notes": ["Secondary conduits on standby"]
+    },
+    {
+      "id": "coolant",
+      "label": "COOLANT",
+      "metrics": [
+        { "id": "temp", "label": "COOLANT TEMP", "unit": "K", "range": [290, 320], "alertRange": [360, 420], "motion": "wave", "signal": "coolant.temp" },
+        { "id": "flow", "label": "FLOW RATE", "unit": "L/s", "range": [40, 55] }
+      ],
+      "actions": [{ "label": "VENT COOLANT", "danger": true }, { "label": "CYCLE PUMPS" }]
+    },
+    {
+      "id": "sif",
+      "label": "STRUCTURAL INTEGRITY",
+      "short": "STRUCTURAL",
+      "metrics": [
+        { "id": "hull", "label": "HULL INTEGRITY", "unit": "%", "range": [96, 100], "alertRange": [40, 70], "prefer": ["gauge"], "signal": "hull" },
+        { "id": "field", "label": "SIF STRENGTH", "unit": "%", "range": [80, 95], "alertRange": [30, 60] },
+        { "id": "stress", "label": "FRAME STRESS", "unit": "GPa", "range": [2, 4], "alertRange": [7, 9] }
+      ],
+      "actions": [{ "label": "REINFORCE SIF" }, { "label": "SEAL BULKHEADS", "danger": true }]
+    }
+  ],
+  "blocks": { "prefer": ["hero-gauge", "control-panel", "gauge-bank"], "avoid": [] },
+  "alert": {
+    "banner": true,
+    "emphasise": ["output", "containment", "temp", "hull"],
+    "status": ["WARP CORE BREACH IMMINENT", "CONTAINMENT FIELD FAILING", "EPS OVERLOAD · DECKS 4 TO 9"]
+  },
+  "tags": ["warp", "power", "core", "engine"]
+}
