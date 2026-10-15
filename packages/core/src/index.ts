@@ -24,3 +24,17 @@ export * from "./lint/lintScreen.ts";
 export * from "./migrate/migrateScreen.ts";
 export * from "./fields/describeFields.ts";
 export * from "./protocol/index.ts";
+export { blockFits } from "./generator/blocks.ts";
+export type { ShowContext, ToneRules } from "./generator/context.ts";
+export {
+  archetypeWeights,
+  type GenerateOptions,
+  generateScreen,
+  generateSuite,
+  generateVariants,
+  regenerateOps,
+  rerollable,
+  rerollOps,
+  type SuiteLink,
+} from "./generator/generate.ts";
+export { randomSeed } from "./generator/random.ts";
