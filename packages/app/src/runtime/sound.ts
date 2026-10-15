@@ -35,18 +35,33 @@ export const scheduleSound = (context: AudioTarget, sound: Sound, start: number 
 
 const browserAudio = (): AudioTarget | null => (typeof AudioContext === "undefined" ? null : new AudioContext());
 
+// A sound that cannot start within this long is dropped rather than played late.
+const LATE_MS = 150;
+
 // Plays theme sounds. The audio context is made on first use: browsers only let a page make sound after a
-// touch, unless the kiosk browser allows autoplay (see the deployment guide).
-export const createSoundPlayer = (makeContext: () => AudioTarget | null = browserAudio) => {
+// touch, unless the kiosk browser allows autoplay (see the deployment guide). Until then the context stays
+// suspended and its clock stands still, so a sound scheduled on it would wait and then play together with
+// every other one at the first touch; such sounds are dropped instead.
+export const createSoundPlayer = (makeContext: () => AudioTarget | null = browserAudio, clock: () => number = Date.now) => {
   let context: AudioTarget | null = null;
   return {
     play: (themeId: string, soundId: string): void => {
       const sound = getThemeSound(themeId, soundId);
       if (!sound) return;
       context ??= makeContext();
-      if (!context) return;
-      if (context.state === "suspended") context.resume().catch(() => undefined);
-      scheduleSound(context, sound);
+      const target = context;
+      if (!target) return;
+      if (target.state === "running") {
+        scheduleSound(target, sound);
+        return;
+      }
+      const asked = clock();
+      target.resume().then(
+        () => {
+          if (target.state === "running" && clock() - asked <= LATE_MS) scheduleSound(target, sound);
+        },
+        () => undefined,
+      );
     },
   };
 };

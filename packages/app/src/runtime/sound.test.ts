@@ -17,9 +17,10 @@ const fakeAudio = (state: AudioContextState = "running"): AudioTarget & { record
   const context = {
     currentTime: 10,
     destination: {},
-    state,
+    state: state as AudioContextState,
     resume: () => {
       recorded.resumed += 1;
+      context.state = "running";
       return Promise.resolve();
     },
     createOscillator: () => {
@@ -77,7 +78,7 @@ describe("scheduleSound", () => {
 });
 
 describe("createSoundPlayer", () => {
-  it("makes the audio context on first use, resumes it when suspended and ignores unknown sounds", () => {
+  it("makes the audio context on first use, starts it when the page may and ignores unknown sounds", async () => {
     const audio = fakeAudio("suspended");
     const make = vi.fn(() => audio);
     const player = createSoundPlayer(make);
@@ -87,10 +88,37 @@ describe("createSoundPlayer", () => {
     expect(make).not.toHaveBeenCalled();
 
     player.play("base", "confirm");
+    await Promise.resolve();
     player.play("lcars", "hail");
     expect(make).toHaveBeenCalledTimes(1);
-    expect(audio.recorded.resumed).toBe(2);
+    expect(audio.recorded.resumed).toBe(1);
     expect(audio.recorded.oscillators.length).toBeGreaterThan(1);
+  });
+
+  it("drops sounds asked for before the page may play audio, instead of playing them all on the first touch", async () => {
+    const audio = fakeAudio("suspended");
+    let allow = () => {};
+    // A browser keeps resume() waiting until the first touch.
+    (audio as unknown as { resume: () => Promise<void> }).resume = () =>
+      new Promise<void>((resolve) => {
+        allow = () => {
+          (audio as unknown as { state: AudioContextState }).state = "running";
+          resolve();
+        };
+      });
+    let now = 0;
+    const player = createSoundPlayer(() => audio, () => now);
+
+    player.play("base", "warning");
+    player.play("base", "alert");
+    now = 60_000;
+    allow();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(audio.recorded.oscillators).toHaveLength(0);
+
+    player.play("base", "press");
+    expect(audio.recorded.oscillators.length).toBeGreaterThan(0);
   });
 
   it("stays quiet where the browser has no Web Audio", () => {

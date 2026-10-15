@@ -18,6 +18,9 @@ export interface DisplayConnection {
   error: string | null;
   // The latest identify request; `at` tells repeated requests for the same label apart.
   identify: { label: string; at: number } | null;
+  // The latest show state this display saw the show enter while connected (not one a snapshot brought after
+  // a reconnect): what state sounds follow. `at` tells repeated entries apart.
+  entered: { state: string; at: number } | null;
   // Shared signal values, updated without re-rendering the page.
   signals: SignalStore;
   // Video commands from the operator, for the video widgets on this display.
@@ -57,6 +60,7 @@ export const useDisplayConnection = (displayId: string): DisplayConnection => {
     snapshot: null,
     error: null,
     identify: null,
+    entered: null,
   });
 
   useEffect(() => {
@@ -101,9 +105,11 @@ export const useDisplayConnection = (displayId: string): DisplayConnection => {
 
     // Show-wide state changes arrive as a small event, not a snapshot, to stay inside the 100 ms budget.
     socket.on("state", ({ state }) => {
-      setConnection((current) =>
-        current.snapshot ? { ...current, snapshot: { ...current.snapshot, state } } : current,
-      );
+      setConnection((current) => {
+        if (!current.snapshot) return current;
+        const entered = current.snapshot.state === state ? current.entered : { state, at: Date.now() };
+        return { ...current, snapshot: { ...current.snapshot, state }, entered };
+      });
     });
 
     // The operator's "reload" for a display that misbehaves.
