@@ -388,7 +388,11 @@ export const generateScreen = (options: GenerateOptions): Screen => {
 // Several different takes on one section: consecutive seeds, each on another layout when the recipe allows.
 export const generateVariants = (options: Omit<GenerateOptions, "archetype" | "from">, count = 3): Screen[] => {
   const profile = options.profile ?? { aspect: "16:9", fit: "fluid" };
-  const order = createRandom(options.seed).shuffle(archetypeWeights(options.recipe, options.theme, profile).map(([id]) => id));
+  // The first take follows the recipe's weights (and the display's shape); the others try the remaining layouts.
+  const weights = archetypeWeights(options.recipe, options.theme, profile);
+  const random = createRandom(options.seed);
+  const first = random.weighted(weights);
+  const order = [first, ...random.shuffle(weights.map(([id]) => id).filter((id) => id !== first))];
   return Array.from({ length: count }, (_, index) =>
     generateScreen({ ...options, seed: (options.seed + index) >>> 0, archetype: order[index % order.length] ?? "header-main" }),
   );
@@ -409,11 +413,17 @@ export const generateSuite = (options: Omit<GenerateOptions, "suite" | "from" | 
   // Every screen of a suite needs somewhere for its nav buttons.
   const drawn = options.theme.archetypes.length > 0 ? options.theme.archetypes : ARCHETYPE_IDS;
   const navigable = drawn.filter((id) => archetypeSlots(id).some((slot) => slot === "nav" || slot === "toolbar"));
-  const theme = { ...options.theme, archetypes: navigable.length > 0 ? navigable : (["sidebar"] as const) };
-  const overview = generateScreen({ ...options, theme, show, suite: { suite: options.id, screens } });
+  const theme = { ...options.theme, archetypes: navigable.length > 0 ? navigable : (["sidebar"] as ArchetypeId[]) };
+  const { archetype: wanted, ...rest } = options;
+  const forced = wanted && theme.archetypes.includes(wanted) ? { archetype: wanted } : {};
+  const overview = generateScreen({ ...rest, ...forced, theme, show, suite: { suite: options.id, screens } });
+  // System screens share the overview's layout, so moving between them feels like one console.
+  const layout = overview.root.type === "container" && overview.root.layout.kind === "frame" ? overview.root.layout.archetype : undefined;
+  const shared = layout && isArchetype(layout) ? { archetype: layout } : forced;
   const systemScreens = options.recipe.systems.map((system, index) =>
     generateScreen({
-      ...options,
+      ...rest,
+      ...shared,
       theme,
       show,
       id: screens[system.id] ?? `${options.id}-${index}`,

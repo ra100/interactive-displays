@@ -1,5 +1,5 @@
 import path from "node:path";
-import { type Browser, expect, type Page, test } from "@playwright/test";
+import { type APIRequestContext, type Browser, expect, type Page, test } from "@playwright/test";
 import { identify, setState } from "./support/api.ts";
 
 // Screenshots for the PR and docs/showcase. Run with: SHOWCASE=phase-1 pnpm test:e2e showcase
@@ -308,5 +308,120 @@ test.describe("showcase phase 3", () => {
     const height = await page.locator(".gallery").evaluate((element) => element.scrollHeight);
     await page.setViewportSize({ width: 1280, height });
     await page.screenshot({ path: out("gallery") });
+  });
+});
+
+test.describe("showcase phase 4", () => {
+  test.skip(phase !== "phase-4", "set SHOWCASE=phase-4 to capture screenshots");
+  const DISPLAY = "showcase-generated";
+
+  test.afterEach(async ({ request }) => {
+    await setState(request, "normal");
+    await request.put(`/api/displays/${DISPLAY}`, { data: { screen: null } });
+    const response = await request.get("/api/screens");
+    const { screens } = (await response.json()) as { screens: { id: string; tags: string[] }[] };
+    for (const screen of screens.filter((each) => each.tags.includes("generated"))) await request.delete(`/api/screens/${screen.id}`);
+  });
+
+  const openDialog = async (page: Page, section: string, seed: number) => {
+    await page.goto("/builder");
+    await page.getByRole("button", { name: "Generate" }).click();
+    const dialog = page.getByRole("dialog", { name: "Generate a screen" });
+    await dialog.getByLabel("Section").selectOption({ label: section });
+    await dialog.getByRole("textbox", { name: "Seed" }).fill(String(seed));
+    await expect(dialog.locator(".thumbnail")).toHaveCount(3);
+    return dialog;
+  };
+
+  // Generates take 1 of a section through the dialog and publishes it.
+  const create = async (page: Page, section: string, seed: number, options: { aspect?: string; density?: string } = {}) => {
+    const dialog = await openDialog(page, section, seed);
+    if (options.aspect) await dialog.getByLabel("Aspect").selectOption(options.aspect);
+    if (options.density) await dialog.getByLabel("Density").selectOption({ label: options.density });
+    await dialog.getByRole("button", { name: "Create and edit" }).click();
+    await expect(page.getByRole("button", { name: "Publish" })).toBeEnabled();
+    const id = page.url().split("/").pop() ?? "";
+    await page.getByRole("button", { name: "Publish" }).click();
+    await expect(page.getByText("Published", { exact: true })).toBeVisible();
+    return id;
+  };
+
+  const onDisplay = async (page: Page, request: APIRequestContext, id: string, name: string, size = { width: 1280, height: 720 }) => {
+    await request.put(`/api/displays/${DISPLAY}`, { data: { screen: id } });
+    await page.setViewportSize(size);
+    await page.goto(`/d/${DISPLAY}`);
+    await expect(page.locator(".screen")).toBeVisible();
+    await settle(page);
+    await page.screenshot({ path: out(name) });
+  };
+
+  test("generate dialog", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    const dialog = await openDialog(page, "Engineering", 2024);
+    await settle(page);
+    await page.screenshot({ path: out("generate-dialog") });
+    await dialog.getByLabel("Preview state").selectOption("red-alert");
+    await dialog.getByRole("checkbox", { name: /screen for each system/ }).check();
+    await settle(page);
+    await page.screenshot({ path: out("generate-dialog-red-alert-suite") });
+  });
+
+  test("generated sections on a display", async ({ page, request }) => {
+    for (const [section, seed] of [
+      ["Engineering", 2024],
+      ["Tactical", 7],
+      ["Science", 31],
+      ["Medical", 4242],
+      ["Helm", 12],
+      ["Operations", 5],
+    ] as const) {
+      await page.setViewportSize({ width: 1440, height: 900 });
+      const id = await create(page, section, seed);
+      await onDisplay(page, request, id, `display-${id}`);
+    }
+    await setState(request, "red-alert");
+    await onDisplay(page, request, "engineering-2", "display-engineering-red-alert");
+    await onDisplay(page, request, "medical", "display-medical-red-alert");
+  });
+
+  test("densities, portrait and another theme", async ({ page, request }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const sparse = await create(page, "Security", 3, { density: "Sparse" });
+    await onDisplay(page, request, sparse, "display-security-sparse");
+    const dense = await create(page, "Communications", 3, { density: "Dense" });
+    await onDisplay(page, request, dense, "display-communications-dense");
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const portrait = await create(page, "Environmental", 8, { aspect: "9:16" });
+    await onDisplay(page, request, portrait, "display-environmental-9x16", { width: 540, height: 960 });
+    await request.put(`/api/displays/${DISPLAY}`, { data: { screen: dense } });
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto(`/d/${DISPLAY}?theme=base`);
+    await settle(page);
+    await page.screenshot({ path: out("display-communications-base-theme") });
+  });
+
+  test("editor: regenerate, reroll and placeholders", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const dialog = await openDialog(page, "Science", 31);
+    await dialog.getByRole("button", { name: "Create and edit" }).click();
+    await expect(page.getByRole("button", { name: "Regenerate", exact: true })).toBeVisible();
+    const outline = page.getByRole("tree", { name: "Outline" });
+    await outline.getByRole("treeitem", { name: /^Title · / }).first().click();
+    await page.getByRole("tabpanel", { name: "Selection" }).getByRole("checkbox", { name: /Locked/ }).check();
+    await page.getByRole("button", { name: "Regenerate", exact: true }).click();
+    await expect(page.getByText(/Regenerated everything that is not locked/)).toBeVisible();
+    await settle(page);
+    await page.screenshot({ path: out("editor-regenerated") });
+
+    // A panel heading, then Esc to select the panel that holds it.
+    await page.locator(".preview-stage h2").first().click();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("button", { name: "Reroll" })).toBeVisible();
+    await settle(page);
+    await page.screenshot({ path: out("editor-reroll") });
+
+    await page.getByRole("button", { name: /Placeholder/ }).click();
+    await settle(page);
+    await page.screenshot({ path: out("editor-placeholder") });
   });
 });

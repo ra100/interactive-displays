@@ -3,54 +3,235 @@
   "label": "Operations",
   "description": "Ship's computer, transporters, shuttle bay and resource allocation.",
   "code": "OPS",
-  "archetypes": { "dashboard": 2, "header-main": 2, "sidebar": 2 },
-  "titles": ["OPERATIONS", "OPS MANAGEMENT", "SHIP'S COMPUTER"],
-  "nav": ["COMPUTER", "TRANSPORTER", "SHUTTLEBAY", "CARGO", "REPLICATORS", "CREW", "LOGS"],
-  "status": ["ALL DEPARTMENTS REPORTING", "COMPUTER CORE AT 34% LOAD", "TRANSPORTER ROOM 3 ON STANDBY"],
+  "archetypes": {
+    "dashboard": 2,
+    "header-main": 2,
+    "sidebar": 2
+  },
+  "titles": [
+    "OPERATIONS",
+    "OPS MANAGEMENT",
+    "SHIP'S COMPUTER"
+  ],
+  "nav": [
+    "COMPUTER",
+    "TRANSPORTER",
+    "SHUTTLEBAY",
+    "CARGO",
+    "REPLICATORS",
+    "CREW",
+    "LOGS"
+  ],
+  "status": [
+    "ALL DEPARTMENTS REPORTING",
+    "COMPUTER CORE AT 34% LOAD",
+    "TRANSPORTER ROOM 3 ON STANDBY"
+  ],
   "systems": [
     {
       "id": "computer",
       "label": "COMPUTER CORE",
       "short": "COMPUTER",
       "metrics": [
-        { "id": "load", "label": "CORE LOAD", "unit": "%", "range": [25, 45], "alertRange": [85, 100], "prefer": ["gauge"] },
-        { "id": "queries", "label": "QUERIES", "unit": "/s", "range": [4000, 9000], "motion": "wave", "prefer": ["sparkline"] },
-        { "id": "memory", "label": "MEMORY", "unit": "%", "range": [60, 70], "prefer": ["readout"] }
+        {
+          "id": "load",
+          "label": "CORE LOAD",
+          "unit": "%",
+          "range": [
+            25,
+            45
+          ],
+          "alertRange": [
+            85,
+            100
+          ],
+          "prefer": [
+            "gauge"
+          ]
+        },
+        {
+          "id": "queries",
+          "label": "QUERIES",
+          "unit": "/s",
+          "range": [
+            4000,
+            9000
+          ],
+          "motion": "wave",
+          "prefer": [
+            "sparkline"
+          ]
+        },
+        {
+          "id": "memory",
+          "label": "MEMORY",
+          "unit": "%",
+          "range": [
+            60,
+            70
+          ],
+          "prefer": [
+            "readout"
+          ]
+        }
       ],
-      "actions": [{ "label": "RUN DIAGNOSTIC" }, { "label": "PURGE BUFFERS", "danger": true }],
-      "notes": ["Optical data network operating at peak"]
+      "actions": [
+        {
+          "label": "RUN DIAGNOSTIC"
+        },
+        {
+          "label": "PURGE BUFFERS",
+          "danger": true
+        }
+      ],
+      "notes": [
+        "Optical data network operating at peak"
+      ]
     },
     {
       "id": "transporter",
       "label": "TRANSPORTER",
       "metrics": [
-        { "id": "lock", "label": "PATTERN LOCK", "unit": "%", "range": [90, 100], "alertRange": [20, 50], "prefer": ["gauge"] },
-        { "id": "buffer", "label": "PATTERN BUFFER", "unit": "%", "range": [0, 10], "prefer": ["readout"] },
-        { "id": "confinement", "label": "CONFINEMENT", "unit": "%", "range": [95, 100] }
+        {
+          "id": "lock",
+          "label": "PATTERN LOCK",
+          "unit": "%",
+          "range": [
+            90,
+            100
+          ],
+          "alertRange": [
+            20,
+            50
+          ],
+          "prefer": [
+            "gauge"
+          ]
+        },
+        {
+          "id": "buffer",
+          "label": "PATTERN BUFFER",
+          "unit": "%",
+          "range": [
+            0,
+            10
+          ],
+          "prefer": [
+            "readout"
+          ]
+        },
+        {
+          "id": "confinement",
+          "label": "CONFINEMENT",
+          "unit": "%",
+          "range": [
+            95,
+            100
+          ]
+        }
       ],
-      "actions": [{ "label": "ENERGISE" }, { "label": "LOCK ON" }, { "label": "ABORT", "danger": true }]
+      "actions": [
+        {
+          "label": "ENERGISE"
+        },
+        {
+          "label": "LOCK ON"
+        },
+        {
+          "label": "ABORT",
+          "danger": true
+        }
+      ]
     },
     {
       "id": "shuttlebay",
       "label": "SHUTTLE BAY",
       "short": "SHUTTLEBAY",
       "metrics": [
-        { "id": "shuttles", "label": "SHUTTLES READY", "range": [3, 5], "precision": 0, "prefer": ["readout"] },
-        { "id": "doors", "label": "BAY DOOR FIELD", "unit": "%", "range": [98, 100] }
+        {
+          "id": "shuttles",
+          "label": "SHUTTLES READY",
+          "range": [
+            3,
+            5
+          ],
+          "precision": 0,
+          "prefer": [
+            "readout"
+          ]
+        },
+        {
+          "id": "doors",
+          "label": "BAY DOOR FIELD",
+          "unit": "%",
+          "range": [
+            98,
+            100
+          ]
+        }
       ],
-      "actions": [{ "label": "OPEN BAY DOORS" }, { "label": "TRACTOR BEAM" }]
+      "actions": [
+        {
+          "label": "OPEN BAY DOORS"
+        },
+        {
+          "label": "TRACTOR BEAM"
+        }
+      ]
     },
     {
       "id": "cargo",
       "label": "CARGO",
       "metrics": [
-        { "id": "capacity", "label": "CAPACITY USED", "unit": "%", "range": [55, 65], "prefer": ["gauge"] },
-        { "id": "replicator", "label": "REPLICATOR LOAD", "unit": "%", "range": [10, 40], "motion": "wave" }
+        {
+          "id": "capacity",
+          "label": "CAPACITY USED",
+          "unit": "%",
+          "range": [
+            55,
+            65
+          ],
+          "prefer": [
+            "gauge"
+          ]
+        },
+        {
+          "id": "replicator",
+          "label": "REPLICATOR LOAD",
+          "unit": "%",
+          "range": [
+            10,
+            40
+          ],
+          "motion": "wave"
+        }
       ],
       "actions": []
     }
   ],
-  "blocks": { "prefer": ["summary-strip", "data-log", "cascade"], "avoid": [] },
-  "alert": { "banner": true, "emphasise": ["load", "lock"], "status": ["COMPUTER CORE OVERLOAD", "TRANSPORTER LOCK LOST"] },
-  "tags": ["computer", "transporter", "cargo", "operations"]
+  "blocks": {
+    "prefer": [
+      "summary-strip",
+      "data-log",
+      "cascade"
+    ],
+    "avoid": []
+  },
+  "alert": {
+    "banner": true,
+    "emphasise": [
+      "load",
+      "lock"
+    ],
+    "status": [
+      "COMPUTER CORE OVERLOAD",
+      "TRANSPORTER LOCK LOST"
+    ]
+  },
+  "tags": [
+    "computer",
+    "transporter",
+    "cargo",
+    "operations"
+  ]
 }

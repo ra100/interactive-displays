@@ -3,45 +3,214 @@
   "label": "Security",
   "description": "Internal sensors, force fields, the brig and intruder alerts.",
   "code": "SEC",
-  "archetypes": { "sidebar": 2, "dashboard": 2, "header-main": 1 },
-  "titles": ["SECURITY", "INTERNAL SECURITY", "SECURITY OPERATIONS"],
-  "nav": ["INTRUDER", "FORCE FIELDS", "BRIG", "ARMOURY", "ACCESS", "SENSORS", "LOGS"],
-  "status": ["ALL DECKS SECURE", "BRIG FIELDS ACTIVE", "SECURITY TEAMS ON STATION"],
+  "archetypes": {
+    "sidebar": 2,
+    "dashboard": 2,
+    "header-main": 1
+  },
+  "titles": [
+    "SECURITY",
+    "INTERNAL SECURITY",
+    "SECURITY OPERATIONS"
+  ],
+  "nav": [
+    "INTRUDER",
+    "FORCE FIELDS",
+    "BRIG",
+    "ARMOURY",
+    "ACCESS",
+    "SENSORS",
+    "LOGS"
+  ],
+  "status": [
+    "ALL DECKS SECURE",
+    "BRIG FIELDS ACTIVE",
+    "SECURITY TEAMS ON STATION"
+  ],
   "systems": [
     {
       "id": "internal",
       "label": "INTERNAL SENSORS",
       "short": "SENSORS",
       "metrics": [
-        { "id": "unknown", "label": "UNIDENTIFIED", "range": [0, 1], "alertRange": [3, 8], "precision": 0, "prefer": ["readout"] },
-        { "id": "coverage", "label": "COVERAGE", "unit": "%", "range": [96, 100], "alertRange": [50, 75], "prefer": ["gauge"] },
-        { "id": "motion", "label": "MOVEMENT", "range": [20, 60], "motion": "wave", "prefer": ["sparkline"] }
+        {
+          "id": "unknown",
+          "label": "UNIDENTIFIED",
+          "range": [
+            0,
+            1
+          ],
+          "alertRange": [
+            3,
+            8
+          ],
+          "precision": 0,
+          "prefer": [
+            "readout"
+          ]
+        },
+        {
+          "id": "coverage",
+          "label": "COVERAGE",
+          "unit": "%",
+          "range": [
+            96,
+            100
+          ],
+          "alertRange": [
+            50,
+            75
+          ],
+          "prefer": [
+            "gauge"
+          ]
+        },
+        {
+          "id": "motion",
+          "label": "MOVEMENT",
+          "range": [
+            20,
+            60
+          ],
+          "motion": "wave",
+          "prefer": [
+            "sparkline"
+          ]
+        }
       ],
-      "actions": [{ "label": "INTRUDER ALERT", "danger": true, "actions": [{ "do": "setState", "state": "red-alert" }] }, { "label": "LOCATE" }],
-      "notes": ["Internal scan cycle every 30 seconds"]
+      "actions": [
+        {
+          "label": "INTRUDER ALERT",
+          "danger": true,
+          "actions": [
+            {
+              "do": "setState",
+              "state": "red-alert"
+            }
+          ]
+        },
+        {
+          "label": "LOCATE"
+        }
+      ],
+      "notes": [
+        "Internal scan cycle every 30 seconds"
+      ]
     },
     {
       "id": "fields",
       "label": "FORCE FIELDS",
       "short": "FIELDS",
       "metrics": [
-        { "id": "brig", "label": "BRIG FIELD", "unit": "%", "range": [98, 100], "alertRange": [20, 50], "prefer": ["gauge"] },
-        { "id": "corridor", "label": "CORRIDOR FIELDS", "range": [0, 4], "precision": 0, "prefer": ["readout"] }
+        {
+          "id": "brig",
+          "label": "BRIG FIELD",
+          "unit": "%",
+          "range": [
+            98,
+            100
+          ],
+          "alertRange": [
+            20,
+            50
+          ],
+          "prefer": [
+            "gauge"
+          ]
+        },
+        {
+          "id": "corridor",
+          "label": "CORRIDOR FIELDS",
+          "range": [
+            0,
+            4
+          ],
+          "precision": 0,
+          "prefer": [
+            "readout"
+          ]
+        }
       ],
-      "actions": [{ "label": "RAISE FIELDS" }, { "label": "DECK LOCKDOWN", "danger": true }]
+      "actions": [
+        {
+          "label": "RAISE FIELDS"
+        },
+        {
+          "label": "DECK LOCKDOWN",
+          "danger": true
+        }
+      ]
     },
     {
       "id": "access",
       "label": "ACCESS CONTROL",
       "short": "ACCESS",
       "metrics": [
-        { "id": "requests", "label": "ACCESS REQUESTS", "range": [10, 40], "prefer": ["sparkline", "readout"] },
-        { "id": "denied", "label": "DENIED", "range": [0, 3], "alertRange": [10, 30], "precision": 0, "prefer": ["readout"] }
+        {
+          "id": "requests",
+          "label": "ACCESS REQUESTS",
+          "range": [
+            10,
+            40
+          ],
+          "prefer": [
+            "sparkline",
+            "readout"
+          ],
+          "precision": 0
+        },
+        {
+          "id": "denied",
+          "label": "DENIED",
+          "range": [
+            0,
+            3
+          ],
+          "alertRange": [
+            10,
+            30
+          ],
+          "precision": 0,
+          "prefer": [
+            "readout"
+          ]
+        }
       ],
-      "actions": [{ "label": "REVOKE CODES", "danger": true }, { "label": "AUDIT" }]
+      "actions": [
+        {
+          "label": "REVOKE CODES",
+          "danger": true
+        },
+        {
+          "label": "AUDIT"
+        }
+      ]
     }
   ],
-  "blocks": { "prefer": ["status-board", "control-panel", "data-log"], "avoid": [] },
-  "alert": { "banner": true, "emphasise": ["unknown", "brig", "denied"], "status": ["INTRUDER ALERT · DECK 8", "BRIG FORCE FIELD DOWN"] },
-  "tags": ["security", "intruder", "fields", "access"]
+  "blocks": {
+    "prefer": [
+      "status-board",
+      "control-panel",
+      "data-log"
+    ],
+    "avoid": []
+  },
+  "alert": {
+    "banner": true,
+    "emphasise": [
+      "unknown",
+      "brig",
+      "denied"
+    ],
+    "status": [
+      "INTRUDER ALERT · DECK 8",
+      "BRIG FORCE FIELD DOWN"
+    ]
+  },
+  "tags": [
+    "security",
+    "intruder",
+    "fields",
+    "access"
+  ]
 }
