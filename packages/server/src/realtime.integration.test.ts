@@ -70,7 +70,7 @@ describe("displays", () => {
 
     const snapshot = await next;
     expect(snapshot.screen?.id).toBe("tactical");
-    expect(snapshot.display).toEqual({ id: "bridge-2", name: "Bridge 2" });
+    expect(snapshot.display).toEqual({ id: "bridge-2", name: "Bridge 2", scale: 0.7 });
   });
 
   it("keeps edits off air until they are published, then updates only the displays showing the screen", async () => {

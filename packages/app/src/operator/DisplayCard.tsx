@@ -3,11 +3,14 @@ import { type FormEvent, useState } from "react";
 import type { Live } from "../runtime/live.ts";
 import { QrCode } from "../tools/QrCode.tsx";
 import { ScreenThumbnail } from "../tools/ScreenThumbnail.tsx";
+import { ScaleSelect } from "./ScaleSelect.tsx";
 import { timeAgo } from "../tools/timeAgo.ts";
 
 export interface DisplayActions {
   assign: (screenId: string | null) => void;
   rename: (name: string | null) => void;
+  // null goes back to the show's size.
+  resize: (scale: number | null) => void;
   identify: () => void;
   reload: () => void;
   endPreview: () => void;
@@ -63,6 +66,7 @@ export const DisplayCard = ({
               effect={effect}
               states={overview.show.states}
               live={live}
+              scale={display.scale ?? overview.show.scale}
             />
           ) : (
             <div className="display-card__empty">{display.showing ? "Not published" : "No screen"}</div>
@@ -129,6 +133,8 @@ export const DisplayCard = ({
             ))}
           </select>
         </label>
+
+        <ScaleSelect label="Size" value={display.scale} inherited={overview.show.scale} onChange={actions.resize} />
 
         {display.preview ? (
           <p className="display-card__note">

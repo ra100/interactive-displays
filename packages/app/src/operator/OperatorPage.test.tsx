@@ -87,13 +87,13 @@ describe("operator console", () => {
     await open();
     const card = screen.getByRole("listitem", { name: "Engineering 1" });
     expect(within(card).getByText(/eng-1 · connected/)).toBeInTheDocument();
-    expect(within(card).getByRole("combobox")).toHaveValue("engineering");
+    expect(within(card).getByRole("combobox", { name: "Screen" })).toHaveValue("engineering");
     expect(within(screen.getByRole("listitem", { name: "lobby" })).getByText(/never connected/)).toBeInTheDocument();
   });
 
   it("assigns a screen, and goes back to the show default", async () => {
     await open();
-    const select = within(screen.getByRole("listitem", { name: "Engineering 1" })).getByRole("combobox");
+    const select = within(screen.getByRole("listitem", { name: "Engineering 1" })).getByRole("combobox", { name: "Screen" });
     expect(within(select).getByRole("option", { name: "Draft only (not published)" })).toBeInTheDocument();
 
     await userEvent.selectOptions(select, "bridge");
@@ -229,6 +229,22 @@ describe("live values and display controls", () => {
     expect(screen.getByRole("combobox", { name: "Variant" })).toBeDisabled();
     await userEvent.selectOptions(theme, "Holo HUD");
     expect(writes().map((call) => [call.path, call.body])).toEqual([["/api/show/theme", { id: "hud" }]]);
+  });
+
+  it("sizes the show for its panels, and one display apart from the rest", async () => {
+    await open();
+    const look = screen.getByRole("region", { name: "Look" });
+    expect(within(look).getByRole("combobox", { name: "Size" })).toHaveValue("0.7");
+    await userEvent.selectOptions(within(look).getByRole("combobox", { name: "Size" }), "50%");
+    const card = within(screen.getByRole("listitem", { name: "Engineering 1" })).getByRole("combobox", { name: "Size" });
+    expect(card).toHaveValue("");
+    await userEvent.selectOptions(card, "80%");
+    await userEvent.selectOptions(card, "Show size (70%)");
+    expect(writes().map((call) => [call.path, call.body])).toEqual([
+      ["/api/show/scale", { scale: 0.5 }],
+      ["/api/displays/eng-1", { scale: 0.8 }],
+      ["/api/displays/eng-1", { scale: null }],
+    ]);
   });
 
   it("keeps AI off the air until the crew lets it on", async () => {

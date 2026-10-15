@@ -450,6 +450,7 @@ const Editor = ({ overview, connection, session, screenId }: Tools & { screenId:
           <FillDialog
             screenId={screenId}
             theme={show.theme}
+            scale={show.scale}
             states={show.states}
             settled={editor.settled}
             onApply={(ops) => {

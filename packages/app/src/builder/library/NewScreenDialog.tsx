@@ -9,12 +9,14 @@ const ASPECTS = ProfileSchema.shape.aspect.unwrap().options;
 // Name, id, section, aspect and a starting layout; each template shows as a live thumbnail in the show's theme.
 export const NewScreenDialog = ({
   theme,
+  scale,
   takenIds,
   sections,
   onCreate,
   onClose,
 }: {
   theme: Show["theme"];
+  scale?: number;
   takenIds: ReadonlySet<string>;
   sections: string[];
   onCreate: (screen: NewScreen) => Promise<string | undefined>;
@@ -109,7 +111,7 @@ export const NewScreenDialog = ({
           {TEMPLATE_IDS.map((each) => (
             <label key={each} className="template-card" data-selected={template === each}>
               <input type="radio" name="template" value={each} checked={template === each} onChange={() => setTemplate(each)} />
-              {previews[each] ? <ScreenThumbnail screen={previews[each]} theme={theme} /> : null}
+              {previews[each] ? <ScreenThumbnail screen={previews[each]} theme={theme} scale={scale} /> : null}
               <span className="template-card__label">{TEMPLATES[each].label}</span>
               <span className="template-card__description">{TEMPLATES[each].description}</span>
             </label>

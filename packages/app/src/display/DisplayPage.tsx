@@ -50,6 +50,7 @@ const ConnectedDisplay = ({ displayId }: { displayId: string }) => {
           effect={effect}
           states={snapshot.show.states}
           live={live}
+          scale={snapshot.display.scale}
         />
       ) : (
         // The id is big so the operator can read it from across the room and assign a screen to it.

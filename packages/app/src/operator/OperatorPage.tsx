@@ -46,6 +46,7 @@ const OperatorConsole = ({ overview, connection, session }: Tools) => {
     return {
       assign: (screen: string | null) => void run(api("PUT", path, { screen })),
       rename: (name: string | null) => void run(api("PUT", path, { name })),
+      resize: (scale: number | null) => void run(api("PUT", path, { scale })),
       identify: () => void run(api("POST", `${path}/identify`)),
       reload: () => void run(api("POST", `${path}/reload`), `Reloading ${display.name ?? display.id}`),
       endPreview: () => void run(api("DELETE", `${path}/preview`)),
@@ -94,7 +95,12 @@ const OperatorConsole = ({ overview, connection, session }: Tools) => {
             <h2 id="look-title" className="tool-label">
               Look
             </h2>
-            <LookPicker theme={overview.show.theme} onChange={(theme) => void run(api("PUT", "/api/show/theme", theme))} />
+            <LookPicker
+              theme={overview.show.theme}
+              scale={overview.show.scale}
+              onChange={(theme) => void run(api("PUT", "/api/show/theme", theme))}
+              onScale={(scale) => void run(api("PUT", "/api/show/scale", { scale }))}
+            />
           </section>
 
           <section className="operator__section" aria-labelledby="switches-title">

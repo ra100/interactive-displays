@@ -10,6 +10,7 @@ import {
   type ShowOverview,
   type SignalValues,
   WatchSchema,
+  displayScale,
 } from "@interactive-displays/core";
 import type { Server, Socket } from "socket.io";
 import { tokenAccepted } from "./auth.ts";
@@ -51,7 +52,11 @@ export const buildSnapshot = (service: ShowService, displayId: string): DisplayS
     },
     state: service.state(),
     signals: service.signalValues(),
-    display: definition?.name ? { id: displayId, name: definition.name } : { id: displayId },
+    display: {
+      id: displayId,
+      ...(definition?.name ? { name: definition.name } : {}),
+      scale: displayScale(show, displayId),
+    },
     screen,
     preview,
     navigated: !preview && service.navigated(displayId) !== null,

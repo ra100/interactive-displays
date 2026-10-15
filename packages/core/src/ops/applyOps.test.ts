@@ -106,7 +106,7 @@ describe("applyOps", () => {
     ["remove", [{ op: "remove", id: "row" }]],
     ["move", [{ op: "move", id: "a", parent: "root" }]],
     ["update", [{ op: "update", id: "title", props: { code: "01-01", tone: "info" } }]],
-    ["set", [{ op: "set", id: "a", hidden: true, locked: true, when: [{ state: "red-alert", props: { tone: "danger" } }] }]],
+    ["set", [{ op: "set", id: "a", hidden: true, locked: true, scale: 0.6, when: [{ state: "red-alert", props: { tone: "danger" } }] }]],
     ["place", [{ op: "place", id: "row", weight: null, slot: "main" }, { op: "place", id: "row", slot: null }]],
     ["layout", [{ op: "layout", id: "root", layout: { kind: "grid", columns: ["1fr"], rows: ["1fr", "1fr"] } }]],
     ["replace", [{ op: "replace", id: "row", node: { id: "z", type: "widget", kind: "text", props: { text: "z" } } }]],

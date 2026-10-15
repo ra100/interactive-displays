@@ -126,7 +126,7 @@ const Library = ({ overview, connection }: Tools) => {
             <li key={screen.id} className="screen-card">
               <Link className="screen-card__open" to={`/builder/${screen.id}`} aria-label={`Edit ${screen.name}`}>
                 {doc ? (
-                  <ScreenThumbnail screen={doc} theme={overview.show.theme} states={overview.show.states} live={live} />
+                  <ScreenThumbnail screen={doc} theme={overview.show.theme} states={overview.show.states} live={live} scale={overview.show.scale} />
                 ) : (
                   <div className="screen-card__placeholder" style={{ aspectRatio: screen.profile.aspect.replace(":", " / ") }} />
                 )}
@@ -179,6 +179,7 @@ const Library = ({ overview, connection }: Tools) => {
       {creating ? (
         <NewScreenDialog
           theme={overview.show.theme}
+          scale={overview.show.scale}
           takenIds={new Set(overview.screens.map((screen) => screen.id))}
           sections={sections}
           onCreate={create}
@@ -188,6 +189,7 @@ const Library = ({ overview, connection }: Tools) => {
       {generating ? (
         <GenerateDialog
           theme={overview.show.theme}
+          scale={overview.show.scale}
           states={overview.show.states}
           base={base}
           sections={generatable}
