@@ -58,12 +58,18 @@ export const LiveContext = createContext<Live>({ signals: [], store: null, media
 export const useLive = (): Live => useContext(LiveContext);
 
 // What a display does itself when an actor uses a control: a press sound, the control's own sounds and
-// video commands, and the rest goes to the server.
-export const runControl = (live: Live, node: WidgetNode, value?: number): void => {
+// video commands, and the rest goes to the server. While a control is still `moving` (a slider being dragged)
+// only its shared values follow it; the sounds, video and other actions run once, where the actor lets go.
+export const runControl = (live: Live, node: WidgetNode, value?: number, moving = false): void => {
+  const actions = node.actions ?? [];
+  if (moving) {
+    if (live.press && actions.some((action) => action.do === "setSignal")) live.press(node.id, value);
+    return;
+  }
   live.playSound?.("press");
-  for (const action of node.actions ?? []) {
+  for (const action of actions) {
     if (action.do === "sound") live.playSound?.(action.sound);
     if (action.do === "video") live.media.send(action.target, action.command);
   }
-  if (live.press && node.actions?.some(isServerAction)) live.press(node.id, value);
+  if (live.press && actions.some(isServerAction)) live.press(node.id, value);
 };

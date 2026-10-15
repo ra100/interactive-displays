@@ -121,3 +121,33 @@ export const usePressFlash = (): { flashing: boolean; flash: () => void } => {
     },
   };
 };
+
+// How long a control keeps showing what the actor chose before it shows its props again.
+export const CONTROL_SETTLE_MS = 1500;
+
+// A control's value: answers a touch at once, then follows its props. While the actor is using it, prop
+// changes wait (they are mostly the server echoing values this control sent a moment ago, which would make a
+// dragged thumb jump back). Once the control settles, a bound control shows its props again even if they never
+// changed, so a change the server refused or ignored does not leave it out of step with every other display;
+// an unbound control keeps the actor's choice unless its props changed meanwhile.
+export const useControlValue = <T,>(value: T, bound: boolean): [T, (next: T) => void] => {
+  const [local, setLocal] = useState(value);
+  const latest = useRef(value);
+  const before = useRef(value);
+  const settling = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => {
+    latest.current = value;
+    if (settling.current === undefined) setLocal(value);
+  }, [value]);
+  useEffect(() => () => clearTimeout(settling.current), []);
+  const use = (next: T) => {
+    if (settling.current === undefined) before.current = latest.current;
+    setLocal(next);
+    clearTimeout(settling.current);
+    settling.current = setTimeout(() => {
+      settling.current = undefined;
+      if (bound || !Object.is(latest.current, before.current)) setLocal(latest.current);
+    }, CONTROL_SETTLE_MS);
+  };
+  return [local, use];
+};

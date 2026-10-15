@@ -35,11 +35,15 @@ the gallery, the editor's Add panel and inspector, and later the MCP tool schema
 Optional flags on the definition:
 
 - `bindable: ["value"]`: props that can follow a live value (`node.bind`). The editor offers them under Live
-  value; the bound value replaces the prop and is re-validated, so a value that does not fit leaves the
+  value (values that wander or swing only for props taking any number); the bound value replaces the prop as it
+  is when it fits, coerced only when it does not, and is re-validated, so a value that does not fit leaves the
   widget's own prop in place.
 - `interactive: true`: a control that can carry `actions`. Its renderer calls `onUse(value?)` on every use (the
   slider position, the chosen option, 1 or 0 for a toggle); the runtime plays sounds, runs video commands and
-  sends the press to the server.
+  sends the press to the server. A slider calls `onUse(value, true)` while it is dragged (shared values only)
+  and `onUse(value)` once where it is let go. Controls keep their own value with `useControlValue(value, bound)`
+  from the themes runtime: it ignores prop changes while in use and, for a bound control, shows the show's
+  value again once it settles.
 
 ## Editor inspector
 

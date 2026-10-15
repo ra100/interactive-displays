@@ -1,19 +1,11 @@
 import type { WidgetPropsOf } from "@interactive-displays/core";
-import { type CSSProperties, useEffect, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useRef } from "react";
 import type { WidgetRendererProps } from "../contract.ts";
 import { formatValue } from "../format.ts";
-import { usePressFlash } from "../runtime.ts";
+import { useControlValue, usePressFlash } from "../runtime.ts";
 
-// Controls answer a touch at once from their own state, then follow their props again when they change
-// (a bound control moves when the shared signal does, whoever changed it).
-const useLocal = <T,>(value: T): [T, (next: T) => void] => {
-  const [local, setLocal] = useState(value);
-  useEffect(() => setLocal(value), [value]);
-  return [local, setLocal];
-};
-
-export const BaseButtonGroup = ({ props, onUse }: WidgetRendererProps<WidgetPropsOf<"button-group">>) => {
-  const [selected, setSelected] = useLocal(props.selected);
+export const BaseButtonGroup = ({ props, onUse, bound = false }: WidgetRendererProps<WidgetPropsOf<"button-group">>) => {
+  const [selected, setSelected] = useControlValue(props.selected, bound);
   return (
     <div className="base-button-group" role="group" data-orientation={props.orientation} data-tone={props.tone}>
       {props.items.map((item, index) => (
@@ -34,8 +26,8 @@ export const BaseButtonGroup = ({ props, onUse }: WidgetRendererProps<WidgetProp
   );
 };
 
-export const BaseToggle = ({ props, onUse }: WidgetRendererProps<WidgetPropsOf<"toggle">>) => {
-  const [on, setOn] = useLocal(props.on);
+export const BaseToggle = ({ props, onUse, bound = false }: WidgetRendererProps<WidgetPropsOf<"toggle">>) => {
+  const [on, setOn] = useControlValue(props.on, bound);
   const { flashing, flash } = usePressFlash();
   return (
     <button
@@ -61,27 +53,52 @@ export const BaseToggle = ({ props, onUse }: WidgetRendererProps<WidgetPropsOf<"
 };
 
 const SEND_EVERY_MS = 120;
+// Where a pointer-up never reaches the input, the slider counts as let go this long after it last moved.
+const RELEASE_AFTER_MS = 800;
+
+// Decimals the readout needs for the slider's step: 0.1 shows one, 5 shows none.
+const decimalsOf = (step: number): number => Math.min(3, (String(step).split(".")[1] ?? "").length);
 
 // A native range input (keyboard and screen readers for free) with a thumb as big as a fingertip. While the
-// actor drags, the value goes out a few times a second and once more where they let go.
-export const BaseSlider = ({ props, onUse }: WidgetRendererProps<WidgetPropsOf<"slider">>) => {
-  const [value, setValue] = useLocal(props.value);
+// actor drags, the value goes out a few times a second as `moving`; where they let go it goes out once more,
+// and only then do the press sound and the slider's own actions run.
+export const BaseSlider = ({ props, onUse, bound = false }: WidgetRendererProps<WidgetPropsOf<"slider">>) => {
+  const [value, setValue] = useControlValue(props.value, bound);
   const lastSent = useRef(0);
   const pending = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  useEffect(() => () => clearTimeout(pending.current), []);
+  const idle = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // The value moved since the last release, if it did.
+  const moved = useRef<number | undefined>(undefined);
+  useEffect(
+    () => () => {
+      clearTimeout(pending.current);
+      clearTimeout(idle.current);
+    },
+    [],
+  );
 
-  const send = (next: number) => {
+  const release = () => {
+    const final = moved.current;
+    clearTimeout(idle.current);
+    if (final === undefined) return;
+    moved.current = undefined;
     clearTimeout(pending.current);
-    const wait = SEND_EVERY_MS - (Date.now() - lastSent.current);
-    if (wait <= 0) {
+    lastSent.current = Date.now();
+    onUse?.(final);
+  };
+
+  const move = (next: number) => {
+    moved.current = next;
+    clearTimeout(pending.current);
+    clearTimeout(idle.current);
+    idle.current = setTimeout(release, RELEASE_AFTER_MS);
+    const go = () => {
       lastSent.current = Date.now();
-      onUse?.(next);
-    } else {
-      pending.current = setTimeout(() => {
-        lastSent.current = Date.now();
-        onUse?.(next);
-      }, wait);
-    }
+      onUse?.(next, true);
+    };
+    const wait = SEND_EVERY_MS - (Date.now() - lastSent.current);
+    if (wait <= 0) go();
+    else pending.current = setTimeout(go, wait);
   };
 
   const fill = ((value - props.min) / (props.max - props.min)) * 100;
@@ -89,7 +106,7 @@ export const BaseSlider = ({ props, onUse }: WidgetRendererProps<WidgetPropsOf<"
     <label className="base-slider" data-tone={props.tone}>
       <span className="base-slider__label">{props.label}</span>
       <span className="base-slider__value">
-        {formatValue(value, 0)}
+        {formatValue(value, decimalsOf(props.step))}
         {props.unit ? <span className="base-slider__unit">{props.unit}</span> : null}
       </span>
       <input
@@ -103,8 +120,12 @@ export const BaseSlider = ({ props, onUse }: WidgetRendererProps<WidgetPropsOf<"
         onChange={(event) => {
           const next = Number(event.target.value);
           setValue(next);
-          send(next);
+          move(next);
         }}
+        onPointerUp={release}
+        onPointerCancel={release}
+        onKeyUp={release}
+        onBlur={release}
       />
     </label>
   );
