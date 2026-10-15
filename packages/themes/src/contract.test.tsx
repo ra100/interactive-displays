@@ -113,6 +113,15 @@ describe("base renderers", () => {
     expect(screen.getByText("Nominal")).toHaveAttribute("data-size", "large");
   });
 
+  it("renders an image from the show's media", () => {
+    const Image = resolveWidgetRenderer("base", "image");
+    if (!Image) throw new Error("missing image renderer");
+    render(<Image props={{ asset: "warp-core.png", fit: "cover", alt: "Warp core" }} nodeId="i" />);
+    const image = screen.getByRole("img", { name: "Warp core" });
+    expect(image.getAttribute("src")).toBe("/media/warp-core.png");
+    expect(image.dataset["fit"]).toBe("cover");
+  });
+
   it("places each slot in its grid area", () => {
     const Frame = resolveFrameRenderer("base", "sidebar");
     if (!Frame) throw new Error("missing sidebar frame");

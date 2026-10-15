@@ -3,7 +3,7 @@ import { type Screen, ScreenSchema } from "../schema/screen.ts";
 import { ShowSchema } from "../schema/show.ts";
 import { lintScreen } from "./lintScreen.ts";
 
-const screenWith = (root: unknown): Screen => ScreenSchema.parse({ schemaVersion: 1, id: "s", name: "S", root });
+const screenWith = (root: unknown): Screen => ScreenSchema.parse({ schemaVersion: 2, id: "s", name: "S", root });
 
 const button = (id: string, label: string) => ({ node: { id, type: "widget", kind: "button", props: { label } } });
 

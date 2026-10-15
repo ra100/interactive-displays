@@ -6,6 +6,7 @@ import {
 } from "@interactive-displays/core";
 import { io, type Socket } from "socket.io-client";
 import { useEffect, useState } from "react";
+import { reloadPage } from "./reloadPage.ts";
 
 export type ConnectionStatus = "connecting" | "connected" | "disconnected";
 
@@ -28,7 +29,7 @@ const reloadForProtocol = (serverProtocol: number): boolean => {
   } catch {
     return false;
   }
-  window.location.reload();
+  reloadPage();
   return true;
 };
 
@@ -74,6 +75,11 @@ export const useDisplayConnection = (displayId: string): DisplayConnection => {
       setConnection((current) =>
         current.snapshot ? { ...current, snapshot: { ...current.snapshot, state } } : current,
       );
+    });
+
+    // The operator's "reload" for a display that misbehaves.
+    socket.on("reload", () => {
+      reloadPage();
     });
 
     socket.on("identify", ({ label }) => {

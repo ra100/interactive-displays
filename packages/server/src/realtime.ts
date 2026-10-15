@@ -3,95 +3,192 @@ import {
   type DisplaySnapshot,
   HelloSchema,
   PROTOCOL_VERSION,
-  resolveScreenId,
+  type Role,
+  type ScreenUpdate,
   type ServerToClientEvents,
+  type ShowOverview,
+  WatchSchema,
 } from "@interactive-displays/core";
 import type { Server, Socket } from "socket.io";
+import { tokenAccepted } from "./auth.ts";
+import { buildOverview } from "./overview.ts";
 import type { ShowService } from "./showService.ts";
-import type { LoadedShow } from "./storage/repository.ts";
 
 interface SocketData {
+  role?: Role;
   displayId?: string;
+  watching?: string;
 }
 
 export type RealtimeServer = Server<ClientToServerEvents, ServerToClientEvents, Record<string, never>, SocketData>;
-type DisplaySocket = Socket<ClientToServerEvents, ServerToClientEvents, Record<string, never>, SocketData>;
+type ClientSocket = Socket<ClientToServerEvents, ServerToClientEvents, Record<string, never>, SocketData>;
 
-const room = (displayId: string) => `display:${displayId}`;
+// Rooms keep traffic to the clients that need it: a display hears about its own screen, a builder about the
+// screen it edits, operators and builders about the show as a whole.
+const displayRoom = (displayId: string) => `display:${displayId}`;
+const screenRoom = (screenId: string) => `screen:${screenId}`;
+const OVERVIEW_ROOMS = ["operators", "builders"];
 
-export const buildSnapshot = ({ show, screens }: LoadedShow, state: string, displayId: string): DisplaySnapshot => {
+export const buildSnapshot = (service: ShowService, displayId: string): DisplaySnapshot | null => {
+  const loaded = service.loaded();
+  if (!loaded) return null;
+  const { show } = loaded;
   const definition = show.displays.find((display) => display.id === displayId);
-  const screenId = resolveScreenId(show, displayId);
+  const { screen, preview } = service.screenForDisplay(displayId);
   return {
     protocol: PROTOCOL_VERSION,
     show: { id: show.id, name: show.name, theme: show.theme, states: show.states },
-    state,
+    state: service.state(),
     display: definition?.name ? { id: displayId, name: definition.name } : { id: displayId },
-    screen: (screenId && screens.get(screenId)) || null,
+    screen,
+    preview,
   };
 };
 
-const displaySockets = (io: RealtimeServer): DisplaySocket[] =>
-  [...io.of("/").sockets.values()].filter((socket) => socket.data.displayId !== undefined);
-
-// A display says hello and gets everything it needs in one snapshot; reconnecting is just another hello.
-// Afterwards it receives a new snapshot whenever its screen or assignment changes, and small events for
-// show-wide state changes, which must reach every display within 100 ms.
-export const attachRealtime = (io: RealtimeServer, service: ShowService): void => {
-  const sendSnapshot = (socket: DisplaySocket) => {
-    const loaded = service.loaded();
-    const displayId = socket.data.displayId;
-    if (!loaded || !displayId) return;
-    socket.emit("snapshot", buildSnapshot(loaded, service.state(), displayId));
-  };
-
-  io.on("connection", (socket) => {
-    socket.on("hello", (payload) => {
-      const hello = HelloSchema.safeParse(payload);
-      if (!hello.success) {
-        socket.emit("error", { code: "INVALID_HELLO", message: "Hello was not understood by this server" });
-        return;
-      }
-
-      const { displayId } = hello.data;
-      if (socket.data.displayId && socket.data.displayId !== displayId) void socket.leave(room(socket.data.displayId));
-      socket.data.displayId = displayId;
-      void socket.join(room(displayId));
-
-      if (!service.loaded()) {
-        socket.emit("error", { code: "NO_ACTIVE_SHOW", message: "The server has no active show; check its log" });
-        return;
-      }
-      service.markSeen(displayId);
-      sendSnapshot(socket);
-    });
-  });
-
-  service.subscribe((event) => {
-    const loaded = service.loaded();
-    if (!loaded) return;
-
-    switch (event.type) {
-      case "state":
-        io.emit("state", { state: event.state });
-        return;
-      case "identify":
-        io.to(room(event.displayId)).emit("identify", { label: event.label });
-        return;
-      case "display":
-        for (const socket of displaySockets(io).filter((s) => s.data.displayId === event.displayId)) sendSnapshot(socket);
-        return;
-      case "screen":
-        for (const socket of displaySockets(io)) {
-          const displayId = socket.data.displayId;
-          if (displayId && resolveScreenId(loaded.show, displayId) === event.screenId) sendSnapshot(socket);
-        }
-        return;
-    }
-  });
+const screenUpdate = (service: ShowService, screenId: string): ScreenUpdate => {
+  const screen = service.loaded()?.screens.get(screenId) ?? null;
+  return { screenId, screen, lint: screen ? service.lint(screen) : [] };
 };
+
+const displaySockets = (io: RealtimeServer): ClientSocket[] =>
+  [...io.of("/").sockets.values()].filter((socket) => socket.data.role === "display");
 
 export const connectedDisplayIds = (io: RealtimeServer): Set<string> =>
   new Set(displaySockets(io).flatMap((socket) => (socket.data.displayId ? [socket.data.displayId] : [])));
 
 export const countDisplays = (io: RealtimeServer): number => displaySockets(io).length;
+
+// A client says hello and gets everything it needs in one message (a display its snapshot, operators and
+// builders the show overview); reconnecting is just another hello. Afterwards displays get a new snapshot
+// whenever what they show changes, and a small event for show-wide state changes, which must reach every
+// display within 100 ms.
+export const attachRealtime = (
+  io: RealtimeServer,
+  service: ShowService,
+  { editorToken }: { editorToken?: string | undefined } = {},
+): void => {
+  const sendSnapshot = (socket: ClientSocket) => {
+    const displayId = socket.data.displayId;
+    const snapshot = displayId ? buildSnapshot(service, displayId) : null;
+    if (snapshot) socket.emit("snapshot", snapshot);
+  };
+
+  const snapshotDisplays = (matches: (displayId: string) => boolean) => {
+    for (const socket of displaySockets(io)) {
+      if (socket.data.displayId && matches(socket.data.displayId)) sendSnapshot(socket);
+    }
+  };
+
+  const overview = (): ShowOverview | null => buildOverview(service, connectedDisplayIds(io));
+
+  // Several changes in one tick (a publish is a draft and a published change) go out as one overview.
+  let overviewQueued = false;
+  const queueOverview = () => {
+    if (overviewQueued) return;
+    overviewQueued = true;
+    setImmediate(() => {
+      overviewQueued = false;
+      const current = overview();
+      if (current) io.to(OVERVIEW_ROOMS).emit("overview", current);
+    });
+  };
+
+  const welcomeDisplay = (socket: ClientSocket, displayId: string) => {
+    if (socket.data.displayId && socket.data.displayId !== displayId) void socket.leave(displayRoom(socket.data.displayId));
+    socket.data.displayId = displayId;
+    void socket.join(displayRoom(displayId));
+    if (!service.loaded()) {
+      socket.emit("error", { code: "NO_ACTIVE_SHOW", message: "The server has no active show; check its log" });
+      return;
+    }
+    service.markSeen(displayId);
+    sendSnapshot(socket);
+    queueOverview();
+  };
+
+  const welcomeTool = (socket: ClientSocket, role: "operator" | "builder") => {
+    void socket.join(role === "operator" ? "operators" : "builders");
+    const current = overview();
+    if (current) socket.emit("overview", current);
+    else socket.emit("error", { code: "NO_ACTIVE_SHOW", message: "The server has no active show; check its log" });
+  };
+
+  io.on("connection", (socket) => {
+    socket.on("hello", (payload) => {
+      const parsed = HelloSchema.safeParse(payload);
+      if (!parsed.success) {
+        socket.emit("error", { code: "INVALID_HELLO", message: "Hello was not understood by this server" });
+        return;
+      }
+      const hello = parsed.data;
+      if (hello.role !== "display" && !tokenAccepted(editorToken, hello.token)) {
+        socket.emit("error", { code: "UNAUTHORIZED", message: "This server needs the editor token" });
+        return;
+      }
+
+      socket.data.role = hello.role;
+      if (hello.role === "display") welcomeDisplay(socket, hello.displayId);
+      else welcomeTool(socket, hello.role);
+    });
+
+    // A builder follows the draft of the screen it has open.
+    socket.on("watch", (payload) => {
+      const watch = WatchSchema.safeParse(payload);
+      if (socket.data.role !== "builder" || !watch.success) return;
+      if (socket.data.watching) void socket.leave(screenRoom(socket.data.watching));
+      const { screenId } = watch.data;
+      if (screenId === null) {
+        delete socket.data.watching;
+        return;
+      }
+      socket.data.watching = screenId;
+      void socket.join(screenRoom(screenId));
+      socket.emit("screen", screenUpdate(service, screenId));
+    });
+
+    socket.on("disconnect", () => {
+      if (socket.data.role === "display") queueOverview();
+    });
+  });
+
+  service.subscribe((event) => {
+    if (!service.loaded()) return;
+
+    switch (event.type) {
+      case "state":
+        io.emit("state", { state: event.state });
+        queueOverview();
+        return;
+      case "identify":
+        io.to(displayRoom(event.displayId)).emit("identify", { label: event.label });
+        return;
+      case "reload":
+        io.to(displayRoom(event.displayId)).emit("reload");
+        return;
+      case "display":
+      case "preview":
+        snapshotDisplays((displayId) => displayId === event.displayId);
+        queueOverview();
+        return;
+      case "screen":
+        io.to(screenRoom(event.screenId)).emit("screen", screenUpdate(service, event.screenId));
+        snapshotDisplays((displayId) => service.previews().get(displayId) === event.screenId);
+        queueOverview();
+        return;
+      case "published":
+        snapshotDisplays((displayId) => {
+          const { screen, preview } = service.screenForDisplay(displayId);
+          return !preview && screen?.id === event.screenId;
+        });
+        queueOverview();
+        return;
+      case "deleted":
+        io.to(screenRoom(event.screenId)).emit("screen", screenUpdate(service, event.screenId));
+        queueOverview();
+        return;
+      case "settings":
+        queueOverview();
+        return;
+    }
+  });
+};

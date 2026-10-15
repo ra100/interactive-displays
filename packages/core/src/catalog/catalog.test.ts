@@ -2,13 +2,14 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { createCatalog, defineWidget } from "./defineWidget.ts";
 import { button } from "./button.ts";
+import { image } from "./image.ts";
 import { catalog, widgets } from "./index.ts";
 import { text } from "./text.ts";
 import { title } from "./title.ts";
 
 describe("catalog", () => {
-  it("contains the Phase 0 widgets", () => {
-    expect([...catalog.keys()]).toEqual(["title", "text", "button"]);
+  it("contains the Phase 0 widgets and the image", () => {
+    expect([...catalog.keys()]).toEqual(["title", "text", "button", "image"]);
   });
 
   it.each(Object.entries(widgets))("registers %s under its own kind", (key, definition) => {
@@ -20,7 +21,8 @@ describe("catalog", () => {
   });
 
   it("rejects duplicate kinds", () => {
-    const again = defineWidget({ ...title, label: "Title again" });    expect(() => createCatalog([title, again])).toThrow(/Duplicate widget kind "title"/);
+    const again = defineWidget({ ...title, label: "Title again" });
+    expect(() => createCatalog([title, again])).toThrow(/Duplicate widget kind "title"/);
   });
 
   it.each([...catalog.values()])("$kind exports a JSON Schema for its props", (definition) => {
@@ -57,5 +59,16 @@ describe("button", () => {
   it("rejects a missing label and an unknown tone", () => {
     expect(button.props.safeParse({}).success).toBe(false);
     expect(button.props.safeParse({ label: "GO", tone: "orange" }).success).toBe(false);
+  });
+});
+
+describe("image", () => {
+  it("defaults to showing the whole image", () => {
+    expect(image.props.parse({ asset: "warp.png" })).toEqual({ asset: "warp.png", fit: "contain" });
+  });
+
+  it("rejects asset names that could escape the assets folder", () => {
+    expect(image.props.safeParse({ asset: "../show.json" }).success).toBe(false);
+    expect(image.props.safeParse({ asset: "https://example.com/x.png" }).success).toBe(false);
   });
 });

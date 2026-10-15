@@ -79,7 +79,7 @@ describe("server", () => {
     await server.stop();
 
     // Edit the data while the server is down; the next start must read it, not re-seed.
-    const screenFile = path.join(server.config().dataDir, "shows/demo/screens/bridge.json");
+    const screenFile = path.join(server.config().dataDir, "shows/demo/published/bridge.json");
     const screen = JSON.parse(await readFile(screenFile, "utf8"));
     await writeFile(screenFile, JSON.stringify({ ...screen, name: "Edited" }));
 

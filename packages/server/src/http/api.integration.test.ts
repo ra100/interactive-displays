@@ -1,4 +1,4 @@
-import type { LintIssue, Screen, ValidationIssue } from "@interactive-displays/core";
+import type { LintIssue, Screen, ShowOverview, ValidationIssue } from "@interactive-displays/core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createTestServer } from "../testing/testServer.ts";
 
@@ -9,15 +9,10 @@ interface CatalogBody {
   themes: Array<{ id: string; variants: object; decor: Array<{ kind: string }> }>;
 }
 
-interface ShowBody {
-  state: string;
-  screens: Array<{ id: string }>;
-  displays: Array<{ id: string }>;
-}
-
 interface ScreenBody {
   screen: Screen;
   lint: LintIssue[];
+  onAir?: string[];
 }
 
 interface IssuesBody {
@@ -25,9 +20,10 @@ interface IssuesBody {
 }
 
 const server = createTestServer();
+const TOKEN = "set-secret-1";
 
-beforeEach(async () => {
-  await server.setup();
+beforeEach(async ({ task }) => {
+  await server.setup(task.suite?.name === "with an editor token" ? { editorToken: TOKEN, publicUrl: "http://10.0.0.5:3010" } : {});
   await server.start();
 });
 afterEach(server.teardown);
@@ -37,7 +33,7 @@ describe("GET /api/catalog", () => {
     const { status, body } = await server.api<CatalogBody>("GET", "/api/catalog");
 
     expect(status).toBe(200);
-    expect(body.widgets.map((widget) => widget.kind)).toEqual(["title", "text", "button"]);
+    expect(body.widgets.map((widget) => widget.kind)).toEqual(["title", "text", "button", "image"]);
     expect(body.widgets[2]?.props.properties).toHaveProperty("label");
     expect(Object.keys(body.archetypes)).toEqual(["sidebar", "header-main", "dashboard"]);
     expect(body.effects).toContain("blackout");
@@ -51,15 +47,12 @@ describe("GET /api/catalog", () => {
 describe("GET /api/show", () => {
   it("lists screens and every known display with what it shows", async () => {
     await server.display("d-new123");
-    const { body } = await server.api<ShowBody>("GET", "/api/show");
+    const { body } = await server.api<ShowOverview>("GET", "/api/show");
 
     expect(body.state).toBe("normal");
-    expect(body.screens.map((screen) => screen.id)).toEqual([
-      "bridge",
-      "engineering",
-      "standby",
-      "tactical",
-    ]);
+    expect(body.show.settings).toEqual({ liveEdit: false });
+    expect(body.screens.map((screen) => screen.id)).toEqual(["bridge", "engineering", "schematic", "standby", "tactical"]);
+    expect(body.screens[0]).toMatchObject({ name: "Bridge operations", revision: 0, published: 0, profile: { aspect: "16:9" } });
     const { displays } = body;
     expect(displays.find((display) => display.id === "d-new123")).toMatchObject({
       showing: "bridge",
@@ -71,7 +64,15 @@ describe("GET /api/show", () => {
       showing: "tactical",
       connected: false,
       lastSeen: null,
+      preview: null,
     });
+  });
+
+  it("switches live edit on and off", async () => {
+    const on = await server.api<{ settings: object }>("PUT", "/api/show/settings", { liveEdit: true });
+    expect(on.body.settings).toEqual({ liveEdit: true });
+    expect((await server.api("PUT", "/api/show/settings", { liveEdit: "yes" })).status).toBe(400);
+    expect((await server.api("PUT", "/api/show/settings", { colour: "red" })).status).toBe(400);
   });
 });
 
@@ -82,6 +83,18 @@ describe("screens", () => {
     expect(status).toBe(200);
     expect(body.screen).toMatchObject({ id: "bridge", revision: 0 });
     expect(body.lint).toEqual([]);
+    expect(body.onAir).toEqual(["test"]);
+  });
+
+  it("lists every draft for the screen library", async () => {
+    const { body } = await server.api<{ screens: Screen[] }>("GET", "/api/screens");
+    expect(body.screens.map((screen) => screen.name)).toEqual([
+      "Bridge operations",
+      "Main engineering",
+      "Ship schematic",
+      "Standby",
+      "Tactical",
+    ]);
   });
 
   it("returns 404 for a missing screen and 400 for a bad id", async () => {
@@ -91,7 +104,7 @@ describe("screens", () => {
 
   it("creates a screen and reports lint for it", async () => {
     const { status, body } = await server.api<ScreenBody>("POST", "/api/screens", {
-      schemaVersion: 1,
+      schemaVersion: 2,
       id: "helm",
       name: "Helm",
       root: { id: "root", type: "container", layout: { kind: "stack", direction: "column" }, children: [] },
@@ -109,7 +122,7 @@ describe("screens", () => {
     expect(first.body.screen).toMatchObject({ revision: 1 });
 
     const stale = await server.api("POST", "/api/screens/bridge/ops", { baseRevision: 0, ops });
-    expect(stale).toEqual({ status: 409, body: { error: "The screen changed; reload it", revision: 1 } });
+    expect(stale).toMatchObject({ status: 409, body: { error: "The screen changed; reload it", revision: 1 } });
   });
 
   it("explains rejected ops: which op failed, or where the result is invalid", async () => {
@@ -133,9 +146,71 @@ describe("screens", () => {
   });
 });
 
+describe("publishing and revisions", () => {
+  const rename = (baseRevision: number, text: string) =>
+    server.api<ScreenBody>("POST", "/api/screens/bridge/ops", {
+      baseRevision,
+      ops: [{ op: "update", id: "title", props: { text } }],
+    });
+
+  it("publishes the current draft and says where it is on air", async () => {
+    await rename(0, "Helm");
+
+    const published = await server.api<ScreenBody>("POST", "/api/screens/bridge/publish", { revision: 1 });
+    expect(published.status).toBe(200);
+    expect(published.body).toMatchObject({ screen: { revision: 1, published: 1 }, onAir: ["test"] });
+
+    const onAir = await server.api<{ screen: Screen }>("GET", "/api/screens/bridge/published");
+    expect(onAir.body.screen.revision).toBe(1);
+  });
+
+  it("refuses to publish a revision that is not the draft", async () => {
+    await rename(0, "Helm");
+    expect(await server.api("POST", "/api/screens/bridge/publish", { revision: 0 })).toMatchObject({
+      status: 409,
+      body: { revision: 1 },
+    });
+    expect((await server.api("POST", "/api/screens/bridge/publish", { revision: -1 })).status).toBe(400);
+  });
+
+  it("publishes without a revision check when none is given", async () => {
+    expect((await server.api("POST", "/api/screens/bridge/publish")).status).toBe(200);
+  });
+
+  it("lists, reads and reverts to earlier revisions", async () => {
+    await rename(0, "One");
+    await rename(1, "Two");
+
+    const list = await server.api<{ revisions: Array<{ revision: number; savedAt: string }> }>(
+      "GET",
+      "/api/screens/bridge/revisions",
+    );
+    expect(list.body.revisions.map((entry) => entry.revision)).toEqual([1, 0]);
+
+    const old = await server.api<{ screen: Screen }>("GET", "/api/screens/bridge/revisions/0");
+    expect(old.body.screen.revision).toBe(0);
+    expect((await server.api("GET", "/api/screens/bridge/revisions/42")).status).toBe(404);
+    expect((await server.api("GET", "/api/screens/bridge/revisions/x")).status).toBe(400);
+
+    const reverted = await server.api<ScreenBody>("POST", "/api/screens/bridge/revert", { baseRevision: 2, revision: 0 });
+    expect(reverted.body.screen.revision).toBe(3);
+    expect(reverted.body.screen.root).toEqual(old.body.screen.root);
+  });
+
+  it("duplicates and deletes screens", async () => {
+    const copy = await server.api<{ screen: Screen }>("POST", "/api/screens/tactical/duplicate", { name: "Weapons" });
+    expect(copy.status).toBe(201);
+    expect(copy.body.screen).toMatchObject({ id: "weapons", name: "Weapons", revision: 0 });
+
+    expect(await server.api("DELETE", "/api/screens/weapons")).toMatchObject({ status: 200, body: { deleted: "weapons" } });
+    expect((await server.api("GET", "/api/screens/weapons")).status).toBe(404);
+    expect((await server.api("DELETE", "/api/screens/tactical")).status).toBe(409);
+  });
+});
+
 describe("state and displays", () => {
   it("sets the show state", async () => {
-    expect(await server.api("POST", "/api/state", { state: "yellow-alert" })).toEqual({
+    expect(await server.api("POST", "/api/state", { state: "yellow-alert" })).toMatchObject({
       status: 200,
       body: { state: "yellow-alert" },
     });
@@ -155,10 +230,103 @@ describe("state and displays", () => {
     expect((await server.api("PUT", "/api/displays/bridge-2", { screen: "nope" })).status).toBe(404);
   });
 
+  it("previews a draft on a display and ends the preview", async () => {
+    expect(await server.api("PUT", "/api/displays/test/preview", { screen: "tactical" })).toMatchObject({
+      status: 200,
+      body: { preview: "tactical" },
+    });
+    const { body } = await server.api<ShowOverview>("GET", "/api/show");
+    expect(body.displays.find((display) => display.id === "test")?.preview).toBe("tactical");
+
+    expect((await server.api("DELETE", "/api/displays/test/preview")).body).toEqual({ preview: null });
+    expect((await server.api("PUT", "/api/displays/test/preview", { screen: "nope" })).status).toBe(404);
+  });
+
+  it("asks a display to reload and forgets a display", async () => {
+    expect((await server.api("POST", "/api/displays/test/reload")).body).toEqual({ reloaded: "test" });
+    expect((await server.api("DELETE", "/api/displays/tactical-1")).body).toEqual({ forgotten: "tactical-1" });
+    const { body } = await server.api<ShowOverview>("GET", "/api/show");
+    expect(body.displays.map((display) => display.id)).not.toContain("tactical-1");
+  });
+
   it("identifies a display", async () => {
-    expect(await server.api("POST", "/api/displays/test/identify")).toEqual({
+    expect(await server.api("POST", "/api/displays/test/identify")).toMatchObject({
       status: 200,
       body: { label: "Test display" },
     });
+  });
+});
+
+describe("assets", () => {
+  const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+
+  it("uploads, lists, serves and deletes an asset", async () => {
+    const uploaded = await server.api("PUT", "/api/assets/warp-core.png", undefined, {
+      raw: { contentType: "image/png", data: png },
+    });
+    expect(uploaded).toMatchObject({ status: 201, body: { asset: "warp-core.png" } });
+
+    const list = await server.api<{ assets: Array<{ name: string; size: number }> }>("GET", "/api/assets");
+    expect(list.body.assets.map((asset) => asset.name)).toEqual(["schematic.svg", "warp-core.png"]);
+
+    const file = await fetch(`${server.url()}/media/warp-core.png`);
+    expect(file.status).toBe(200);
+    expect(file.headers.get("content-type")).toBe("image/png");
+    expect(file.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(new Uint8Array(await file.arrayBuffer())).toEqual(png);
+
+    expect((await server.api("DELETE", "/api/assets/warp-core.png")).status).toBe(200);
+    expect((await server.api("DELETE", "/api/assets/warp-core.png")).status).toBe(404);
+  });
+
+  it("serves SVG sandboxed, so it cannot run scripts when opened directly", async () => {
+    const file = await fetch(`${server.url()}/media/schematic.svg`);
+    expect(file.headers.get("content-type")).toContain("image/svg+xml");
+    expect(file.headers.get("content-security-policy")).toContain("sandbox");
+  });
+
+  it("rejects bad names, empty bodies and other content types", async () => {
+    const raw = { contentType: "image/png", data: png };
+    expect((await server.api("PUT", "/api/assets/..%2Fshow.json", undefined, { raw })).status).toBe(400);
+    expect((await server.api("PUT", "/api/assets/notes.txt", undefined, { raw })).status).toBe(400);
+    expect(
+      (await server.api("PUT", "/api/assets/a.png", undefined, { raw: { contentType: "image/png", data: new Uint8Array() } }))
+        .status,
+    ).toBe(400);
+    expect(
+      (await server.api("PUT", "/api/assets/a.png", undefined, { raw: { contentType: "text/html", data: png } })).status,
+    ).toBe(415);
+    expect((await fetch(`${server.url()}/media/..%2Fshow.json`)).status).toBe(404);
+  });
+});
+
+describe("with an editor token", () => {
+  it("needs the token for every write", async () => {
+    expect(await server.api("POST", "/api/state", { state: "red-alert" })).toMatchObject({
+      status: 401,
+      body: { error: "This server needs the editor token" },
+    });
+    expect((await server.api("POST", "/api/state", { state: "red-alert" }, { token: "wrong-token" })).status).toBe(401);
+    expect((await server.api("POST", "/api/state", { state: "red-alert" }, { token: TOKEN })).status).toBe(200);
+  });
+
+  it("keeps reads open", async () => {
+    expect((await server.api("GET", "/api/show")).status).toBe(200);
+    expect((await server.api("GET", "/api/screens/bridge")).status).toBe(200);
+  });
+
+  it("reports whether a token is needed and valid, and the public URL", async () => {
+    expect((await server.api("GET", "/api/session")).body).toEqual({
+      tokenRequired: true,
+      tokenValid: false,
+      publicUrl: "http://10.0.0.5:3010",
+    });
+    expect((await server.api("GET", "/api/session", undefined, { token: TOKEN })).body).toMatchObject({ tokenValid: true });
+  });
+});
+
+describe("without an editor token", () => {
+  it("reports that none is needed", async () => {
+    expect((await server.api("GET", "/api/session")).body).toEqual({ tokenRequired: false, tokenValid: true, publicUrl: null });
   });
 });

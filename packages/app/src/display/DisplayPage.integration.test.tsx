@@ -34,6 +34,13 @@ const fake = vi.hoisted(() => {
 
 vi.mock("socket.io-client", () => ({ io: () => fake.socket }));
 
+const reload = vi.hoisted(() => ({ calls: 0 }));
+vi.mock("./reloadPage.ts", () => ({
+  reloadPage: () => {
+    reload.calls += 1;
+  },
+}));
+
 const serverSends = (event: string, payload?: unknown) => {
   act(() => {
     fake.handlers.get(event)?.(payload);
@@ -54,7 +61,7 @@ const snapshot = (overrides: Partial<DisplaySnapshot> = {}): DisplaySnapshot => 
   state: "normal",
   display: { id: "bridge-1" },
   screen: ScreenSchema.parse({
-    schemaVersion: 1,
+    schemaVersion: 2,
     id: "welcome",
     name: "Welcome",
     root: {
@@ -76,6 +83,7 @@ const snapshot = (overrides: Partial<DisplaySnapshot> = {}): DisplaySnapshot => 
       ],
     },
   }),
+  preview: false,
   ...overrides,
 });
 
@@ -88,6 +96,7 @@ const renderAt = (path: string) =>
 
 beforeEach(() => {
   fake.reset();
+  reload.calls = 0;
   sessionStorage.clear();
 });
 
@@ -201,6 +210,30 @@ describe("display page", () => {
     serverSends("snapshot", snapshot({ protocol: PROTOCOL_VERSION + 1 }));
 
     expect(screen.getByText(/Clear the browser cache/)).toBeInTheDocument();
+  });
+
+  it("marks a draft preview so nobody mistakes it for the published screen", () => {
+    renderAt("/d/bridge-1");
+    serverSends("connect");
+    serverSends("snapshot", snapshot());
+    expect(screen.queryByText("DRAFT PREVIEW")).not.toBeInTheDocument();
+
+    serverSends("snapshot", snapshot({ preview: true }));
+    expect(screen.getByText("DRAFT PREVIEW")).toBeInTheDocument();
+  });
+
+  it("reloads when the operator asks it to", () => {
+    renderAt("/d/bridge-1");
+    serverSends("connect");
+    serverSends("reload");
+    expect(reload.calls).toBe(1);
+  });
+
+  it("reloads once for a protocol mismatch", () => {
+    renderAt("/d/bridge-1");
+    serverSends("connect");
+    serverSends("snapshot", snapshot({ protocol: PROTOCOL_VERSION + 1 }));
+    expect(reload.calls).toBe(1);
   });
 
   it("rejects an invalid display id", () => {

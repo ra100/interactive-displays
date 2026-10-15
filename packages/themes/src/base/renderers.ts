@@ -1,6 +1,7 @@
 import { type BaseThemeRenderers, defineRenderers } from "../contract.ts";
 import { BaseButton } from "./BaseButton.tsx";
 import { BaseFrame } from "./BaseFrame.tsx";
+import { BaseImage } from "./BaseImage.tsx";
 import { BaseText } from "./BaseText.tsx";
 import { BaseTitle } from "./BaseTitle.tsx";
 import "./base.css";
@@ -11,6 +12,7 @@ export const baseRenderers: BaseThemeRenderers = defineRenderers({
     title: BaseTitle,
     text: BaseText,
     button: BaseButton,
+    image: BaseImage,
   },
   frames: {
     sidebar: BaseFrame,

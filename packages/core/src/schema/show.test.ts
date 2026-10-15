@@ -19,6 +19,11 @@ describe("ShowSchema", () => {
     expect(parsed.displays).toEqual([]);
   });
 
+  it("defaults to drafts that wait for Publish", () => {
+    const parsed = ShowSchema.parse({ schemaVersion: 1, id: "s", name: "S", theme: { id: "base" } });
+    expect(parsed.settings).toEqual({ liveEdit: false });
+  });
+
   it("rejects an unsupported schema version", () => {
     const result = ShowSchema.safeParse({ schemaVersion: 2, id: "s", name: "S", theme: { id: "base" } });
     expect(result.success).toBe(false);

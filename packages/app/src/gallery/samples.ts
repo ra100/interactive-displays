@@ -15,7 +15,7 @@ import type { AnyDecorDefinition } from "@interactive-displays/core";
 // without touching this file.
 
 const screen = (id: string, root: NodeInput): Screen =>
-  ScreenSchema.parse({ schemaVersion: 1, id, name: id, root });
+  ScreenSchema.parse({ schemaVersion: 2, id, name: id, root });
 
 const column = (id: string, children: ChildEntryInput[]): NodeInput => ({
   id,

@@ -7,7 +7,7 @@ import { validateScreen } from "./validateScreen.ts";
 
 const screen = (children: unknown[]): ScreenInput =>
   ({
-    schemaVersion: 1,
+    schemaVersion: 2,
     id: "welcome",
     name: "Welcome",
     root: {
@@ -90,7 +90,7 @@ describe("validateScreen", () => {
   });
 
   describe("layouts", () => {
-    const withRoot = (root: unknown) => ({ schemaVersion: 1, id: "s", name: "S", root });
+    const withRoot = (root: unknown) => ({ schemaVersion: 2, id: "s", name: "S", root });
 
     it("accepts frame children in the archetype's slots", () => {
       const result = validateScreen(

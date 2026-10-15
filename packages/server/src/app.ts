@@ -1,7 +1,8 @@
 import { existsSync } from "node:fs";
+import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import fastifyStatic from "@fastify/static";
-import { PROTOCOL_VERSION } from "@interactive-displays/core";
+import { AssetNameSchema, PROTOCOL_VERSION } from "@interactive-displays/core";
 import { decorCatalog } from "@interactive-displays/themes/manifest";
 import Fastify, { type FastifyInstance } from "fastify";
 import { Server } from "socket.io";
@@ -10,7 +11,7 @@ import { registerApi } from "./http/api.ts";
 import { SEED_DIR } from "./paths.ts";
 import { attachRealtime, countDisplays, type RealtimeServer } from "./realtime.ts";
 import { createShowService } from "./showService.ts";
-import { ensureSeeded, loadActiveShow } from "./storage/repository.ts";
+import { assetsDir, ensureSeeded, loadActiveShow } from "./storage/repository.ts";
 
 const hasFileExtension = (url: string): boolean => path.extname(url.split("?")[0] ?? "") !== "";
 
@@ -23,7 +24,7 @@ export const buildServer = async (config: Config): Promise<FastifyInstance> => {
   const service = createShowService({ dataDir: config.dataDir, decor: decorCatalog, log: app.log, loaded });
 
   const io: RealtimeServer = new Server(app.server, { serveClient: false });
-  attachRealtime(io, service);
+  attachRealtime(io, service, { editorToken: config.editorToken });
 
   // Long-lived sockets would otherwise keep the HTTP server from closing. Closing the transports
   // (rather than disconnecting sockets) tells displays to reconnect on their own once we are back.
@@ -40,7 +41,24 @@ export const buildServer = async (config: Config): Promise<FastifyInstance> => {
     displays: countDisplays(io),
   }));
 
-  registerApi(app, service, io);
+  registerApi(app, service, io, { editorToken: config.editorToken, publicUrl: config.publicUrl });
+
+  // Show assets. Uploads can be SVG, so the files are sandboxed: opened directly they cannot run scripts.
+  if (loaded) {
+    const root = assetsDir(config.dataDir, loaded.show.id);
+    await mkdir(root, { recursive: true });
+    await app.register(fastifyStatic, {
+      root,
+      prefix: "/media/",
+      decorateReply: false,
+      allowedPath: (pathName) => AssetNameSchema.safeParse(pathName.replace(/^\//, "")).success,
+      setHeaders: (reply) => {
+        reply.header("cache-control", "no-cache");
+        reply.header("content-security-policy", "sandbox; default-src 'none'; img-src 'self'; style-src 'unsafe-inline'");
+        reply.header("x-content-type-options", "nosniff");
+      },
+    });
+  }
 
   if (existsSync(path.join(config.appDist, "index.html"))) {
     await app.register(fastifyStatic, {

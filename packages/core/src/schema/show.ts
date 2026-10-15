@@ -20,6 +20,11 @@ export const DisplayDefSchema = z.object({
   screen: IdSchema.optional(),
 });
 
+export const ShowSettingsSchema = z.object({
+  // Rehearsal mode: every edit goes on air at once instead of waiting for Publish.
+  liveEdit: z.boolean().default(false),
+});
+
 export const DEFAULT_STATES: StateDef[] = [{ id: "normal", label: "Normal", effect: "none" }];
 
 const uniqueIds = (items: readonly { id: string }[]) => new Set(items.map((item) => item.id)).size === items.length;
@@ -39,11 +44,13 @@ export const ShowSchema = z.object({
   // Shown on displays that have no screen of their own.
   defaultScreen: IdSchema.optional(),
   displays: z.array(DisplayDefSchema).max(100).refine(uniqueIds, "Display ids must be unique").default([]),
+  settings: ShowSettingsSchema.default({ liveEdit: false }),
 });
 
 export type Effect = z.infer<typeof EffectSchema>;
 export type StateDef = z.infer<typeof StateDefSchema>;
 export type DisplayDef = z.infer<typeof DisplayDefSchema>;
+export type ShowSettings = z.infer<typeof ShowSettingsSchema>;
 export type Show = z.infer<typeof ShowSchema>;
 export type ShowInput = z.input<typeof ShowSchema>;
 

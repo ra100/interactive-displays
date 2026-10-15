@@ -11,6 +11,27 @@ describe("loadConfig", () => {
     expect(config.dataDir.endsWith(`${path.sep}data`)).toBe(true);
     expect(config.appDist.endsWith(path.join("packages", "app", "dist"))).toBe(true);
     expect(config.logLevel).toBe("info");
+    expect(config.editorToken).toBeUndefined();
+    expect(config.publicUrl).toBeUndefined();
+  });
+
+  it("reads the editor token and public URL", () => {
+    const config = loadConfig({ EDITOR_TOKEN: "set-secret-1", PUBLIC_URL: "http://10.0.0.5:3010/" });
+
+    expect(config.editorToken).toBe("set-secret-1");
+    expect(config.publicUrl).toBe("http://10.0.0.5:3010");
+  });
+
+  it("treats empty values from docker compose as unset", () => {
+    const config = loadConfig({ EDITOR_TOKEN: "", PUBLIC_URL: "" });
+
+    expect(config.editorToken).toBeUndefined();
+    expect(config.publicUrl).toBeUndefined();
+  });
+
+  it("rejects a short editor token and a malformed public URL", () => {
+    expect(() => loadConfig({ EDITOR_TOKEN: "short" })).toThrow(/EDITOR_TOKEN/);
+    expect(() => loadConfig({ PUBLIC_URL: "not a url" })).toThrow(/PUBLIC_URL/);
   });
 
   it("reads overrides from the environment", () => {

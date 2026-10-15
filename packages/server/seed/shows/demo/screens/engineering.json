@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "engineering",
   "name": "Main engineering",
   "tags": [
@@ -10,6 +10,8 @@
     "aspect": "16:9",
     "fit": "fluid"
   },
+  "revision": 0,
+  "published": 0,
   "root": {
     "id": "root",
     "type": "container",

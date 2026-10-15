@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 2,
+  "id": "schematic",
+  "name": "Ship schematic",
+  "section": "engineering",
+  "tags": [
+    "demo",
+    "lcars",
+    "image"
+  ],
+  "profile": {
+    "aspect": "16:9",
+    "fit": "fluid"
+  },
+  "revision": 0,
+  "published": 0,
+  "root": {
+    "id": "root",
+    "type": "container",
+    "layout": {
+      "kind": "frame",
+      "archetype": "dashboard"
+    },
+    "children": [
+      {
+        "slot": "title",
+        "node": {
+          "id": "title",
+          "type": "widget",
+          "kind": "title",
+          "props": {
+            "text": "Ship schematic",
+            "code": "07-3254"
+          }
+        }
+      },
+      {
+        "slot": "main",
+        "node": {
+          "id": "schematic",
+          "type": "widget",
+          "kind": "image",
+          "props": {
+            "asset": "schematic.svg",
+            "alt": "Dorsal schematic of the ship"
+          }
+        }
+      },
+      {
+        "slot": "aside",
+        "node": {
+          "id": "readouts",
+          "type": "container",
+          "layout": {
+            "kind": "stack",
+            "direction": "column",
+            "gap": "small"
+          },
+          "children": [
+            {
+              "node": {
+                "id": "readouts-title",
+                "type": "widget",
+                "kind": "title",
+                "props": {
+                  "text": "Structure",
+                  "tone": "secondary"
+                }
+              }
+            },
+            {
+              "node": {
+                "id": "hull",
+                "type": "widget",
+                "kind": "text",
+                "props": {
+                  "text": "Hull integrity 100%"
+                },
+                "when": [
+                  {
+                    "state": "damaged",
+                    "props": {
+                      "text": "Hull integrity 61%",
+                      "tone": "danger"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "node": {
+                "id": "sif",
+                "type": "widget",
+                "kind": "text",
+                "props": {
+                  "text": "Structural field 98%"
+                }
+              }
+            },
+            {
+              "node": {
+                "id": "decks",
+                "type": "widget",
+                "kind": "text",
+                "props": {
+                  "text": "42 decks pressurised"
+                }
+              }
+            },
+            {
+              "node": {
+                "id": "sections",
+                "type": "widget",
+                "kind": "button",
+                "props": {
+                  "label": "Sections",
+                  "tone": "secondary"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slot": "status",
+        "node": {
+          "id": "status-line",
+          "type": "widget",
+          "kind": "text",
+          "props": {
+            "text": "DORSAL VIEW · ALL SECTIONS REPORTING",
+            "size": "small"
+          }
+        }
+      }
+    ]
+  }
+}

@@ -43,6 +43,8 @@ const ConnectedDisplay = ({ displayId }: { displayId: string }) => {
         <StatusMessage title="NO SCREEN ASSIGNED" code={displayId} detail={snapshot.show.name} />
       )}
       <IdentifyOverlay request={identify} />
+      {/* Sent from the editor: the crew should know this is not what goes on air. */}
+      {snapshot.preview ? <div className="preview-badge">DRAFT PREVIEW</div> : null}
       {/* The last screen stays up while reconnecting, so a network blip never blanks a display on camera. */}
       {status === "connected" ? null : <div className="connection-badge">RECONNECTING</div>}
       {error && status === "connected" ? <div className="connection-badge">{error}</div> : null}

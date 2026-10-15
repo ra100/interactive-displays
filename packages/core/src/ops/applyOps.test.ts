@@ -9,7 +9,7 @@ import { type Op, OpSchema } from "./ops.ts";
 const base = (): Screen => {
   const result = validateScreen(
     ScreenSchema.parse({
-      schemaVersion: 1,
+      schemaVersion: 2,
       id: "s",
       name: "Screen",
       revision: 3,

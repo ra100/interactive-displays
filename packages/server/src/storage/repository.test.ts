@@ -1,14 +1,29 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SEED_DIR } from "../paths.ts";
 import { ScreenSchema } from "@interactive-displays/core";
 import { decorCatalog } from "@interactive-displays/themes/manifest";
-import { ensureSeeded, HISTORY_LIMIT, listRevisions, loadActiveShow, saveRuntime, saveScreen } from "./repository.ts";
+import {
+  deleteAsset,
+  ensureSeeded,
+  HISTORY_LIMIT,
+  listAssets,
+  listRevisions,
+  loadActiveShow,
+  readRevision,
+  saveAsset,
+  savePublished,
+  saveRuntime,
+  saveScreen,
+  trashScreen,
+} from "./repository.ts";
 
 const log = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
 let dataDir: string;
+
+const readData = async (relative: string) => JSON.parse(await readFile(path.join(dataDir, relative), "utf8"));
 
 const write = async (relative: string, value: unknown) => {
   const file = path.join(dataDir, relative);
@@ -16,11 +31,12 @@ const write = async (relative: string, value: unknown) => {
   await writeFile(file, typeof value === "string" ? value : JSON.stringify(value));
 };
 
-const screen = (id: string) => ({
-  schemaVersion: 1,
+const screen = (id: string, extra: Record<string, unknown> = {}) => ({
+  schemaVersion: 2,
   id,
   name: id,
   root: { id: "root", type: "container", layout: { kind: "stack", direction: "column" }, children: [] },
+  ...extra,
 });
 
 beforeEach(async () => {
@@ -39,7 +55,9 @@ describe("ensureSeeded", () => {
     const loaded = await loadActiveShow(dataDir, decorCatalog, log);
     expect(loaded?.show.id).toBe("demo");
     expect(loaded?.show.theme.id).toBe("lcars");
-    expect([...(loaded?.screens.keys() ?? [])]).toEqual(["bridge", "engineering", "standby", "tactical"]);
+    expect([...(loaded?.screens.keys() ?? [])]).toEqual(["bridge", "engineering", "schematic", "standby", "tactical"]);
+    expect([...(loaded?.published.keys() ?? [])]).toEqual([...(loaded?.screens.keys() ?? [])]);
+    expect(await listAssets(dataDir, "demo")).toMatchObject([{ name: "schematic.svg", kind: "image" }]);
     expect(log.warn).not.toHaveBeenCalled();
   });
 
@@ -132,7 +150,7 @@ describe("saveScreen", () => {
     await saveScreen(dataDir, "s1", revision(0));
     await saveScreen(dataDir, "s1", revision(1), revision(0));
 
-    expect(await listRevisions(dataDir, "s1", "a")).toEqual([0]);
+    expect(await listRevisions(dataDir, "s1", "a")).toEqual([{ revision: 0, savedAt: expect.any(String) }]);
     const current = JSON.parse(await readFile(path.join(dataDir, "shows/s1/screens/a.json"), "utf8"));
     expect(current.revision).toBe(1);
   });
@@ -142,7 +160,7 @@ describe("saveScreen", () => {
       await saveScreen(dataDir, "s1", revision(n), revision(n - 1));
     }
 
-    const revisions = await listRevisions(dataDir, "s1", "a");
+    const revisions = (await listRevisions(dataDir, "s1", "a")).map((entry) => entry.revision);
     expect(revisions).toHaveLength(HISTORY_LIMIT);
     expect(revisions[0]).toBe(HISTORY_LIMIT + 2);
     expect(revisions.at(-1)).toBe(3);
@@ -150,5 +168,104 @@ describe("saveScreen", () => {
 
   it("lists no revisions for a screen that was never edited", async () => {
     expect(await listRevisions(dataDir, "s1", "nothing")).toEqual([]);
+  });
+});
+
+describe("published screens", () => {
+  beforeEach(async () => {
+    await write("settings.json", { schemaVersion: 1, activeShow: "s1" });
+    await write("shows/s1/show.json", { schemaVersion: 1, id: "s1", name: "Show", theme: { id: "base" } });
+  });
+
+  it("loads the published copy beside the draft", async () => {
+    await write("shows/s1/screens/a.json", screen("a", { name: "Draft", revision: 3, published: 2 }));
+    await write("shows/s1/published/a.json", screen("a", { name: "On air", revision: 2, published: 2 }));
+
+    const loaded = await loadActiveShow(dataDir, decorCatalog, log);
+    expect(loaded?.screens.get("a")?.name).toBe("Draft");
+    expect(loaded?.published.get("a")?.name).toBe("On air");
+  });
+
+  it("does not put a screen that was never published on air", async () => {
+    await write("shows/s1/screens/a.json", screen("a"));
+
+    const loaded = await loadActiveShow(dataDir, decorCatalog, log);
+    expect(loaded?.published.size).toBe(0);
+  });
+
+  it("keeps v1 screens on air: they are upgraded and published as they were", async () => {
+    await write("shows/s1/screens/a.json", { ...screen("a", { revision: 4 }), schemaVersion: 1 });
+
+    const loaded = await loadActiveShow(dataDir, decorCatalog, log);
+    expect(loaded?.screens.get("a")).toMatchObject({ schemaVersion: 2, revision: 4, published: 4 });
+    expect(loaded?.published.get("a")?.revision).toBe(4);
+    expect((await readData("shows/s1/published/a.json")).revision).toBe(4);
+  });
+
+  it("rebuilds a missing published copy from the history", async () => {
+    await write("shows/s1/screens/a.json", screen("a", { name: "Draft", revision: 3, published: 1 }));
+    await write("shows/s1/screens/.history/a/1.json", screen("a", { name: "Revision 1", revision: 1 }));
+
+    const loaded = await loadActiveShow(dataDir, decorCatalog, log);
+    expect(loaded?.published.get("a")).toMatchObject({ name: "Revision 1", revision: 1, published: 1 });
+  });
+
+  it("takes a screen off air when its published revision is gone", async () => {
+    await write("shows/s1/screens/a.json", screen("a", { revision: 3, published: 1 }));
+
+    const loaded = await loadActiveShow(dataDir, decorCatalog, log);
+    expect(loaded?.published.has("a")).toBe(false);
+    expect(loaded?.screens.get("a")?.published).toBeUndefined();
+    expect(log.warn).toHaveBeenCalled();
+  });
+
+  it("saves published copies", async () => {
+    await savePublished(dataDir, "s1", ScreenSchema.parse(screen("a", { revision: 2, published: 2 })));
+    expect((await readData("shows/s1/published/a.json")).published).toBe(2);
+  });
+});
+
+describe("history and trash", () => {
+  it("reads an archived revision", async () => {
+    await saveScreen(dataDir, "s1", ScreenSchema.parse(screen("a", { revision: 1 })), ScreenSchema.parse(screen("a")));
+
+    expect((await readRevision(dataDir, "s1", "a", 0, decorCatalog, log))?.revision).toBe(0);
+    expect(await readRevision(dataDir, "s1", "a", 9, decorCatalog, log)).toBeUndefined();
+  });
+
+  it("moves a deleted screen to the trash and takes it off air", async () => {
+    await write("shows/s1/screens/a.json", screen("a"));
+    await write("shows/s1/published/a.json", screen("a"));
+
+    await trashScreen(dataDir, "s1", "a");
+
+    expect(await readdir(path.join(dataDir, "shows/s1/screens"))).toEqual([".trash"]);
+    expect(await readdir(path.join(dataDir, "shows/s1/screens/.trash"))).toEqual([expect.stringMatching(/^a-.*\.json$/)]);
+    expect(await readdir(path.join(dataDir, "shows/s1/published"))).toEqual([]);
+  });
+});
+
+describe("assets", () => {
+  it("saves, lists and deletes assets", async () => {
+    await saveAsset(dataDir, "s1", "warp.png", Buffer.from([1, 2, 3]));
+    await saveAsset(dataDir, "s1", "intro.mp4", Buffer.from([4]));
+
+    expect(await listAssets(dataDir, "s1")).toEqual([
+      { name: "intro.mp4", kind: "video", type: "video/mp4", size: 1, modified: expect.any(String) },
+      { name: "warp.png", kind: "image", type: "image/png", size: 3, modified: expect.any(String) },
+    ]);
+    expect(await deleteAsset(dataDir, "s1", "warp.png")).toBe(true);
+    expect(await deleteAsset(dataDir, "s1", "warp.png")).toBe(false);
+    expect((await listAssets(dataDir, "s1")).map((asset) => asset.name)).toEqual(["intro.mp4"]);
+  });
+
+  it("ignores files the server would not accept as assets", async () => {
+    await write("shows/s1/assets/notes.txt", "hello");
+    await write("shows/s1/assets/Upper.PNG", "x");
+    expect(await listAssets(dataDir, "s1")).toEqual([]);
+  });
+
+  it("lists nothing when the show has no assets folder", async () => {
+    expect(await listAssets(dataDir, "nothing")).toEqual([]);
   });
 });

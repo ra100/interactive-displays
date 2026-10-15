@@ -6,13 +6,13 @@ import { WidgetErrorBoundary } from "./WidgetErrorBoundary.tsx";
 
 const makeScreen = (children: Array<{ node: unknown; weight?: number }>): Screen =>
   ScreenSchema.parse({
-    schemaVersion: 1,
+    schemaVersion: 2,
     id: "test",
     name: "Test",
     root: { id: "root", type: "container", layout: { kind: "stack", direction: "column" }, children },
   });
 
-const withRoot = (root: unknown): Screen => ScreenSchema.parse({ schemaVersion: 1, id: "test", name: "Test", root });
+const withRoot = (root: unknown): Screen => ScreenSchema.parse({ schemaVersion: 2, id: "test", name: "Test", root });
 
 const sidebar = withRoot({
   id: "root",

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "bridge",
+  "name": "Bridge operations",
+  "section": "bridge",
+  "tags": ["lcars"],
+  "profile": { "aspect": "16:9", "fit": "fluid" },
+  "revision": 7,
+  "root": {
+    "id": "root",
+    "type": "container",
+    "layout": { "kind": "frame", "archetype": "sidebar" },
+    "children": [
+      { "slot": "title", "node": { "id": "title", "type": "widget", "kind": "title", "props": { "text": "BRIDGE OPERATIONS" } } },
+      { "slot": "nav", "node": { "id": "helm", "type": "widget", "kind": "button", "props": { "label": "HELM" } } },
+      {
+        "slot": "main",
+        "node": {
+          "id": "status",
+          "type": "widget",
+          "kind": "text",
+          "props": { "text": "All systems nominal." },
+          "when": [{ "state": "red-alert", "props": { "text": "Battle stations." } }]
+        }
+      }
+    ]
+  }
+}

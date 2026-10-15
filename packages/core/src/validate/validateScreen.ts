@@ -3,6 +3,7 @@ import type { DecorCatalog } from "../catalog/defineDecor.ts";
 import type { Catalog } from "../catalog/defineWidget.ts";
 import { archetypeSlots, isArchetype } from "../schema/archetypes.ts";
 import type { ChildEntry, ContainerNode, Node } from "../schema/node.ts";
+import { migrateScreen } from "../migrate/migrateScreen.ts";
 import { type Screen, ScreenSchema } from "../schema/screen.ts";
 
 export interface ValidationIssue {
@@ -48,10 +49,11 @@ const placementIssues = (container: ContainerNode, child: ChildEntry, path: Path
   return issues;
 };
 
-// Full document check: the schema, unique ids, known archetypes and widget kinds, props (including per-state
-// overrides) and placement. On success every widget and known decor node has its prop defaults filled in.
+// Full document check, after upgrading an older document to the current version: the schema, unique ids,
+// known archetypes and widget kinds, props (including per-state overrides) and placement. On success every
+// widget and known decor node has its prop defaults filled in.
 export const validateScreen = (input: unknown, catalog: Catalog, decor?: DecorCatalog): ValidationResult<Screen> => {
-  const parsed = ScreenSchema.safeParse(input);
+  const parsed = ScreenSchema.safeParse(migrateScreen(input));
   if (!parsed.success) return { ok: false, issues: toIssues(parsed.error) };
 
   const issues: ValidationIssue[] = [];
