@@ -38,3 +38,5 @@ export {
   type SuiteLink,
 } from "./generator/generate.ts";
 export { randomSeed } from "./generator/random.ts";
+export * from "./generator/sections.ts";
+export { outlineScreen } from "./tree/outline.ts";

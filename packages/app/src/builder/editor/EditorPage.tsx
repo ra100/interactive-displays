@@ -18,6 +18,8 @@ import {
   type Profile,
   ProfileSchema,
   randomSeed,
+  regenerateScreenOps,
+  sectionOfScreen,
   type Screen,
   takenIds,
 } from "@interactive-displays/core";
@@ -29,7 +31,8 @@ import { api } from "../../tools/api.ts";
 import { ConfirmDialog } from "../../tools/Dialog.tsx";
 import { ToolGate, type Tools } from "../../tools/ToolGate.tsx";
 import { useToast } from "../../tools/useToast.tsx";
-import { generationBase, regenerate, sectionOf } from "../generation.ts";
+import { generationBase } from "../generation.ts";
+import { usePacks } from "../usePacks.ts";
 import { publishStatus } from "../publishStatus.ts";
 import { AddPanel } from "./AddPanel.tsx";
 import type { DragSource } from "./dragSource.ts";
@@ -79,6 +82,7 @@ const Editor = ({ overview, connection, screenId }: Tools & { screenId: string }
   const toast = useToast();
   const notify = toast.show;
   const editor = useScreenEditor(screenId, connection.socket, (message) => notify(message, "danger"));
+  const packs = usePacks();
   const show = overview.show;
   const summary = overview.screens.find((screen) => screen.id === screenId);
   const liveEdit = show.settings.liveEdit;
@@ -246,9 +250,9 @@ const Editor = ({ overview, connection, screenId }: Tools & { screenId: string }
     notify(`Restored revision ${revision} as revision ${result.data.screen.revision}`);
   };
 
-  const section = sectionOf(screen);
+  const section = sectionOfScreen(packs, screen);
   const regenerateScreen = () => {
-    const ops = regenerate(screen, generationBase(show, overview.screens.map((each) => each.id)), randomSeed());
+    const ops = regenerateScreenOps(screen, packs, generationBase(show, overview.screens.map((each) => each.id)), randomSeed());
     if (ops && apply(ops)) notify("Regenerated everything that is not locked; Undo brings the old screen back");
   };
 

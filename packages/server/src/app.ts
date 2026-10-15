@@ -7,6 +7,7 @@ import { decorCatalog } from "@interactive-displays/themes/manifest";
 import Fastify, { type FastifyInstance } from "fastify";
 import { Server } from "socket.io";
 import type { Config } from "./config.ts";
+import { createGeneration } from "./generation.ts";
 import { registerApi } from "./http/api.ts";
 import { SEED_DIR } from "./paths.ts";
 import { attachRealtime, countDisplays, type RealtimeServer } from "./realtime.ts";
@@ -48,7 +49,8 @@ export const buildServer = async (config: Config): Promise<FastifyInstance> => {
     displays: countDisplays(io),
   }));
 
-  registerApi(app, service, io, { editorToken: config.editorToken, publicUrl: config.publicUrl });
+  const generation = await createGeneration({ service, dataDir: config.dataDir, log: app.log });
+  registerApi(app, service, generation, io, { editorToken: config.editorToken, publicUrl: config.publicUrl });
 
   // Show assets. Uploads can be SVG, so the files are sandboxed: opened directly they cannot run scripts.
   if (loaded) {

@@ -12,7 +12,9 @@ import {
   type Node,
   type NodeLocation,
   type NormRect,
+  canReroll,
   randomSeed,
+  rerollScreenOps,
   resolveTokens,
   SpaceSchema,
   type SlotName,
@@ -35,7 +37,8 @@ import {
 } from "./editing.ts";
 import { useEditor } from "./EditorContext.ts";
 import { FieldInput } from "./FieldInput.tsx";
-import { canReroll, generationBase, reroll } from "../generation.ts";
+import { generationBase } from "../generation.ts";
+import { usePacks } from "../usePacks.ts";
 import { NumberBox, Section } from "./inspectorParts.tsx";
 import { ActionsEditor, LiveValues } from "./LiveSection.tsx";
 
@@ -262,6 +265,7 @@ const overridesSummary = (entry: When[number]) => {
 
 const NodeInspector = ({ location }: { location: NodeLocation }) => {
   const { screen, overview, apply, select, preview } = useEditor();
+  const packs = usePacks();
   const { node, parent, entry } = location;
   const show = overview.show;
   const baseState = show.states[0]?.id;
@@ -322,13 +326,13 @@ const NodeInspector = ({ location }: { location: NodeLocation }) => {
           >
             Duplicate
           </button>
-          {canReroll(screen, node.id) ? (
+          {canReroll(screen, packs, node.id) ? (
             <button
               type="button"
               className="tool-button tool-button--small"
               title="Swap this panel for a fresh one in the same place"
               onClick={() => {
-                const ops = reroll(screen, node.id, generationBase(overview.show, overview.screens.map((each) => each.id)), randomSeed());
+                const ops = rerollScreenOps(screen, packs, generationBase(overview.show, overview.screens.map((each) => each.id)), node.id, randomSeed());
                 if (ops) apply(ops);
               }}
             >
