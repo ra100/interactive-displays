@@ -388,6 +388,7 @@ describe("with an editor token", () => {
       tokenRequired: true,
       tokenValid: false,
       publicUrl: "http://10.0.0.5:3010",
+      ai: null,
     });
     expect((await server.api("GET", "/api/session", undefined, { token: TOKEN })).body).toMatchObject({ tokenValid: true });
   });
@@ -395,6 +396,6 @@ describe("with an editor token", () => {
 
 describe("without an editor token", () => {
   it("reports that none is needed", async () => {
-    expect((await server.api("GET", "/api/session")).body).toEqual({ tokenRequired: false, tokenValid: true, publicUrl: null });
+    expect((await server.api("GET", "/api/session")).body).toEqual({ tokenRequired: false, tokenValid: true, publicUrl: null, ai: null });
   });
 });

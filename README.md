@@ -65,6 +65,22 @@ curl -X PUT http://<server>:3010/api/displays/bridge-2 -H 'content-type: applica
 # with EDITOR_TOKEN set, add: -H 'authorization: Bearer <token>'
 ```
 
+## AI and MCP
+
+- **MCP:** point any MCP client (Claude Desktop, Claude Code, …) at `http://<server>:3010/mcp` (Streamable HTTP).
+  It can read the catalog, theme and screens, generate screens and suites from a section, edit drafts with ops,
+  check them and save new section recipes. Locked parts are never touched. With `EDITOR_TOKEN` set, send it as
+  `authorization: Bearer <token>`.
+
+  ```bash
+  claude mcp add --transport http displays http://<server>:3010/mcp --header "Authorization: Bearer <token>"
+  ```
+
+- Publishing and running the show (assigning screens, changing state or signals) stay off for AI until the operator
+  turns on **AI may publish** or **AI may run the show** in `/operator`.
+- **Fill with AI** in the editor: with `ANTHROPIC_API_KEY` set, describe a change ("fill the placeholders", "make
+  this the torpedo bay") and review the proposal before applying it; Undo takes it back.
+
 ## Configuration
 
 | Variable | Default | Meaning |
@@ -75,6 +91,8 @@ curl -X PUT http://<server>:3010/api/displays/bridge-2 -H 'content-type: applica
 | `LOG_LEVEL` | `info` | `fatal` … `trace`, or `silent` |
 | `EDITOR_TOKEN` | unset | Protects `/operator`, `/builder` and every change (at least 8 characters); displays never need it |
 | `PUBLIC_URL` | unset | The address tablets use to reach the server (`http://10.0.0.5:3010`), for QR codes |
+| `ANTHROPIC_API_KEY` | unset | Turns on the editor's Fill with AI; MCP clients bring their own model and need no key |
+| `AI_MODEL` | `claude-opus-5-5` | The model Fill with AI uses |
 
 With Docker, put them in a `.env` file next to `docker-compose.yml`.
 
