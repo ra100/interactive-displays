@@ -26,6 +26,7 @@ import {
   type AssetInfo,
   type RevisionInfo,
   type VideoCommand,
+  UiScaleSchema,
 } from "@interactive-displays/core";
 import { themeManifests } from "@interactive-displays/themes/manifest";
 import type { FastifyBaseLogger } from "fastify";
@@ -78,6 +79,8 @@ export type CommandResult<T> = { ok: true; value: T } | Failure;
 export interface DisplayPatch {
   name?: string | null;
   screen?: string | null;
+  // null goes back to the show's scale.
+  scale?: number | null;
 }
 
 const NO_SHOW: Failure = { ok: false, status: 503, message: "The server has no active show; check its log" };
@@ -447,6 +450,18 @@ export const createShowService = ({
         return { ok: true, value: next };
       }),
 
+    // How big every display draws its screen, unless the display has a scale of its own.
+    setScale: (scale: number): Promise<CommandResult<number>> =>
+      serialize(async () => {
+        if (!loaded) return NO_SHOW;
+        const parsed = UiScaleSchema.safeParse(scale);
+        if (!parsed.success) return { ok: false, status: 422, message: "Scale must be between 0.25 and 2" };
+        loaded.show = { ...loaded.show, scale: parsed.data };
+        await saveShow(dataDir, loaded.show);
+        emit({ type: "show" });
+        return { ok: true, value: parsed.data };
+      }),
+
     // Replaces the show's signal definitions. Values of signals that are gone, or no longer manual, are dropped.
     defineSignals: (input: unknown): Promise<CommandResult<SignalDef[]>> =>
       serialize(async () => {
@@ -531,6 +546,10 @@ export const createShowService = ({
           else next.screen = patch.screen;
           // A new assignment wins over wherever the display's own controls took it.
           clearNavigation(displayId);
+        }
+        if (patch.scale !== undefined) {
+          if (patch.scale === null) delete next.scale;
+          else next.scale = patch.scale;
         }
 
         loaded.show = {

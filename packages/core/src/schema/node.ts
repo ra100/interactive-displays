@@ -22,6 +22,8 @@ const nodeBase = {
   locked: z.boolean().optional(),
   hidden: z.boolean().optional(),
   when: WhenSchema.optional(),
+  // Draws this part and everything in it larger or smaller than the rest of the screen.
+  scale: z.number().min(0.25).max(4).optional(),
 };
 
 // Grid tracks: fractions of the free space ("2fr") or "auto".

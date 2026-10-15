@@ -160,6 +160,7 @@ export const Preview = ({
           effect={effect}
           states={overview.show.states}
           live={live}
+          scale={overview.show.scale}
           embedded
         />
         {box ? (

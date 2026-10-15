@@ -210,6 +210,18 @@ describe("drafts and publishing", () => {
     expect(await service.setTheme({ id: "lcars" })).toEqual({ ok: true, value: { id: "lcars" } });
   });
 
+  it("scales the show, and a display can keep a scale of its own", async () => {
+    const service = await open();
+    const events = record(service);
+    expect(await service.setScale(0.5)).toEqual({ ok: true, value: 0.5 });
+    expect(events).toEqual([{ type: "show" }]);
+    expect((await readShowFile("show.json")).scale).toBe(0.5);
+    expect(await service.setScale(5)).toMatchObject({ ok: false, status: 422 });
+    expect(await service.updateDisplay("test", { scale: 0.8 })).toMatchObject({ ok: true, value: { scale: 0.8 } });
+    expect(await service.updateDisplay("test", { scale: null })).toMatchObject({ ok: true, value: { id: "test" } });
+    expect(service.loaded()?.show.displays.find((display) => display.id === "test")?.scale).toBeUndefined();
+  });
+
   it("refuses an unknown theme or variant", async () => {
     const service = await open();
     expect(await service.setTheme({ id: "holodeck" })).toMatchObject({ ok: false, status: 422, message: expect.stringContaining("try base, lcars, hud, crt") });

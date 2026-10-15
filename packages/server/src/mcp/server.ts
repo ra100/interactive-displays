@@ -10,6 +10,7 @@ import {
   type Screen,
   sectionsOf,
   SignalIdSchema,
+  UiScaleSchema,
   VideoCommandSchema,
 } from "@interactive-displays/core";
 import { getThemeManifest } from "@interactive-displays/themes/manifest";
@@ -360,6 +361,18 @@ export const createMcpServer = ({ service, generation, connected }: McpDeps): Mc
       annotations: LIVE,
     },
     ({ id, variant }) => gated("aiLiveControl", async () => result(await service.setTheme({ id, variant }), (theme) => ({ theme }))),
+  );
+
+  server.registerTool(
+    "set_scale",
+    {
+      title: "Resize everything on the displays",
+      description:
+        'Sets how big every display draws its screen: 1 sizes parts to the display, 0.5 halves them so more fits on a large 4K panel (0.25–2). A display with its own scale keeps it. Needs "AI may run the show".',
+      inputSchema: { scale: UiScaleSchema },
+      annotations: LIVE,
+    },
+    ({ scale }) => gated("aiLiveControl", async () => result(await service.setScale(scale), (current) => ({ scale: current }))),
   );
 
   server.registerTool(

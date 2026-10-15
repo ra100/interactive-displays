@@ -31,7 +31,7 @@ describe("server", () => {
       "blackout",
     ]);
     expect(snapshot.state).toBe("normal");
-    expect(snapshot.display).toEqual({ id: "bridge-1" });
+    expect(snapshot.display).toEqual({ id: "bridge-1", scale: 0.7 });
     expect(snapshot.screen?.id).toBe("bridge");
   });
 
@@ -39,7 +39,7 @@ describe("server", () => {
     await server.start();
     const { snapshot } = await server.display("engineering-1");
 
-    expect(snapshot.display).toEqual({ id: "engineering-1", name: "Engineering 1" });
+    expect(snapshot.display).toEqual({ id: "engineering-1", name: "Engineering 1", scale: 0.7 });
     expect(snapshot.screen?.id).toBe("engineering");
   });
 

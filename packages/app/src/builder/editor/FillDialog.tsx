@@ -18,6 +18,7 @@ const SUGGESTIONS = ["Fill the placeholders", "Make it look busier", "Add a red 
 export const FillDialog = ({
   screenId,
   theme,
+  scale,
   states,
   settled,
   onApply,
@@ -25,6 +26,7 @@ export const FillDialog = ({
 }: {
   screenId: string;
   theme: Show["theme"];
+  scale?: number;
   states: Show["states"];
   // The draft once pending edits are saved, so the proposal starts from what the server has.
   settled: () => Promise<Screen | undefined>;
@@ -62,7 +64,7 @@ export const FillDialog = ({
     <Dialog title="Fill with AI" onClose={onClose} wide>
       {proposal ? (
         <div className="fill">
-          <ScreenThumbnail screen={proposal.screen} theme={theme} states={states} />
+          <ScreenThumbnail screen={proposal.screen} theme={theme} scale={scale} states={states} />
           <p className="fill__summary">{proposal.summary}</p>
           <p className="tool-field__hint">
             {proposal.ops.length === 0
