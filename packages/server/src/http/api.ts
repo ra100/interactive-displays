@@ -28,7 +28,16 @@ const PublishBody = z.object({ revision: z.number().int().min(0).optional() }).s
 const RevertBody = z.object({ baseRevision: z.number().int().min(0), revision: z.number().int().min(0) }).strict();
 const DuplicateBody = z.object({ id: IdSchema.optional(), name: z.string().min(1).max(120).optional() }).strict();
 const StateBody = z.object({ state: IdSchema });
-const SettingsBody = ShowSettingsSchema.partial().strict();
+// Without the schema's defaults: Zod fills defaults even in a partial schema, which would reset every setting
+// a request does not name.
+const SettingsBody = z
+  .object({
+    liveEdit: ShowSettingsSchema.shape.liveEdit.unwrap(),
+    displayGlobalActions: ShowSettingsSchema.shape.displayGlobalActions.unwrap(),
+    sounds: ShowSettingsSchema.shape.sounds.unwrap(),
+  })
+  .partial()
+  .strict();
 const SignalsBody = z.object({ signals: z.unknown() }).strict();
 const SignalParams = z.object({ id: SignalIdSchema });
 const SignalValueBody = z
