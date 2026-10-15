@@ -214,3 +214,99 @@ test.describe("showcase phase 2", () => {
     await display?.close();
   });
 });
+
+test.describe("showcase phase 3", () => {
+  test.skip(phase !== "phase-3", "set SHOWCASE=phase-3 to capture screenshots");
+
+  test.beforeEach(async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+  });
+
+  test.afterEach(async ({ request }) => {
+    await setState(request, "normal");
+    for (const [id, value] of [
+      ["shields", 0],
+      ["hull", 100],
+    ] as const) {
+      await request.put(`/api/signals/${id}/value`, { data: { value } });
+    }
+    await request.put("/api/displays/test", { data: { screen: null } });
+  });
+
+  test("live screens", async ({ page }) => {
+    await shoot(page, "bridge-live", "/d/test", /bridge operations/i);
+    await shoot(page, "engineering-live", "/d/engineering-1", /main engineering/i);
+    await shoot(page, "tactical-live", "/d/tactical-1", /long range sensors/i);
+    await shoot(page, "engineering-base-theme", "/d/engineering-1?theme=base", /main engineering/i);
+
+    await page.goto("/d/viewscreen-1");
+    await expect.poll(() => page.locator("video").evaluate((element: HTMLVideoElement) => element.currentTime)).toBeGreaterThan(2);
+    await page.screenshot({ path: out("viewscreen-video") });
+  });
+
+  test("controls on the displays", async ({ page }) => {
+    await page.goto("/d/test");
+    await page.getByRole("button", { name: /red alert/i }).click();
+    await expect(page.getByRole("button", { name: /stand down/i })).toBeVisible();
+    await settle(page);
+    await page.screenshot({ path: out("bridge-red-alert-from-button") });
+    await page.getByRole("button", { name: /stand down/i }).click();
+
+    await page.getByRole("button", { name: /engineering/i }).click();
+    await expect(page.getByRole("heading", { name: /main engineering/i })).toBeVisible();
+    await page.getByRole("button", { name: /core eject/i }).click();
+    await expect(page.locator(".screen")).toHaveAttribute("data-state", "damaged");
+    await settle(page);
+    await page.screenshot({ path: out("engineering-core-eject") });
+
+    await page.getByRole("button", { name: /damage control/i }).click();
+    await expect(page.getByRole("button", { name: /back/i })).toBeVisible();
+    await settle(page);
+    await page.screenshot({ path: out("schematic-with-back") });
+  });
+
+  test("operator live values", async ({ browser, page, request }) => {
+    const displays = await openDisplays(browser, ["test", "engineering-1", "tactical-1", "viewscreen-1"]);
+    await request.put("/api/signals/shields/value", { data: { value: 65 } });
+    await page.setViewportSize({ width: 412, height: 915 });
+    await page.goto("/operator");
+    await expect(page.getByRole("slider", { name: "Shield strength" })).toHaveValue("65");
+    await shootTall(page, "operator-phone-live");
+
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await settle(page);
+    await page.screenshot({ path: out("operator-tablet-live") });
+    await Promise.all(displays.map((display) => display.close()));
+  });
+
+  test("editor live values and actions", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/builder/tactical");
+    await page.getByRole("tree", { name: "Outline" }).getByRole("treeitem", { name: /Gauge · Strength/ }).click();
+    await expect(page.getByRole("region", { name: "Live value" })).toBeVisible();
+    await page.getByRole("region", { name: "Live value" }).scrollIntoViewIfNeeded();
+    await settle(page);
+    await page.screenshot({ path: out("editor-live-value") });
+
+    await page.getByRole("tree", { name: "Outline" }).getByRole("treeitem", { name: /Button · Raise shields/ }).click();
+    await page.getByRole("region", { name: "When used" }).scrollIntoViewIfNeeded();
+    await settle(page);
+    await page.screenshot({ path: out("editor-actions") });
+
+    await page.goto("/builder");
+    await page.getByRole("button", { name: "Signals" }).click();
+    await page.getByRole("dialog").getByRole("option", { name: /Warp core output/ }).click();
+    await settle(page);
+    await page.screenshot({ path: out("signals-dialog") });
+  });
+
+  test("gallery", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto("/gallery");
+    await expect(page.locator(".frame").first()).toBeVisible();
+    await page.evaluate(() => document.fonts.ready);
+    const height = await page.locator(".gallery").evaluate((element) => element.scrollHeight);
+    await page.setViewportSize({ width: 1280, height });
+    await page.screenshot({ path: out("gallery") });
+  });
+});
