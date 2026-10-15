@@ -214,6 +214,9 @@ export const ContentPackSchema = z
     id: IdSchema,
     name: z.string().min(1).max(60),
     description: z.string().max(200).default(""),
+    // The theme the pack was written for. The builder lists it first for shows in that theme; any pack still
+    // generates in any theme.
+    theme: IdSchema.optional(),
     vocab: VocabSchema,
     blocks: z.array(BlockSchema).min(1).max(60),
     recipes: z.array(RecipeSchema).min(1).max(60),
