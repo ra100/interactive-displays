@@ -123,6 +123,43 @@ describe("screen library", () => {
     ]);
   });
 
+  it("generates a section screen from three takes and opens it", async () => {
+    await open();
+    await userEvent.click(screen.getByRole("button", { name: "Generate" }));
+    const dialog = within(screen.getByRole("dialog", { name: "Generate a screen" }));
+    await userEvent.selectOptions(dialog.getByLabelText("Section"), "Tactical");
+    await userEvent.clear(dialog.getByLabelText("Seed"));
+    await userEvent.type(dialog.getByLabelText("Seed"), "1234");
+    expect(dialog.getAllByRole("radio", { name: /Take/ })).toHaveLength(3);
+    await userEvent.click(dialog.getByRole("radio", { name: /Take 2/ }));
+    await userEvent.click(dialog.getByRole("button", { name: "Create and edit" }));
+
+    expect(await screen.findByText("Editing")).toBeInTheDocument();
+    expect(writes()).toEqual([
+      expect.objectContaining({
+        method: "POST",
+        path: "/api/screens",
+        body: expect.objectContaining({
+          id: "tactical",
+          section: "tactical",
+          generator: { recipe: "trek/tactical", seed: 1235, density: "normal" },
+        }),
+      }),
+    ]);
+  });
+
+  it("generates a linked suite of screens", async () => {
+    await open();
+    await userEvent.click(screen.getByRole("button", { name: "Generate" }));
+    const dialog = within(screen.getByRole("dialog", { name: "Generate a screen" }));
+    await userEvent.selectOptions(dialog.getByLabelText("Section"), "Medical");
+    await userEvent.click(dialog.getByRole("checkbox", { name: /screen for each system/ }));
+    await userEvent.click(dialog.getByRole("button", { name: "Create 4 screens" }));
+
+    expect(await screen.findByText("Editing")).toBeInTheDocument();
+    expect(writes().map((call) => (call.body as { id: string }).id)).toEqual(["medical", "medical-vitals", "medical-biobed", "medical-quarantine"]);
+  });
+
   it("will not reuse an existing screen id", async () => {
     await open();
     await userEvent.click(screen.getByRole("button", { name: "New screen" }));

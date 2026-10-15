@@ -258,3 +258,34 @@
     grid-template-columns: 220px 1fr;
   }
 }
+
+/* Generate dialog: the fields of the new screen dialog, then three takes to pick from. */
+.generate__seed {
+  display: flex;
+  gap: 6px;
+}
+
+.generate__seed .tool-input {
+  min-width: 0;
+  flex: 1;
+}
+
+.generate__variants {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.generate__variants legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.generate__state {
+  width: auto;
+}

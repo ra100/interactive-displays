@@ -12,6 +12,7 @@ import {
   type Node,
   type NodeLocation,
   type NormRect,
+  randomSeed,
   resolveTokens,
   SpaceSchema,
   type SlotName,
@@ -34,6 +35,7 @@ import {
 } from "./editing.ts";
 import { useEditor } from "./EditorContext.ts";
 import { FieldInput } from "./FieldInput.tsx";
+import { canReroll, generationBase, reroll } from "../generation.ts";
 import { NumberBox, Section } from "./inspectorParts.tsx";
 import { ActionsEditor, LiveValues } from "./LiveSection.tsx";
 
@@ -320,6 +322,19 @@ const NodeInspector = ({ location }: { location: NodeLocation }) => {
           >
             Duplicate
           </button>
+          {canReroll(screen, node.id) ? (
+            <button
+              type="button"
+              className="tool-button tool-button--small"
+              title="Swap this panel for a fresh one in the same place"
+              onClick={() => {
+                const ops = reroll(screen, node.id, generationBase(overview.show, overview.screens.map((each) => each.id)), randomSeed());
+                if (ops) apply(ops);
+              }}
+            >
+              Reroll
+            </button>
+          ) : null}
           <button
             type="button"
             className="tool-button tool-button--small tool-button--quiet"

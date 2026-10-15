@@ -306,6 +306,24 @@ describe("live values and actions", () => {
     await waitFor(() => expect(lastOps()).toEqual([{ op: "set", id: "shields", bind: null }]));
   });
 
+  it("keeps how a generated value moves in an alert when its range changes", async () => {
+    const plain = liveBridge();
+    const bind = { value: { ambient: { kind: "walk", min: 60, max: 80, volatility: 0.3 }, byState: { "red-alert": { min: 90, max: 99 } } } };
+    draft = ScreenSchema.parse(JSON.parse(JSON.stringify(plain).replace('"props":{"label":"SHIELDS","value":50}', `"props":{"label":"SHIELDS","value":50},"bind":${JSON.stringify(bind)}`)));
+    await open(withSignals);
+    await selectInOutline(/Gauge · SHIELDS/);
+    const live = section("Live value");
+    expect(live.getByText("Moves differently in Red alert.")).toBeInTheDocument();
+    const lowest = live.getByLabelText("Lowest");
+    await userEvent.clear(lowest);
+    await userEvent.type(lowest, "50{Enter}");
+    await waitFor(() =>
+      expect(lastOps()).toEqual([
+        { op: "set", id: "shields", bind: { value: { ambient: { kind: "walk", min: 50, max: 80, volatility: 0.3 }, byState: { "red-alert": { min: 90, max: 99 } } } } },
+      ]),
+    );
+  });
+
   it("offers values that move by themselves only for props that take any number", async () => {
     draft = liveBridge();
     await open(withSignals);
@@ -402,5 +420,30 @@ describe("live values and actions", () => {
     await userEvent.type(items, "IMPULSE{Enter}WARP");
     await userEvent.tab();
     await waitFor(() => expect(lastOps()).toEqual([{ op: "update", id: "modes", props: { items: ["IMPULSE", "WARP"] } }]));
+  });
+});
+
+describe("generating", () => {
+  it("regenerates a section screen around its locked parts, and Undo brings it back", async () => {
+    const original = { ...bridge(), section: "helm" };
+    const root = original.root.type === "container" ? original.root : undefined;
+    if (!root) throw new Error("no root");
+    draft = { ...original, root: { ...root, children: root.children.map((child) => (child.node.id === "title" ? { ...child, node: { ...child.node, locked: true } } : child)) } };
+    await open();
+    await userEvent.click(screen.getByRole("button", { name: "Regenerate" }));
+
+    await waitFor(() => expect(draft.generator?.recipe).toBe("trek/helm"));
+    const title = draft.root.type === "container" ? draft.root.children.find((child) => child.node.id === "title") : undefined;
+    expect(title?.node).toMatchObject({ locked: true, props: { text: "BRIDGE" } });
+    expect(JSON.stringify(draft.root)).not.toContain("All quiet.");
+
+    await userEvent.click(screen.getByRole("button", { name: "Undo" }));
+    await waitFor(() => expect(draft.generator).toBeUndefined());
+    expect(JSON.stringify(draft.root)).toContain("All quiet.");
+  });
+
+  it("offers Regenerate only for screens of a known section", async () => {
+    await open();
+    expect(screen.queryByRole("button", { name: "Regenerate" })).not.toBeInTheDocument();
   });
 });

@@ -1,4 +1,4 @@
-import type { ScreenSummary, ShowOverview } from "@interactive-displays/core";
+import type { Screen, ScreenSummary, ShowOverview } from "@interactive-displays/core";
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../../tools/api.ts";
@@ -7,7 +7,9 @@ import { ScreenThumbnail } from "../../tools/ScreenThumbnail.tsx";
 import { ToolGate, type Tools } from "../../tools/ToolGate.tsx";
 import { useScreenDocs } from "../../tools/useScreenDocs.ts";
 import { useToast } from "../../tools/useToast.tsx";
+import { generationBase } from "../generation.ts";
 import { publishStatus } from "../publishStatus.ts";
+import { GenerateDialog } from "./GenerateDialog.tsx";
 import { NewScreenDialog } from "./NewScreenDialog.tsx";
 import { SignalsDialog } from "./SignalsDialog.tsx";
 import { buildScreen, type NewScreen } from "./templates.ts";
@@ -32,6 +34,7 @@ const Library = ({ overview, connection }: Tools) => {
   const toast = useToast();
   const [query, setQuery] = useState("");
   const [creating, setCreating] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [editingSignals, setEditingSignals] = useState(false);
   const [deleting, setDeleting] = useState<ScreenSummary | undefined>(undefined);
   const docFor = useScreenDocs(overview.screens.map((screen) => ({ id: screen.id, revision: screen.revision, source: "draft" })));
@@ -43,6 +46,21 @@ const Library = ({ overview, connection }: Tools) => {
     const result = await api("POST", "/api/screens", buildScreen(input));
     if (!result.ok) return result.issues?.[0]?.message ?? result.error;
     navigate(`/builder/${input.id}`);
+    return undefined;
+  };
+
+  const screenIds = useMemo(() => overview.screens.map((screen) => screen.id), [overview.screens]);
+  const base = useMemo(() => generationBase(overview.show, screenIds), [overview.show, screenIds]);
+
+  // Screens of a suite are created in order, so the overview opens in the editor once they all exist.
+  const createGenerated = async (screens: Screen[]) => {
+    for (const screen of screens) {
+      const result = await api("POST", "/api/screens", screen);
+      if (!result.ok) return `${screen.name}: ${result.issues?.[0]?.message ?? result.error}`;
+    }
+    const [first] = screens;
+    if (screens.length > 1) toast.show(`Created ${screens.length} linked screens`);
+    if (first) navigate(`/builder/${first.id}`);
     return undefined;
   };
 
@@ -70,6 +88,9 @@ const Library = ({ overview, connection }: Tools) => {
         </Link>
         <button type="button" className="tool-button" onClick={() => setEditingSignals(true)}>
           Signals
+        </button>
+        <button type="button" className="tool-button" onClick={() => setGenerating(true)}>
+          Generate
         </button>
         <button type="button" className="tool-button tool-button--primary" onClick={() => setCreating(true)}>
           New screen
@@ -157,6 +178,16 @@ const Library = ({ overview, connection }: Tools) => {
           sections={sections}
           onCreate={create}
           onClose={() => setCreating(false)}
+        />
+      ) : null}
+      {generating ? (
+        <GenerateDialog
+          theme={overview.show.theme}
+          states={overview.show.states}
+          base={base}
+          takenIds={new Set(screenIds)}
+          onCreate={createGenerated}
+          onClose={() => setGenerating(false)}
         />
       ) : null}
       {editingSignals ? (
