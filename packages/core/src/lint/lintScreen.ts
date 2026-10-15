@@ -2,7 +2,8 @@ import type { DecorCatalog } from "../catalog/defineDecor.ts";
 import type { ContainerNode, Node, WidgetNode } from "../schema/node.ts";
 import type { Screen } from "../schema/screen.ts";
 import type { Show } from "../schema/show.ts";
-import { walkNodes } from "../tree/tree.ts";
+import { isSettable } from "../signals/sample.ts";
+import { walkNodes, widgetIds } from "../tree/tree.ts";
 
 // Lint finds things that are valid but probably wrong or ugly. Validation (validateScreen) finds things
 // that cannot render. Both run on every change, whoever makes it: editor, generator or AI.
@@ -117,7 +118,7 @@ const lintLiveParts = (node: WidgetNode, videos: ReadonlySet<string>, context: L
     if (action.do === "setSignal" && show) {
       const signal = show.signals.find((each) => each.id === action.signal);
       if (!signal) warn("unknown-signal", `The show has no signal "${action.signal}"`);
-      else if (signal.scope !== "shared" || signal.source.kind !== "manual") {
+      else if (!isSettable(signal)) {
         warn("signal-not-settable", `"${action.signal}" is not a shared manual signal, so controls cannot set it`);
       }
     }
@@ -127,10 +128,7 @@ const lintLiveParts = (node: WidgetNode, videos: ReadonlySet<string>, context: L
 export const lintScreen = (screen: Screen, context: LintContext = {}): LintIssue[] => {
   const issues: LintIssue[] = [];
   const states = context.show ? new Set(context.show.states.map((state) => state.id)) : undefined;
-  const videos = new Set<string>();
-  walkNodes(screen.root, (node) => {
-    if (node.type === "widget" && node.kind === "video") videos.add(node.id);
-  });
+  const videos = new Set(widgetIds(screen.root, "video"));
 
   walkNodes(screen.root, (node) => {
     if (node.type === "container") lintContainer(node, issues);
