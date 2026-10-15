@@ -42,6 +42,9 @@ import { usePacks } from "../usePacks.ts";
 import { NumberBox, Section } from "./inspectorParts.tsx";
 import { ActionsEditor, LiveValues } from "./LiveSection.tsx";
 
+// Sizes a part can take relative to the rest of the screen.
+const NODE_SCALES = [0.5, 0.6, 0.75, 0.9, 1, 1.25, 1.5, 2, 3];
+
 const fieldsCache = new Map<string, Field[]>();
 
 const fieldsFor = (node: Node): Field[] => {
@@ -393,6 +396,29 @@ const NodeInspector = ({ location }: { location: NodeLocation }) => {
 
       {node.type === "container" ? <LayoutEditor container={node} /> : null}
       {parent && entry ? <Placement location={location} /> : null}
+
+      <Section title="Size">
+        <label className="tool-field">
+          <span className="tool-label">Size</span>
+          <select
+            className="tool-select"
+            value={String(node.scale ?? 1)}
+            onChange={(event) => {
+              const scale = Number(event.target.value);
+              apply([{ op: "set", id: node.id, scale: scale === 1 ? null : scale }]);
+            }}
+          >
+            {(NODE_SCALES.some((step) => step === (node.scale ?? 1)) ? NODE_SCALES : [...NODE_SCALES, node.scale ?? 1].sort((a, b) => a - b)).map(
+              (step) => (
+                <option key={step} value={String(step)}>
+                  {step === 1 ? "As the screen (100%)" : `${Math.round(step * 100)}%`}
+                </option>
+              ),
+            )}
+          </select>
+          <span className="tool-field__hint">Draws this part and everything in it larger or smaller.</span>
+        </label>
+      </Section>
 
       <Section title="Visibility">
         {overrideState ? (

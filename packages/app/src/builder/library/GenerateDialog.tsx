@@ -42,6 +42,7 @@ const archetypeOf = (screen: Screen) =>
 // Dice rolls new ones; "a suite" also makes one screen per system, linked by their nav buttons.
 export const GenerateDialog = ({
   theme,
+  scale,
   states,
   base,
   sections,
@@ -50,6 +51,7 @@ export const GenerateDialog = ({
   onClose,
 }: {
   theme: Show["theme"];
+  scale?: number;
   states: Show["states"];
   base: GenerationBase;
   sections: readonly Section[];
@@ -59,7 +61,8 @@ export const GenerateDialog = ({
 }) => {
   const groups = useMemo(() => packGroups(sections, theme.id), [sections, theme.id]);
   const [key, setKey] = useState(groups[0]?.sections[0]?.key ?? "");
-  const [density, setDensity] = useState<Density>("normal");
+  // Large panels drawn small have room for more parts, so they start dense.
+  const [density, setDensity] = useState<Density>(scale !== undefined && scale < 0.8 ? "dense" : "normal");
   const [aspect, setAspect] = useState<Profile["aspect"]>("16:9");
   const [seed, setSeed] = useState(randomSeed);
   const [chosen, setChosen] = useState(0);
@@ -200,7 +203,7 @@ export const GenerateDialog = ({
           {variants.map((screen, index) => (
             <label key={`${screen.generator?.seed}-${index}`} className="template-card" data-selected={chosen === index}>
               <input type="radio" name="variant" value={index} checked={chosen === index} onChange={() => setChosen(index)} />
-              <ScreenThumbnail screen={screen} theme={theme} state={previewState} effect={effect} states={states} />
+              <ScreenThumbnail screen={screen} theme={theme} scale={scale} state={previewState} effect={effect} states={states} />
               <span className="template-card__label">Take {index + 1}</span>
               <span className="template-card__description">
                 {archetypeOf(screen)} · seed {screen.generator?.seed}

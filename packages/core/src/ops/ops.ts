@@ -38,6 +38,7 @@ export const OpSchema = z.discriminatedUnion("op", [
     locked: z.boolean().nullable().optional(),
     hidden: z.boolean().nullable().optional(),
     when: WhenSchema.nullable().optional(),
+    scale: z.number().min(0.25).max(4).nullable().optional(),
     // Widgets only: live values and what a control does.
     bind: BindingsSchema.nullable().optional(),
     actions: ActionsSchema.nullable().optional(),

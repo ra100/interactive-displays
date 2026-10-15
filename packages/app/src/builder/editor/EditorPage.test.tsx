@@ -182,6 +182,16 @@ describe("screen editor", () => {
     await waitFor(() => expect(opsSent()[0]?.ops).toEqual([{ op: "move", id: "helm", parent: "root", index: 2 }, { op: "place", id: "helm", slot: "status" }]));
   });
 
+  it("draws one part smaller than the rest of the screen", async () => {
+    await open();
+    await selectInOutline(/Button · HELM/);
+    await userEvent.selectOptions(inspector().getByRole("combobox", { name: /^Size/ }), "60%");
+    await waitFor(() => expect(opsSent()[0]?.ops).toEqual([{ op: "set", id: "helm", scale: 0.6 }]));
+    await waitFor(() =>
+      expect(within(preview()).getByText("HELM").closest(".node-scale")).toHaveStyle({ "--u": "calc(var(--u-screen) * 0.6)" }),
+    );
+  });
+
   it("edits a prop for one show state only", async () => {
     await open();
     await userEvent.selectOptions(screen.getByLabelText("State"), "red-alert");
