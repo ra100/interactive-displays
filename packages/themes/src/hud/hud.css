@@ -1,0 +1,750 @@
+/*
+ * Holo HUD: thin lines and glassy panels over a faint grid. Lines are hairlines that scale a little with the
+ * display; sizes are in --u or the widget box (cq*); colours come from tone variables only.
+ */
+
+/* ── The visor ──────────────────────────────────────────────────────────── */
+
+.screen[data-theme="hud"] {
+  --hud-line: max(1px, calc(0.18 * var(--u)));
+  --hud-glow: calc(0.9 * var(--u));
+
+  position: relative;
+  background:
+    radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--tone-primary) 10%, transparent), transparent 70%),
+    repeating-linear-gradient(to right, color-mix(in srgb, var(--tone-neutral) 9%, transparent) 0 1px, transparent 1px calc(5 * var(--u))),
+    repeating-linear-gradient(to bottom, color-mix(in srgb, var(--tone-neutral) 9%, transparent) 0 1px, transparent 1px calc(5 * var(--u))),
+    var(--theme-bg);
+  letter-spacing: 0.04em;
+}
+
+/* A vignette at the visor's edges; it never catches a press. */
+.screen[data-theme="hud"]::after {
+  content: "";
+  position: absolute;
+  z-index: 10;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 62%, color-mix(in srgb, var(--theme-bg) 75%, transparent) 100%);
+  pointer-events: none;
+}
+
+@keyframes hud-pulse {
+  50% {
+    box-shadow:
+      0 0 calc(2.5 * var(--hud-glow)) color-mix(in srgb, var(--tone-danger) 55%, transparent),
+      inset 0 0 calc(3 * var(--hud-glow)) color-mix(in srgb, var(--tone-danger) 30%, transparent);
+  }
+}
+
+.screen[data-theme="hud"][data-effect="alert"] .hud-frame__panel {
+  animation: hud-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes hud-warn {
+  50% {
+    border-color: var(--tone-warning);
+  }
+}
+
+.screen[data-theme="hud"][data-effect="warning"] .hud-frame__panel {
+  animation: hud-warn 1.8s ease-in-out infinite;
+}
+
+/* Damaged: the projection glitches sideways and loses colour for a moment. */
+@keyframes hud-glitch {
+  0%,
+  90%,
+  100% {
+    transform: none;
+    filter: none;
+  }
+  91% {
+    transform: translateX(-1.2%);
+    filter: hue-rotate(40deg) saturate(2);
+  }
+  93% {
+    transform: translateX(0.8%);
+    filter: grayscale(1) brightness(1.4);
+  }
+  95% {
+    transform: none;
+    opacity: 0.6;
+  }
+}
+
+.screen[data-theme="hud"][data-effect="damaged"] > * {
+  animation: hud-glitch 4.3s steps(1) infinite;
+}
+
+/* ── Frames ─────────────────────────────────────────────────────────────── */
+
+.hud-frame {
+  --hud-gap: calc(1.4 * var(--u));
+  --hud-head: calc(11 * var(--u));
+  --hud-foot: calc(5.5 * var(--u));
+
+  display: grid;
+  gap: var(--hud-gap);
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: calc(1.2 * var(--u));
+}
+
+.hud-frame--sidebar {
+  grid-template:
+    "header header" var(--hud-head)
+    "nav main" minmax(0, 1fr)
+    "status status" var(--hud-foot) / minmax(0, 22%) minmax(0, 1fr);
+}
+
+.hud-frame--header-main {
+  grid-template:
+    "header" var(--hud-head)
+    "toolbar" max(calc(var(--touch) + 3 * var(--u)), calc(10 * var(--u)))
+    "main" minmax(0, 1fr)
+    "status" var(--hud-foot) / minmax(0, 1fr);
+}
+
+.hud-frame--dashboard {
+  grid-template:
+    "header header" var(--hud-head)
+    "main aside" minmax(0, 1fr)
+    "status status" var(--hud-foot) / minmax(0, 1fr) minmax(0, 30%);
+}
+
+.hud-frame__header {
+  position: relative;
+  display: flex;
+  grid-area: header;
+  min-width: 0;
+  min-height: 0;
+  padding-bottom: calc(1.2 * var(--u));
+}
+
+.hud-frame__header > *,
+.hud-frame__panel > *,
+.hud-frame__status-text > * {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* A hairline under the header with a brighter run on its left and ticks on its right. */
+.hud-frame__rule {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  flex: none;
+  height: calc(1 * var(--u));
+  background:
+    linear-gradient(to right, var(--tone) 0 18%, transparent 18%) left bottom / 100% var(--hud-line) no-repeat,
+    linear-gradient(color-mix(in srgb, var(--tone) 40%, transparent), color-mix(in srgb, var(--tone) 40%, transparent)) left bottom / 100% var(--hud-line) no-repeat,
+    repeating-linear-gradient(to left, color-mix(in srgb, var(--tone) 70%, transparent) 0 var(--hud-line), transparent var(--hud-line) calc(1.2 * var(--u))) right bottom / 22% 100% no-repeat;
+  pointer-events: none;
+}
+
+.hud-frame__panel {
+  position: relative;
+  display: flex;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  padding: calc(1.6 * var(--u));
+  border: var(--hud-line) solid color-mix(in srgb, var(--tone) 35%, transparent);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--tone) 9%, transparent), color-mix(in srgb, var(--tone) 3%, transparent));
+  box-shadow: inset 0 0 calc(2 * var(--hud-glow)) color-mix(in srgb, var(--tone) 10%, transparent);
+  backdrop-filter: blur(calc(0.6 * var(--u)));
+}
+
+.hud-frame__panel[data-area="nav"] {
+  grid-area: nav;
+  flex-direction: column;
+}
+
+.hud-frame__panel[data-area="toolbar"] {
+  grid-area: toolbar;
+  padding: calc(0.8 * var(--u)) calc(1.6 * var(--u));
+}
+
+.hud-frame__panel[data-area="main"] {
+  grid-area: main;
+}
+
+.hud-frame__panel[data-area="aside"] {
+  grid-area: aside;
+}
+
+/* Bright L-shaped ticks on two opposite corners. */
+.hud-frame__tick {
+  position: absolute;
+  width: calc(3 * var(--u));
+  height: calc(3 * var(--u));
+  border: 0 solid var(--tone);
+  pointer-events: none;
+}
+
+.hud-frame__tick[data-corner="tl"] {
+  top: calc(-1 * var(--hud-line));
+  left: calc(-1 * var(--hud-line));
+  border-top-width: calc(2 * var(--hud-line));
+  border-left-width: calc(2 * var(--hud-line));
+}
+
+.hud-frame__tick[data-corner="br"] {
+  right: calc(-1 * var(--hud-line));
+  bottom: calc(-1 * var(--hud-line));
+  border-right-width: calc(2 * var(--hud-line));
+  border-bottom-width: calc(2 * var(--hud-line));
+}
+
+.hud-frame__status {
+  display: flex;
+  grid-area: status;
+  align-items: center;
+  gap: calc(1.4 * var(--u));
+  min-width: 0;
+  color: var(--tone);
+  font-family: var(--font-display);
+  font-size: calc(3.2 * var(--u));
+  text-transform: uppercase;
+}
+
+@keyframes hud-blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.hud-frame__pip {
+  flex: none;
+  width: calc(1.2 * var(--u));
+  height: calc(1.2 * var(--u));
+  background: var(--tone);
+  box-shadow: 0 0 var(--hud-glow) var(--tone);
+  transform: rotate(45deg);
+  animation: hud-blink 2s ease-in-out infinite;
+}
+
+.hud-frame__status-text {
+  display: flex;
+  flex: 0 1 auto;
+  min-width: 0;
+  height: 100%;
+}
+
+.hud-frame__scale {
+  flex: 1;
+  height: calc(1.2 * var(--u));
+  background: repeating-linear-gradient(to right, color-mix(in srgb, var(--tone) 55%, transparent) 0 var(--hud-line), transparent var(--hud-line) calc(1 * var(--u)));
+  mask-image: linear-gradient(to right, transparent, #000 30%);
+}
+
+/* ── Text ───────────────────────────────────────────────────────────────── */
+
+.hud-title {
+  display: flex;
+  align-items: center;
+  gap: calc(2 * var(--u));
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  color: var(--tone);
+  font-family: var(--font-display);
+  text-transform: uppercase;
+}
+
+.hud-title__text {
+  flex: 1;
+  margin: 0;
+  overflow: hidden;
+  font-weight: 600;
+  line-height: 1;
+  text-overflow: ellipsis;
+  text-shadow: 0 0 var(--hud-glow) color-mix(in srgb, currentColor 50%, transparent);
+  white-space: nowrap;
+}
+
+.hud-title--header .hud-title__text {
+  font-size: min(80cqh, 7cqw, calc(8.5 * var(--u)));
+  letter-spacing: 0.16em;
+}
+
+/* The code sits on a small angled tab. */
+.hud-title__code {
+  flex: none;
+  padding: calc(0.4 * var(--u)) calc(1.6 * var(--u));
+  background: color-mix(in srgb, var(--tone) 18%, transparent);
+  clip-path: polygon(calc(1 * var(--u)) 0, 100% 0, calc(100% - 1 * var(--u)) 100%, 0 100%);
+  font-family: "Share Tech Mono", var(--font-display);
+  font-size: min(40cqh, calc(3.2 * var(--u)));
+  letter-spacing: 0.12em;
+}
+
+.hud-title--section {
+  align-items: flex-end;
+  padding-bottom: calc(0.6 * var(--u));
+  background: linear-gradient(to right, var(--tone) 0 calc(6 * var(--u)), color-mix(in srgb, var(--tone) 30%, transparent) calc(6 * var(--u))) left bottom / 100% var(--hud-line) no-repeat;
+}
+
+.hud-title--section .hud-title__text {
+  font-size: min(65cqh, 8cqw, calc(5 * var(--u)));
+  letter-spacing: 0.14em;
+}
+
+.hud-title--section .hud-title__code {
+  font-size: min(35cqh, calc(2.6 * var(--u)));
+}
+
+.hud-text {
+  margin: 0;
+  overflow: hidden;
+  color: color-mix(in srgb, var(--tone) 70%, var(--theme-fg));
+  font-family: var(--font-body);
+  line-height: 1.3;
+}
+
+.hud-text[data-size="small"] {
+  font-size: calc(2.6 * var(--u));
+}
+
+.hud-text[data-size="medium"] {
+  font-size: calc(3.4 * var(--u));
+}
+
+.hud-text[data-size="large"] {
+  font-size: calc(4.8 * var(--u));
+}
+
+/* ── Buttons ────────────────────────────────────────────────────────────── */
+
+.hud-button {
+  --hud-cut: calc(1.6 * var(--u));
+
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-width: var(--touch);
+  min-height: var(--touch);
+  padding: 0 calc(2 * var(--u));
+  border: 0;
+  background:
+    linear-gradient(135deg, var(--tone) 0 calc(var(--hud-cut) * 0.72), transparent 0) top left / 100% 100% no-repeat,
+    color-mix(in srgb, var(--tone) 12%, transparent);
+  box-shadow: inset 0 0 0 var(--hud-line) color-mix(in srgb, var(--tone) 70%, transparent);
+  clip-path: polygon(var(--hud-cut) 0, 100% 0, 100% calc(100% - var(--hud-cut)), calc(100% - var(--hud-cut)) 100%, 0 100%, 0 var(--hud-cut));
+  color: var(--tone);
+  font-family: var(--font-display);
+  font-size: min(48cqh, 9cqw, calc(4.4 * var(--u)));
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  transition:
+    background-color 80ms,
+    color 80ms;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* In the nav: a flat tab with a bar on its left edge. */
+.hud-button[data-shape="tab"] {
+  justify-content: flex-start;
+  background:
+    linear-gradient(var(--tone), var(--tone)) left / calc(0.6 * var(--u)) 100% no-repeat,
+    linear-gradient(to right, color-mix(in srgb, var(--tone) 18%, transparent), transparent);
+  box-shadow: none;
+  clip-path: none;
+}
+
+.hud-button__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Pressing floods it with light, long enough to read on camera. */
+.hud-button:active,
+.hud-button[data-flash="true"] {
+  background: var(--tone);
+  color: var(--theme-bg);
+  filter: drop-shadow(0 0 var(--hud-glow) var(--tone));
+}
+
+.hud-button:focus-visible {
+  outline: var(--hud-line) dashed var(--theme-fg);
+  outline-offset: calc(0.4 * var(--u));
+}
+
+/* ── Data ───────────────────────────────────────────────────────────────── */
+
+.hud-readout {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--tone);
+  font-family: var(--font-display);
+}
+
+.hud-readout__label {
+  overflow: hidden;
+  color: color-mix(in srgb, var(--tone) 65%, var(--theme-fg));
+  font-size: min(26cqh, 9cqw, calc(2.8 * var(--u)));
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.hud-readout__value {
+  font-size: min(62cqh, 22cqw, calc(9 * var(--u)));
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  line-height: 1;
+  text-shadow: 0 0 var(--hud-glow) color-mix(in srgb, currentColor 45%, transparent);
+  white-space: nowrap;
+}
+
+.hud-readout__unit,
+.hud-gauge__unit {
+  margin-left: 0.15em;
+  font-size: 0.42em;
+  letter-spacing: 0.1em;
+  opacity: 0.75;
+}
+
+.hud-gauge {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  color: var(--tone);
+  font-family: var(--font-display);
+}
+
+.hud-gauge__label {
+  overflow: hidden;
+  color: color-mix(in srgb, var(--tone) 65%, var(--theme-fg));
+  font-size: min(24cqh, 8cqw, calc(2.8 * var(--u)));
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.hud-gauge__value {
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-shadow: 0 0 var(--hud-glow) color-mix(in srgb, currentColor 45%, transparent);
+  white-space: nowrap;
+}
+
+/* Line gauge: label and number above a hairline track with ticks. */
+.hud-gauge--line {
+  display: grid;
+  grid-template: "label value" auto "track track" auto / minmax(0, 1fr) auto;
+  align-content: center;
+  align-items: end;
+  gap: calc(0.8 * var(--u)) calc(1.5 * var(--u));
+}
+
+.hud-gauge--line .hud-gauge__value {
+  font-size: min(40cqh, 14cqw, calc(6 * var(--u)));
+}
+
+.hud-gauge__track-line {
+  position: relative;
+  display: block;
+  grid-area: track;
+  height: calc(1.6 * var(--u));
+  background:
+    repeating-linear-gradient(to right, color-mix(in srgb, var(--tone) 45%, transparent) 0 var(--hud-line), transparent var(--hud-line) 10%) bottom / 100% 50% no-repeat,
+    linear-gradient(color-mix(in srgb, var(--tone) 30%, transparent), color-mix(in srgb, var(--tone) 30%, transparent)) center / 100% var(--hud-line) no-repeat;
+}
+
+.hud-gauge__fill-line {
+  position: absolute;
+  top: calc(50% - 0.4 * var(--u));
+  left: 0;
+  height: calc(0.8 * var(--u));
+  background: var(--tone);
+  box-shadow: 0 0 var(--hud-glow) var(--tone);
+}
+
+.hud-gauge--line[data-variant="segmented"] .hud-gauge__fill-line {
+  background: repeating-linear-gradient(to right, var(--tone) 0 calc(2 * var(--u)), transparent calc(2 * var(--u)) calc(2.6 * var(--u)));
+  box-shadow: none;
+}
+
+/* Ring gauge: a three-quarter ring with the number and label in its middle. */
+.hud-gauge--ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.hud-gauge__ring {
+  width: min(100cqw, 100cqh);
+  height: min(100cqw, 100cqh);
+  rotate: 135deg;
+  overflow: visible;
+}
+
+.hud-gauge__track,
+.hud-gauge__fill {
+  fill: none;
+  stroke-width: 3;
+}
+
+.hud-gauge__track {
+  stroke: color-mix(in srgb, var(--tone) 25%, transparent);
+}
+
+.hud-gauge__fill {
+  stroke: var(--tone);
+  filter: drop-shadow(0 0 1.5px var(--tone));
+}
+
+.hud-gauge__center {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 70%;
+}
+
+.hud-gauge--ring .hud-gauge__value {
+  font-size: min(22cqh, 22cqw, calc(8 * var(--u)));
+}
+
+.hud-gauge--ring .hud-gauge__label {
+  max-width: 100%;
+  font-size: min(9cqh, 9cqw, calc(2.6 * var(--u)));
+}
+
+.hud-status {
+  display: flex;
+  align-items: center;
+  gap: calc(1.4 * var(--u));
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  color: color-mix(in srgb, var(--tone) 60%, var(--theme-fg));
+  font-family: var(--font-display);
+  text-transform: uppercase;
+}
+
+.hud-status__diamond {
+  flex: none;
+  width: min(36cqh, calc(2.4 * var(--u)));
+  aspect-ratio: 1;
+  border: calc(2 * var(--hud-line)) solid var(--tone);
+  background: color-mix(in srgb, var(--tone) 55%, transparent);
+  box-shadow: 0 0 var(--hud-glow) var(--tone);
+  transform: rotate(45deg);
+}
+
+.hud-status[data-status="off"] .hud-status__diamond {
+  background: transparent;
+  box-shadow: none;
+  opacity: 0.6;
+}
+
+.hud-status[data-blink="true"] .hud-status__diamond {
+  animation: hud-blink 0.9s steps(1) infinite;
+}
+
+.hud-status__label {
+  overflow: hidden;
+  font-size: min(50cqh, 7cqw, calc(3.6 * var(--u)));
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Alert: the text between moving chevron stripes. */
+@keyframes hud-chevrons {
+  to {
+    background-position: calc(4 * var(--u)) 0;
+  }
+}
+
+.hud-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.hud-banner[data-active="true"] {
+  background: repeating-linear-gradient(-60deg, color-mix(in srgb, var(--tone) 28%, transparent) 0 calc(1 * var(--u)), transparent calc(1 * var(--u)) calc(2 * var(--u)));
+  box-shadow: inset 0 0 0 var(--hud-line) var(--tone);
+  animation: hud-chevrons 0.8s linear infinite;
+}
+
+.hud-banner__text {
+  padding: 0 calc(2 * var(--u));
+  overflow: hidden;
+  background: var(--theme-bg);
+  color: var(--tone);
+  font-family: var(--font-display);
+  font-size: min(65cqh, 8cqw, calc(7 * var(--u)));
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-overflow: ellipsis;
+  text-shadow: 0 0 var(--hud-glow) var(--tone);
+  white-space: nowrap;
+}
+
+/* Base renderers the theme does not replace keep square corners and the HUD's lighter weight. */
+.screen[data-theme="hud"] [class^="base-"] {
+  border-radius: 0;
+}
+
+/* ── Decor ──────────────────────────────────────────────────────────────── */
+
+.hud-reticle,
+.hud-arcs {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: var(--tone);
+}
+
+.hud-reticle svg,
+.hud-arcs svg {
+  width: min(100cqw, 100cqh);
+  height: min(100cqw, 100cqh);
+  overflow: visible;
+}
+
+@keyframes hud-spin {
+  to {
+    rotate: 1turn;
+  }
+}
+
+.hud-reticle__ring {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 0.6;
+  stroke-dasharray: 18 4 2 4;
+  opacity: 0.7;
+  transform-origin: 50px 50px;
+}
+
+.hud-reticle[data-spin="slow"] .hud-reticle__ring {
+  animation: hud-spin 40s linear infinite;
+}
+
+.hud-reticle[data-spin="fast"] .hud-reticle__ring {
+  animation: hud-spin 10s linear infinite;
+}
+
+.hud-reticle__ring[data-ring="1"],
+.hud-reticle__ring[data-ring="3"] {
+  animation-direction: reverse;
+}
+
+.hud-reticle__ticks line,
+.hud-reticle__cross {
+  stroke: currentColor;
+  stroke-width: 0.6;
+}
+
+.hud-reticle__cross {
+  opacity: 0.6;
+}
+
+.hud-corners {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hud-corners__corner {
+  position: absolute;
+  width: min(16cqw, 16cqh);
+  height: min(16cqw, 16cqh);
+  border: 0 solid var(--tone);
+  filter: drop-shadow(0 0 calc(0.5 * var(--u)) var(--tone));
+}
+
+.hud-corners__corner[data-corner="tl"] {
+  top: 0;
+  left: 0;
+  border-top-width: calc(2 * var(--hud-line));
+  border-left-width: calc(2 * var(--hud-line));
+}
+
+.hud-corners__corner[data-corner="tr"] {
+  top: 0;
+  right: 0;
+  border-top-width: calc(2 * var(--hud-line));
+  border-right-width: calc(2 * var(--hud-line));
+}
+
+.hud-corners__corner[data-corner="bl"] {
+  bottom: 0;
+  left: 0;
+  border-bottom-width: calc(2 * var(--hud-line));
+  border-left-width: calc(2 * var(--hud-line));
+}
+
+.hud-corners__corner[data-corner="br"] {
+  right: 0;
+  bottom: 0;
+  border-right-width: calc(2 * var(--hud-line));
+  border-bottom-width: calc(2 * var(--hud-line));
+}
+
+.hud-scale {
+  display: flex;
+  align-items: center;
+  gap: calc(1.2 * var(--u));
+  width: 100%;
+  height: 100%;
+  color: var(--tone);
+  font-family: var(--font-display);
+  font-size: min(60cqh, calc(2.8 * var(--u)));
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.hud-scale__ticks {
+  flex: 1;
+  height: min(60cqh, calc(1.6 * var(--u)));
+  background:
+    repeating-linear-gradient(to right, currentColor 0 var(--hud-line), transparent var(--hud-line) 10%) bottom / 100% 100% no-repeat,
+    repeating-linear-gradient(to right, color-mix(in srgb, currentColor 55%, transparent) 0 var(--hud-line), transparent var(--hud-line) 2%) bottom / 100% 50% no-repeat;
+}
+
+.hud-scale__label {
+  flex: none;
+}
+
+.hud-arcs__segment {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  opacity: 0.8;
+  transform-origin: 50px 50px;
+  animation: hud-spin linear infinite;
+}

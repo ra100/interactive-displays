@@ -5,7 +5,8 @@ import { lcars } from "./lcars/manifest.ts";
 import { decorCatalog, getThemeManifest, getThemeSound, themeManifests, themeSoundIds } from "./manifest.ts";
 
 describe("theme manifests", () => {
-  it("registers the base, LCARS and terminal themes", () => {
+  it("registers the base, LCARS, HUD and terminal themes", () => {
+    expect(themeManifests.get("hud")?.name).toBe("Holo HUD");
     expect(themeManifests.get("base")?.name).toBe("Base");
     expect(themeManifests.get("lcars")?.name).toBe("LCARS");
     expect(themeManifests.get("crt")?.name).toBe("Terminal");
@@ -25,6 +26,10 @@ describe("theme manifests", () => {
       "lcars.bar",
       "lcars.cap",
       "lcars.bracket",
+      "hud.reticle",
+      "hud.corners",
+      "hud.scale",
+      "hud.arcs",
       "crt.rule",
       "crt.brackets",
       "crt.radar",
