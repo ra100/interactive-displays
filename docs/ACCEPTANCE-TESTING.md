@@ -71,7 +71,7 @@ once (browsers only play sound after a touch), or start the kiosk browser with
 | 3 | Open Main engineering, select the Core output gauge; under Live value pick Plasma pressure | The preview follows the new signal at once (unpublished: displays keep the old one until Publish) |
 | 4 | Pick "Wanders", then change Lowest and Highest | The gauge wanders in that range by itself |
 | 5 | Pick "Its own value" | The gauge shows its Value property again |
-| 6 | Select a button; under When used, Add an action: Go to screen, Change show state, Set a shared value, Play a sound | Each adds a small form; choices the show cannot do (a video when the screen has none) are greyed out; Remove takes one away |
+| 6 | Select a button; under When used, choose each New action and press Add: Go to screen, Change show state, Set a shared value, Play a sound | Each adds a small form; choosing alone adds nothing; choices the show cannot do (a video when the screen has none) are greyed out; Remove takes one away |
 | 7 | Open Tactical, select the contacts table | Columns edit one per line, Rows one row per line with cells split by `|` |
 | 8 | Point a Go to screen action at a new, empty screen, delete that screen in the library, then reopen this one | Checks warns "There is no screen … to go to" |
 | 9 | Publish, then press the button on a display | It does what the actions say |
@@ -81,6 +81,12 @@ once (browsers only play sound after a touch), or start the kiosk browser with
 - Restart the server: Shield strength, Hull integrity and Warp factor keep the values the crew set; displays that
   buttons had moved go back to their assigned screens.
 - Press a button just as the state changes and it disappears: a press on a hidden button is ignored.
+- In the editor, add a Slider to a screen, bind its Value to Shield strength and give it "Set a shared value" (to this
+  control's value); publish. Drag it on a display and hold: the thumb stays under the finger, every other display
+  follows, and with sounds on it chirps once where you let go. With display buttons switched off, the slider moves
+  back to the show's value a moment after you let go.
+- With sounds on, change states before anyone has touched a display: those alarms are skipped, not saved up and
+  played together at the first touch. A display that was offline during a state change does not sound it late.
 - Upload an H.264 MP4 and play it on a display running open-source Chromium: it stays black. Use WebM (VP9), which
   every display browser plays, or Google Chrome.
 - Edit the show's signals while displays are on: they pick up the change at once, keeping the values of signals
