@@ -1,0 +1,732 @@
+/*
+ * Terminal theme: one phosphor colour on near black, monospace type, boxed panels, scanlines and glow.
+ * Everything is sized in --u (1% of the display's shorter side) or the widget box (cq*); colours come from
+ * tone variables only.
+ */
+
+/* ── The tube ───────────────────────────────────────────────────────────── */
+
+.screen[data-theme="crt"] {
+  position: relative;
+  text-shadow: 0 0 calc(0.6 * var(--u)) color-mix(in srgb, currentColor 65%, transparent);
+  animation: crt-flicker 6s steps(60) infinite;
+}
+
+/* Scanlines and a vignette over everything; they never catch a press. */
+.screen[data-theme="crt"]::after {
+  content: "";
+  position: absolute;
+  z-index: 10;
+  inset: 0;
+  background:
+    repeating-linear-gradient(to bottom, transparent 0 2px, color-mix(in srgb, var(--theme-bg) 28%, transparent) 2px 3px),
+    radial-gradient(ellipse at center, transparent 60%, color-mix(in srgb, var(--theme-bg) 70%, transparent) 100%);
+  pointer-events: none;
+}
+
+@keyframes crt-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  48% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.96;
+  }
+  52% {
+    opacity: 1;
+  }
+}
+
+/* Warning: the frame boxes pulse. Alert: the palette turns red (manifest) and the whole tube throbs. */
+@keyframes crt-throb {
+  50% {
+    box-shadow: inset 0 0 calc(6 * var(--u)) color-mix(in srgb, var(--tone-danger) 45%, transparent);
+  }
+}
+
+.screen[data-theme="crt"][data-effect="alert"] {
+  animation:
+    crt-flicker 6s steps(60) infinite,
+    crt-throb 1.4s ease-in-out infinite;
+}
+
+@keyframes crt-warn {
+  50% {
+    border-color: var(--tone-warning);
+  }
+}
+
+.screen[data-theme="crt"][data-effect="warning"] .crt-frame__box {
+  animation: crt-warn 1.6s steps(1) infinite;
+}
+
+/* Damaged: the picture rolls and tears now and then. */
+@keyframes crt-roll {
+  0%,
+  92%,
+  100% {
+    transform: none;
+    filter: none;
+  }
+  93% {
+    transform: translateY(-2%) skewX(-2deg);
+    filter: brightness(1.6);
+  }
+  95% {
+    transform: translateY(1.5%);
+    filter: brightness(0.6);
+  }
+}
+
+.screen[data-theme="crt"][data-effect="damaged"] > * {
+  animation: crt-roll 3.7s linear infinite;
+}
+
+/* ── Frames ─────────────────────────────────────────────────────────────── */
+
+.crt-frame {
+  --crt-gap: calc(1.2 * var(--u));
+  --crt-line: calc(0.35 * var(--u));
+  --crt-head: calc(10 * var(--u));
+  --crt-foot: calc(6 * var(--u));
+
+  display: grid;
+  gap: var(--crt-gap);
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.crt-frame--sidebar {
+  grid-template:
+    "title title" var(--crt-head)
+    "nav main" minmax(0, 1fr)
+    "status status" var(--crt-foot) / minmax(0, 24%) minmax(0, 1fr);
+}
+
+.crt-frame--header-main {
+  grid-template:
+    "title" var(--crt-head)
+    "toolbar" max(calc(var(--touch) + 3 * var(--u)), calc(10 * var(--u)))
+    "main" minmax(0, 1fr)
+    "status" var(--crt-foot) / minmax(0, 1fr);
+}
+
+.crt-frame--dashboard {
+  grid-template:
+    "title title" var(--crt-head)
+    "main aside" minmax(0, 1fr)
+    "status status" var(--crt-foot) / minmax(0, 1fr) minmax(0, 30%);
+}
+
+.crt-frame__title {
+  display: flex;
+  grid-area: title;
+  min-width: 0;
+  min-height: 0;
+}
+
+.crt-frame__box {
+  display: flex;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  padding: calc(1.4 * var(--u));
+  border: var(--crt-line) solid var(--tone);
+  box-shadow:
+    0 0 calc(0.8 * var(--u)) color-mix(in srgb, var(--tone) 40%, transparent),
+    inset 0 0 calc(0.8 * var(--u)) color-mix(in srgb, var(--tone) 25%, transparent);
+}
+
+.crt-frame__box[data-line="double"] {
+  border-width: calc(3 * var(--crt-line));
+  border-style: double;
+}
+
+.crt-frame__box[data-line="dashed"] {
+  border-style: dashed;
+}
+
+.crt-frame__box[data-area="nav"] {
+  grid-area: nav;
+  flex-direction: column;
+}
+
+.crt-frame__box[data-area="toolbar"] {
+  grid-area: toolbar;
+  padding: calc(0.8 * var(--u)) calc(1.4 * var(--u));
+}
+
+.crt-frame__box[data-area="main"] {
+  grid-area: main;
+}
+
+.crt-frame__box[data-area="aside"] {
+  grid-area: aside;
+}
+
+.crt-frame__box > *,
+.crt-frame__title > *,
+.crt-frame__status-text > * {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.crt-frame__status {
+  display: flex;
+  grid-area: status;
+  align-items: center;
+  gap: calc(1.2 * var(--u));
+  min-width: 0;
+  color: var(--tone);
+  font-family: var(--font-display);
+  font-size: calc(4 * var(--u));
+}
+
+.crt-frame__status-text {
+  display: flex;
+  flex: 0 1 auto;
+  min-width: 0;
+  height: 100%;
+}
+
+@keyframes crt-cursor {
+  50% {
+    opacity: 0;
+  }
+}
+
+.crt-frame__cursor {
+  flex: none;
+  width: 0.55em;
+  height: 0.9em;
+  background: var(--tone);
+  animation: crt-cursor 1.06s steps(1) infinite;
+}
+
+/* ── Text ───────────────────────────────────────────────────────────────── */
+
+.crt-title {
+  display: flex;
+  align-items: center;
+  gap: calc(2 * var(--u));
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  color: var(--tone);
+  font-family: var(--font-display);
+  text-transform: uppercase;
+}
+
+/* The header: an inverse bar, as a terminal draws its title line. */
+.crt-title--header {
+  box-sizing: border-box;
+  padding: 0 calc(2 * var(--u));
+  background: var(--tone);
+  box-shadow: 0 0 calc(1.5 * var(--u)) color-mix(in srgb, var(--tone) 55%, transparent);
+  color: var(--theme-bg);
+  text-shadow: none;
+}
+
+.crt-title__text {
+  flex: 1;
+  margin: 0;
+  overflow: hidden;
+  font-size: min(80cqh, 7cqw, calc(9 * var(--u)));
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crt-title__code {
+  flex: none;
+  font-size: min(45cqh, calc(4 * var(--u)));
+  letter-spacing: 0.1em;
+}
+
+.crt-title--section {
+  border-bottom: calc(1 * var(--u)) double var(--tone);
+}
+
+.crt-title--section .crt-title__text {
+  font-size: min(70cqh, 8cqw, calc(6 * var(--u)));
+}
+
+.crt-title--section .crt-title__code {
+  opacity: 0.75;
+}
+
+.crt-text {
+  margin: 0;
+  overflow: hidden;
+  color: var(--tone);
+  font-family: var(--font-body);
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.crt-text::before {
+  content: "> ";
+  opacity: 0.7;
+}
+
+.crt-text[data-size="small"] {
+  font-size: calc(2.4 * var(--u));
+}
+
+.crt-text[data-size="medium"] {
+  font-size: calc(3.2 * var(--u));
+}
+
+.crt-text[data-size="large"] {
+  font-size: calc(4.6 * var(--u));
+}
+
+/* ── Buttons ────────────────────────────────────────────────────────────── */
+
+.crt-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-width: var(--touch);
+  min-height: var(--touch);
+  padding: 0 calc(1.5 * var(--u));
+  border: calc(0.35 * var(--u)) solid var(--tone);
+  border-radius: 0;
+  background: transparent;
+  color: var(--tone);
+  font-family: var(--font-display);
+  font-size: min(55cqh, 9cqw, calc(5 * var(--u)));
+  letter-spacing: 0.08em;
+  text-shadow: inherit;
+  text-transform: uppercase;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.crt-button[data-shape="key"] .crt-button__label::before {
+  content: "[ ";
+}
+
+.crt-button[data-shape="key"] .crt-button__label::after {
+  content: " ]";
+}
+
+/* In the menu column: a left-aligned line with a pointer, no box until pressed. */
+.crt-button[data-shape="menu"] {
+  justify-content: flex-start;
+  border-color: transparent;
+  border-left-color: color-mix(in srgb, var(--tone) 50%, transparent);
+}
+
+.crt-button[data-shape="menu"] .crt-button__label::before {
+  content: "> ";
+}
+
+.crt-button__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Pressing inverts the button, the terminal way, long enough to see on camera. */
+.crt-button:active,
+.crt-button[data-flash="true"] {
+  background: var(--tone);
+  color: var(--theme-bg);
+  text-shadow: none;
+}
+
+.crt-button:focus-visible {
+  outline: calc(0.3 * var(--u)) dashed var(--theme-fg);
+  outline-offset: calc(0.3 * var(--u));
+}
+
+/* ── Data ───────────────────────────────────────────────────────────────── */
+
+.crt-readout {
+  display: flex;
+  align-items: baseline;
+  gap: calc(1 * var(--u));
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--tone);
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  align-content: center;
+  flex-wrap: wrap;
+}
+
+.crt-readout__label {
+  overflow: hidden;
+  font-size: min(40cqh, 8cqw, calc(4 * var(--u)));
+  letter-spacing: 0.06em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Dot leaders between label and value, like a printed listing. */
+.crt-readout__leader {
+  flex: 1;
+  min-width: calc(2 * var(--u));
+  border-bottom: calc(0.4 * var(--u)) dotted color-mix(in srgb, var(--tone) 55%, transparent);
+}
+
+.crt-readout__value {
+  font-size: min(65cqh, 13cqw, calc(7 * var(--u)));
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.crt-readout__unit,
+.crt-gauge__unit {
+  margin-left: 0.2em;
+  font-size: 0.6em;
+  opacity: 0.8;
+}
+
+.crt-gauge {
+  display: grid;
+  grid-template: "label value" auto "bar bar" auto / minmax(0, 1fr) auto;
+  align-content: center;
+  align-items: center;
+  gap: calc(0.6 * var(--u)) calc(1.5 * var(--u));
+  width: 100%;
+  height: 100%;
+  color: var(--tone);
+  font-family: var(--font-display);
+  text-transform: uppercase;
+}
+
+.crt-gauge__label {
+  grid-area: label;
+  overflow: hidden;
+  font-size: min(30cqh, 7cqw, calc(3.6 * var(--u)));
+  letter-spacing: 0.06em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crt-gauge__value {
+  grid-area: value;
+  font-size: min(36cqh, 9cqw, calc(4.6 * var(--u)));
+  font-variant-numeric: tabular-nums;
+}
+
+/* [cells] with square brackets drawn as borders. */
+.crt-gauge__bar {
+  display: grid;
+  grid-area: bar;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: calc(0.15 * var(--u));
+  height: min(40cqh, calc(5 * var(--u)));
+  padding: calc(0.4 * var(--u)) calc(0.6 * var(--u));
+  border-inline: calc(0.35 * var(--u)) solid var(--tone);
+}
+
+.crt-gauge__cell {
+  background: var(--tone);
+  opacity: 0.16;
+}
+
+.crt-gauge__cell[data-lit="true"] {
+  opacity: 1;
+  box-shadow: 0 0 calc(0.6 * var(--u)) color-mix(in srgb, var(--tone) 60%, transparent);
+}
+
+.crt-gauge[data-variant="segmented"] .crt-gauge__bar {
+  gap: calc(0.5 * var(--u));
+}
+
+.crt-gauge[data-variant="segmented"] .crt-gauge__cell {
+  margin: 0 18%;
+}
+
+.crt-gauge[data-variant="arc"] .crt-gauge__cell[data-lit="true"] {
+  background: repeating-linear-gradient(135deg, var(--tone) 0 2px, transparent 2px 4px);
+}
+
+.crt-status {
+  display: flex;
+  align-items: center;
+  gap: calc(1.2 * var(--u));
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  color: var(--theme-fg);
+  font-family: var(--font-display);
+  text-transform: uppercase;
+}
+
+/* [ OK ] in the status's tone, a fixed width so labels line up. */
+.crt-status__tag {
+  flex: none;
+  min-width: 4.4em;
+  color: var(--tone);
+  font-size: min(55cqh, 7cqw, calc(4 * var(--u)));
+  text-align: center;
+}
+
+.crt-status__tag::before {
+  content: "[ ";
+}
+
+.crt-status__tag::after {
+  content: " ]";
+}
+
+.crt-status[data-blink="true"] .crt-status__tag {
+  animation: crt-cursor 0.9s steps(1) infinite;
+}
+
+.crt-status[data-status="off"] {
+  opacity: 0.55;
+}
+
+.crt-status__label {
+  overflow: hidden;
+  font-size: min(55cqh, 7cqw, calc(4 * var(--u)));
+  letter-spacing: 0.05em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crt-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.crt-banner[data-active="true"] {
+  background: var(--tone);
+  color: var(--theme-bg);
+  text-shadow: none;
+  animation: crt-cursor 1s steps(1) infinite;
+}
+
+.crt-banner__text {
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: min(70cqh, 9cqw, calc(8 * var(--u)));
+  letter-spacing: 0.14em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Base renderers the theme does not replace (cascades, grids, sliders…) get the terminal's square corners and
+   type from the tokens; a few touches make them sit right. */
+.screen[data-theme="crt"] .base-data-grid {
+  font-size: calc(3 * var(--u));
+}
+
+.screen[data-theme="crt"] .base-data-grid th {
+  border-bottom-style: dashed;
+}
+
+/* No rounded pills on a terminal. */
+.screen[data-theme="crt"] [class^="base-"],
+.screen[data-theme="crt"] [class^="base-"]::before,
+.screen[data-theme="crt"] [class^="base-"]::after {
+  border-radius: 0;
+}
+
+.screen[data-theme="crt"] .base-button-group__item,
+.screen[data-theme="crt"] .base-toggle,
+.screen[data-theme="crt"] .base-clock,
+.screen[data-theme="crt"] .base-bar-graph,
+.screen[data-theme="crt"] .base-sparkline,
+.screen[data-theme="crt"] .base-status-matrix {
+  font-weight: 400;
+}
+
+/* ── Decor ──────────────────────────────────────────────────────────────── */
+
+.crt-rule {
+  display: flex;
+  align-items: center;
+  gap: calc(1.2 * var(--u));
+  width: 100%;
+  height: 100%;
+  color: var(--tone);
+  font-family: var(--font-display);
+  font-size: min(70cqh, calc(3.6 * var(--u)));
+  text-transform: uppercase;
+}
+
+.crt-rule__line {
+  flex: 1;
+  border-top: calc(1 * var(--u)) double var(--tone);
+}
+
+.crt-rule[data-style="single"] .crt-rule__line {
+  border-top: calc(0.35 * var(--u)) solid var(--tone);
+}
+
+.crt-rule[data-style="dashed"] .crt-rule__line {
+  border-top: calc(0.35 * var(--u)) dashed var(--tone);
+}
+
+.crt-rule__label {
+  flex: none;
+  letter-spacing: 0.12em;
+}
+
+.crt-brackets {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.crt-brackets__corner {
+  position: absolute;
+  width: min(18cqw, 18cqh);
+  height: min(18cqw, 18cqh);
+  border: 0 solid var(--tone);
+}
+
+.crt-brackets__corner[data-corner="tl"] {
+  top: 0;
+  left: 0;
+  border-top-width: calc(0.5 * var(--u));
+  border-left-width: calc(0.5 * var(--u));
+}
+
+.crt-brackets__corner[data-corner="tr"] {
+  top: 0;
+  right: 0;
+  border-top-width: calc(0.5 * var(--u));
+  border-right-width: calc(0.5 * var(--u));
+}
+
+.crt-brackets__corner[data-corner="bl"] {
+  bottom: 0;
+  left: 0;
+  border-bottom-width: calc(0.5 * var(--u));
+  border-left-width: calc(0.5 * var(--u));
+}
+
+.crt-brackets__corner[data-corner="br"] {
+  right: 0;
+  bottom: 0;
+  border-right-width: calc(0.5 * var(--u));
+  border-bottom-width: calc(0.5 * var(--u));
+}
+
+.crt-radar {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.crt-radar__scope {
+  position: relative;
+  width: min(100cqw, 100cqh);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: calc(0.35 * var(--u)) solid var(--tone);
+  border-radius: 50%;
+  box-shadow: 0 0 calc(1.2 * var(--u)) color-mix(in srgb, var(--tone) 45%, transparent);
+}
+
+.crt-radar__ring {
+  position: absolute;
+  border: calc(0.2 * var(--u)) solid color-mix(in srgb, var(--tone) 45%, transparent);
+  border-radius: 50%;
+}
+
+.crt-radar__ring[data-ring="1"] {
+  inset: 12%;
+}
+
+.crt-radar__ring[data-ring="2"] {
+  inset: 25%;
+}
+
+.crt-radar__ring[data-ring="3"] {
+  inset: 38%;
+}
+
+.crt-radar__cross {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(color-mix(in srgb, var(--tone) 35%, transparent), color-mix(in srgb, var(--tone) 35%, transparent)) center / calc(0.2 * var(--u)) 100% no-repeat,
+    linear-gradient(color-mix(in srgb, var(--tone) 35%, transparent), color-mix(in srgb, var(--tone) 35%, transparent)) center / 100% calc(0.2 * var(--u)) no-repeat;
+}
+
+@keyframes crt-sweep {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+.crt-radar__sweep {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0 290deg, color-mix(in srgb, var(--tone) 55%, transparent) 360deg);
+  animation: crt-sweep 4s linear infinite;
+}
+
+@keyframes crt-contact {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  8% {
+    opacity: 1;
+  }
+}
+
+.crt-radar__contact {
+  position: absolute;
+  width: 4%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--tone);
+  box-shadow: 0 0 calc(0.8 * var(--u)) var(--tone);
+  transform: translate(-50%, -50%);
+  animation: crt-contact 4s linear infinite;
+}
+
+.crt-log {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  color: var(--tone);
+  font-family: var(--font-body);
+  font-size: calc(2.4 * var(--u));
+  line-height: 1.35;
+  text-transform: uppercase;
+  mask-image: linear-gradient(transparent, #000 15%, #000 85%, transparent);
+}
+
+@keyframes crt-log {
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+.crt-log__scroll {
+  display: flex;
+  flex-direction: column;
+  animation: crt-log linear infinite;
+}

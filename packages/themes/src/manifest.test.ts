@@ -5,9 +5,10 @@ import { lcars } from "./lcars/manifest.ts";
 import { decorCatalog, getThemeManifest, getThemeSound, themeManifests, themeSoundIds } from "./manifest.ts";
 
 describe("theme manifests", () => {
-  it("registers the base and LCARS themes", () => {
+  it("registers the base, LCARS and terminal themes", () => {
     expect(themeManifests.get("base")?.name).toBe("Base");
     expect(themeManifests.get("lcars")?.name).toBe("LCARS");
+    expect(themeManifests.get("crt")?.name).toBe("Terminal");
   });
 
   it("falls back to base for an unknown theme", () => {
@@ -19,7 +20,16 @@ describe("theme manifests", () => {
   });
 
   it("collects every theme's decor, each prefixed with its theme id", () => {
-    expect([...decorCatalog.keys()]).toEqual(["lcars.elbow", "lcars.bar", "lcars.cap", "lcars.bracket"]);
+    expect([...decorCatalog.keys()]).toEqual([
+      "lcars.elbow",
+      "lcars.bar",
+      "lcars.cap",
+      "lcars.bracket",
+      "crt.rule",
+      "crt.brackets",
+      "crt.radar",
+      "crt.log",
+    ]);
   });
 
   it("gives every decor an example that passes its own schema", () => {
@@ -63,5 +73,22 @@ describe("theme sounds", () => {
 
   it("lists a theme's sounds together with the base ones", () => {
     expect(themeSoundIds("lcars")).toEqual(["alert", "confirm", "hail", "press", "warning"]);
+    expect(themeSoundIds("crt")).toEqual(["alert", "confirm", "press", "teletype", "warning"]);
+  });
+});
+
+describe("terminal tokens", () => {
+  const crt = getThemeManifest("crt");
+
+  it("turns the whole tube red on alert, whatever the variant", () => {
+    const amber = resolveTokens(crt, "amber");
+    expect(amber.palette.primary).not.toBe(crt.tokens.palette.primary);
+    expect(resolveTokens(crt, "amber", "alert").palette.primary).toBe(resolveTokens(crt, undefined, "alert").palette.primary);
+  });
+
+  it("draws square corners in its monospace faces", () => {
+    expect(crt.tokens.font.display).toContain("VT323");
+    expect(crt.tokens.font.body).toContain("Share Tech Mono");
+    expect(crt.tokens.radius).toBe("none");
   });
 });
