@@ -53,4 +53,11 @@ describe("bindings", () => {
     expect(BindingSchema.safeParse({ ambient: { kind: "manual" } }).success).toBe(false);
     expect(BindingSchema.safeParse({ signal: "shields", ambient: { kind: "wave", min: 0, max: 1 } }).success).toBe(false);
   });
+
+  it("let an ambient source change its range per show state, but not to a fixed value", () => {
+    const ambient = { kind: "walk", min: 90, max: 99 };
+    expect(BindingSchema.safeParse({ ambient, byState: { "red-alert": { min: 40, max: 70 } } }).success).toBe(true);
+    expect(BindingSchema.safeParse({ ambient, byState: { "red-alert": { value: 3 } } }).success).toBe(false);
+    expect(BindingSchema.safeParse({ signal: "shields", byState: { "red-alert": { min: 1 } } }).success).toBe(false);
+  });
 });

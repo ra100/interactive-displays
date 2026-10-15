@@ -1,5 +1,5 @@
 import type { Binding, Bindings, SignalDef, SignalValue } from "../schema/signal.ts";
-import { isServerOwned, sampleAmbient, sampleSource, seedOf, sourceInState } from "./sample.ts";
+import { ambientInState, isServerOwned, sampleAmbient, sampleSource, seedOf, sourceInState } from "./sample.ts";
 
 // Everything needed to turn a binding into a value at one moment.
 export interface SignalEnvironment {
@@ -21,7 +21,9 @@ export const bindingValue = (
   prop: string,
   environment: SignalEnvironment,
 ): SignalValue | undefined => {
-  if ("ambient" in binding) return sampleAmbient(binding.ambient, seedOf(`${nodeId}/${prop}`), environment.now);
+  if ("ambient" in binding) {
+    return sampleAmbient(ambientInState(binding, environment.state), seedOf(`${nodeId}/${prop}`), environment.now);
+  }
   const signal = findDef(environment.signals, binding.signal);
   if (!signal) return undefined;
   if (isServerOwned(signal)) {
