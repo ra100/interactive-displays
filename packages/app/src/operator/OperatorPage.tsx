@@ -91,7 +91,7 @@ const OperatorConsole = ({ overview, connection, session }: Tools) => {
 
           <section className="operator__section" aria-labelledby="switches-title">
             <h2 id="switches-title" className="tool-label">
-              Displays
+              Display controls
             </h2>
             <ShowSwitches
               settings={overview.show.settings}
