@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import { baseRenderers } from "./base/renderers.ts";
+import { crtRenderers } from "./crt/renderers.ts";
 import type { AnyDecorRenderer, FrameRenderer, ThemeRenderers, WidgetRendererProps } from "./contract.ts";
 import { lcarsRenderers } from "./lcars/renderers.ts";
 import "./tones.css";
@@ -16,6 +17,7 @@ export type {
 const themeRenderers: ReadonlyMap<string, ThemeRenderers> = new Map([
   [baseRenderers.id, baseRenderers],
   [lcarsRenderers.id, lcarsRenderers],
+  [crtRenderers.id, crtRenderers],
 ]);
 
 type AnyWidgetRenderer = ComponentType<WidgetRendererProps<Record<string, unknown>>>;
