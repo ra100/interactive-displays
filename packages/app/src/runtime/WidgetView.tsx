@@ -39,7 +39,10 @@ export const WidgetView = ({ node }: { node: WidgetNode }) => {
     [node, bindings, live.signals, values, state, now],
   );
   const Renderer = resolveWidgetRenderer(themeId, node.kind);
-  const onUse = catalog.get(node.kind)?.interactive ? (value?: number) => runControl(live, node, value) : undefined;
+  const onUse = catalog.get(node.kind)?.interactive
+    ? (value?: number, moving?: boolean) => runControl(live, node, value, moving)
+    : undefined;
+  const bound = bindings !== undefined && Object.keys(bindings).length > 0;
 
   if ("problem" in resolved) return <WidgetFallback kind={node.kind} reason={resolved.problem} />;
   if (!Renderer) return <WidgetFallback kind={node.kind} reason="No renderer" />;
@@ -49,6 +52,7 @@ export const WidgetView = ({ node }: { node: WidgetNode }) => {
       nodeId={node.id}
       {...(slot ? { slot } : {})}
       {...(onUse ? { onUse } : {})}
+      {...(bound ? { bound } : {})}
     />
   );
 };

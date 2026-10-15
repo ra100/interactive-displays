@@ -599,7 +599,8 @@
   color: var(--theme-bg);
 }
 
-.base-button-group__item:active {
+.base-button-group__item:active,
+.base-toggle:active {
   filter: brightness(1.4);
 }
 

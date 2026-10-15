@@ -14,11 +14,16 @@ import type { ComponentType, ReactNode } from "react";
 // as a sidebar block in nav and as a pill in a toolbar.
 // `onUse` is for controls: call it when the actor uses the control, with the control's value (the chosen
 // option, the slider position, 1 or 0 for a toggle). The runtime plays the press sound and runs the actions.
+// A control that moves continuously (a slider being dragged) passes `moving` for the values on the way, which
+// only update shared values, and calls it once more without it where the actor lets go.
+// `bound` says the control's value follows a live value: after a use it shows what the show says again
+// (useControlValue does this), rather than keeping its own.
 export interface WidgetRendererProps<Props> {
   props: Props;
   nodeId: string;
   slot?: SlotName;
-  onUse?: (value?: number) => void;
+  onUse?: (value?: number, moving?: boolean) => void;
+  bound?: boolean;
 }
 
 export type WidgetRenderer<Kind extends WidgetKind> = ComponentType<WidgetRendererProps<WidgetPropsOf<Kind>>>;

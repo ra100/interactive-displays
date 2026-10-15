@@ -1,7 +1,7 @@
 import { catalog, type WidgetKind, type WidgetPropsOf } from "@interactive-displays/core";
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
-import { ShowStateInfoContext } from "../runtime.ts";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { CONTROL_SETTLE_MS, ShowStateInfoContext } from "../runtime.ts";
 import { bannerText, BaseAlertBanner } from "./BaseAlertBanner.tsx";
 import { BaseButtonGroup, BaseSlider, BaseToggle } from "./BaseControls.tsx";
 import { BaseSparkline } from "./BaseAmbient.tsx";
@@ -83,12 +83,67 @@ describe("controls", () => {
     expect(onUse).toHaveBeenLastCalledWith(0);
   });
 
-  it("reports slider positions and follows its props again", () => {
-    const onUse = vi.fn();
-    const { rerender } = render(<BaseSlider props={propsOf("slider", { value: 20, min: 0, max: 100 })} nodeId="s" onUse={onUse} />);
-    fireEvent.change(screen.getByRole("slider"), { target: { value: "70" } });
-    expect(onUse).toHaveBeenCalledWith(70);
-    rerender(<BaseSlider props={propsOf("slider", { value: 35, min: 0, max: 100 })} nodeId="s" onUse={onUse} />);
-    expect(screen.getByRole("slider")).toHaveValue("35");
+  describe("while and after the actor uses them", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    const slider = (value: number, extra: { onUse?: (value?: number, moving?: boolean) => void; bound?: boolean } = {}) => (
+      <BaseSlider props={propsOf("slider", { value, min: 0, max: 100 })} nodeId="s" {...extra} />
+    );
+
+    it("sends slider positions as moving, and the last one once more where the actor lets go", () => {
+      const onUse = vi.fn();
+      render(slider(20, { onUse }));
+      fireEvent.change(screen.getByRole("slider"), { target: { value: "70" } });
+      expect(onUse).toHaveBeenLastCalledWith(70, true);
+      fireEvent.pointerUp(screen.getByRole("slider"));
+      expect(onUse).toHaveBeenLastCalledWith(70);
+      fireEvent.pointerUp(screen.getByRole("slider"));
+      expect(onUse).toHaveBeenCalledTimes(2);
+
+      // A release the input never hears about still happens once the slider stops moving.
+      fireEvent.change(screen.getByRole("slider"), { target: { value: "75" } });
+      act(() => vi.advanceTimersByTime(1000));
+      expect(onUse).toHaveBeenLastCalledWith(75);
+    });
+
+    it("ignores echoes while in use, then shows a bound value as the show has it", () => {
+      const { rerender } = render(slider(20, { onUse: vi.fn(), bound: true }));
+      fireEvent.change(screen.getByRole("slider"), { target: { value: "80" } });
+      // The server echoing an earlier position does not pull the thumb back.
+      rerender(slider(50, { onUse: vi.fn(), bound: true }));
+      expect(screen.getByRole("slider")).toHaveValue("80");
+      rerender(slider(80, { onUse: vi.fn(), bound: true }));
+      act(() => vi.advanceTimersByTime(CONTROL_SETTLE_MS));
+      expect(screen.getByRole("slider")).toHaveValue("80");
+
+      rerender(slider(35, { onUse: vi.fn(), bound: true }));
+      expect(screen.getByRole("slider")).toHaveValue("35");
+    });
+
+    it("goes back to a bound value the server never changed, and keeps an unbound one", () => {
+      const toggle = (bound: boolean) => <BaseToggle props={propsOf("toggle", { on: false })} nodeId="t" onUse={vi.fn()} bound={bound} />;
+      const { unmount } = render(toggle(true));
+      fireEvent.click(screen.getByRole("switch"));
+      expect(screen.getByRole("switch")).toHaveAttribute("aria-checked", "true");
+      act(() => vi.advanceTimersByTime(CONTROL_SETTLE_MS));
+      expect(screen.getByRole("switch")).toHaveAttribute("aria-checked", "false");
+      unmount();
+
+      render(toggle(false));
+      fireEvent.click(screen.getByRole("switch"));
+      act(() => vi.advanceTimersByTime(CONTROL_SETTLE_MS));
+      expect(screen.getByRole("switch")).toHaveAttribute("aria-checked", "true");
+    });
+
+    it("shows a slider's value with the decimals its step needs", () => {
+      render(<BaseSlider props={propsOf("slider", { value: 9.5, min: 1, max: 9.9, step: 0.1 })} nodeId="w" />);
+      expect(screen.getByText("9.5")).toBeInTheDocument();
+    });
   });
 });

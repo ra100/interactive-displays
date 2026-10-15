@@ -78,6 +78,30 @@ describe("runControl", () => {
     ]);
   });
 
+  it("only moves shared values while a control is still moving", () => {
+    const playSound = vi.fn();
+    const press = vi.fn();
+    const live = liveWith({ playSound, press });
+    const slider = control([
+      { do: "setSignal", signal: "shields" },
+      { do: "video", target: "feed", command: "toggle" },
+    ]);
+    runControl(live, slider, 40, true);
+    runControl(live, slider, 60, true);
+    runControl(live, control([{ do: "navigate", screen: "tactical" }]), 60, true);
+    expect(playSound).not.toHaveBeenCalled();
+    expect(live.sent).toEqual([]);
+    expect(press.mock.calls).toEqual([
+      ["go", 40],
+      ["go", 60],
+    ]);
+
+    runControl(live, slider, 70);
+    expect(playSound.mock.calls).toEqual([["press"]]);
+    expect(live.sent).toEqual([["feed", "toggle"]]);
+    expect(press).toHaveBeenLastCalledWith("go", 70);
+  });
+
   it("does nothing more than the press sound for a control without actions or a server", () => {
     const playSound = vi.fn();
     runControl(liveWith({ playSound }), control(undefined));
