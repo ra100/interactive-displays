@@ -10,6 +10,7 @@ import {
   type Screen,
   sectionsOf,
   SignalIdSchema,
+  VideoCommandSchema,
 } from "@interactive-displays/core";
 import { getThemeManifest } from "@interactive-displays/themes/manifest";
 import { z } from "zod";
@@ -364,6 +365,18 @@ export const createMcpServer = ({ service, generation, connected }: McpDeps): Mc
         const change = value === undefined ? { delta: delta ?? 0 } : { value };
         return result(service.setSignal(signal, change), (current) => ({ signal, value: current }));
       }),
+  );
+
+  server.registerTool(
+    "video_command",
+    {
+      title: "Control a video",
+      description: 'Plays, pauses, toggles or restarts a video widget on the screen a display shows. Needs "AI may run the show".',
+      inputSchema: { display: IdSchema, target: IdSchema.describe("The video widget's id"), command: VideoCommandSchema },
+      annotations: LIVE,
+    },
+    ({ display, target, command }) =>
+      gated("aiLiveControl", () => result(service.video(display, target, command), () => ({ display, target, command }))),
   );
 
   // Resources
