@@ -186,7 +186,7 @@ describe("drafts and publishing", () => {
     const service = await open();
     expect(await service.updateSettings({ liveEdit: true })).toEqual({
       ok: true,
-      value: { liveEdit: true, displayGlobalActions: true, sounds: false },
+      value: { liveEdit: true, displayGlobalActions: true, sounds: false, aiPublish: false, aiLiveControl: false },
     });
     const events = record(service);
 

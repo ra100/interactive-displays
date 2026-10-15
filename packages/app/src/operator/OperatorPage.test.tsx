@@ -222,6 +222,20 @@ describe("live values and display controls", () => {
     ]);
   });
 
+  it("keeps AI off the air until the crew lets it on", async () => {
+    await open();
+    const publish = screen.getByRole("switch", { name: /AI may publish/ });
+    const control = screen.getByRole("switch", { name: /AI may run the show/ });
+    expect(publish).not.toBeChecked();
+    expect(control).not.toBeChecked();
+    await userEvent.click(publish);
+    await userEvent.click(control);
+    expect(writes().map((call) => [call.path, call.body])).toEqual([
+      ["/api/show/settings", { aiPublish: true }],
+      ["/api/show/settings", { aiLiveControl: true }],
+    ]);
+  });
+
   it("plays, pauses and restarts the videos on a display", async () => {
     await open(liveOverview);
     const video = within(screen.getByRole("listitem", { name: "Engineering 1" })).getByRole("group", { name: "Video feed" });

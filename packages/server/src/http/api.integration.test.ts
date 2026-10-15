@@ -50,7 +50,7 @@ describe("GET /api/show", () => {
     const { body } = await server.api<ShowOverview>("GET", "/api/show");
 
     expect(body.state).toBe("normal");
-    expect(body.show.settings).toEqual({ liveEdit: false, displayGlobalActions: true, sounds: false });
+    expect(body.show.settings).toEqual({ liveEdit: false, displayGlobalActions: true, sounds: false, aiPublish: false, aiLiveControl: false });
     expect(body.screens.map((screen) => screen.id)).toEqual([
       "bridge",
       "engineering",
@@ -300,14 +300,14 @@ describe("signals, settings and video", () => {
 
   it("switches display controls and sounds", async () => {
     const { body } = await server.api<{ settings: object }>("PUT", "/api/show/settings", { displayGlobalActions: false, sounds: true });
-    expect(body.settings).toEqual({ liveEdit: false, displayGlobalActions: false, sounds: true });
+    expect(body.settings).toEqual({ liveEdit: false, displayGlobalActions: false, sounds: true, aiPublish: false, aiLiveControl: false });
   });
 
   it("changes only the settings a request names", async () => {
     await server.api("PUT", "/api/show/settings", { displayGlobalActions: false });
     await server.api("PUT", "/api/show/settings", { liveEdit: true });
     const { body } = await server.api<{ settings: object }>("PUT", "/api/show/settings", { sounds: true });
-    expect(body.settings).toEqual({ liveEdit: true, displayGlobalActions: false, sounds: true });
+    expect(body.settings).toEqual({ liveEdit: true, displayGlobalActions: false, sounds: true, aiPublish: false, aiLiveControl: false });
   });
 
   it("sends video commands only for videos the display shows", async () => {

@@ -19,15 +19,15 @@ describe("ShowSchema", () => {
     expect(parsed.displays).toEqual([]);
   });
 
-  it("defaults to drafts that wait for Publish, display controls on and sounds off", () => {
+  it("defaults to drafts that wait for Publish, display controls on, sounds off and AI kept off the air", () => {
     const parsed = ShowSchema.parse({ schemaVersion: 1, id: "s", name: "S", theme: { id: "base" } });
-    expect(parsed.settings).toEqual({ liveEdit: false, displayGlobalActions: true, sounds: false });
+    expect(parsed.settings).toEqual({ liveEdit: false, displayGlobalActions: true, sounds: false, aiPublish: false, aiLiveControl: false });
     expect(parsed.signals).toEqual([]);
   });
 
   it("fills in new settings for a show saved before they existed", () => {
     const parsed = ShowSchema.parse({ schemaVersion: 1, id: "s", name: "S", theme: { id: "base" }, settings: { liveEdit: true } });
-    expect(parsed.settings).toEqual({ liveEdit: true, displayGlobalActions: true, sounds: false });
+    expect(parsed.settings).toEqual({ liveEdit: true, displayGlobalActions: true, sounds: false, aiPublish: false, aiLiveControl: false });
   });
 
   it("takes signals and rejects duplicate signal ids", () => {

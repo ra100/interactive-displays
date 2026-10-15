@@ -2,6 +2,8 @@ import { cp, mkdir, readdir, rename, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import {
   type AssetInfo,
+  type ContentOverlay,
+  ContentOverlaySchema,
   AssetNameSchema,
   assetContentType,
   assetKind,
@@ -31,6 +33,7 @@ type Log = Pick<FastifyBaseLogger, "info" | "warn" | "error">;
  *   shows/<showId>/screens/.trash/<screenId>-<time>.json
  *   shows/<showId>/published/<screenId>.json     what displays show
  *   shows/<showId>/assets/<name>                 images and video
+ *   shows/<showId>/content/<packId>.json         recipes and blocks the show adds to a content pack
  */
 const SettingsSchema = z.object({
   schemaVersion: z.literal(1),
@@ -270,3 +273,24 @@ export const deleteAsset = async (dataDir: string, showId: string, name: string)
   await rm(file);
   return true;
 };
+
+const contentDir = (dataDir: string, showId: string) => path.join(showDir(dataDir, showId), "content");
+
+// The show's additions to content packs, by pack id. An unreadable file is skipped (and logged), not fatal.
+export const loadContent = async (dataDir: string, showId: string, log: Log): Promise<Map<string, ContentOverlay>> => {
+  const dir = contentDir(dataDir, showId);
+  const overlays = new Map<string, ContentOverlay>();
+  if (!(await exists(dir))) return overlays;
+  for (const file of (await readdir(dir)).filter((name) => name.endsWith(".json")).sort()) {
+    const packId = file.slice(0, -".json".length);
+    try {
+      overlays.set(IdSchema.parse(packId), ContentOverlaySchema.parse(await readJson(path.join(dir, file))));
+    } catch (error) {
+      log.warn({ file, err: error }, "Ignoring unreadable content file");
+    }
+  }
+  return overlays;
+};
+
+export const saveContent = (dataDir: string, showId: string, packId: string, overlay: ContentOverlay): Promise<void> =>
+  writeJsonAtomic(path.join(contentDir(dataDir, showId), `${packId}.json`), overlay);

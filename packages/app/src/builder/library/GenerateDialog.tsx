@@ -4,10 +4,12 @@ import {
   type Density,
   generateSuite,
   generateVariants,
+  type GenerationBase,
   isArchetype,
   type Profile,
   ProfileSchema,
   randomSeed,
+  type Section,
   type Screen,
   type Show,
   slugify,
@@ -16,7 +18,7 @@ import {
 import { useId, useMemo, useState } from "react";
 import { Dialog } from "../../tools/Dialog.tsx";
 import { ScreenThumbnail } from "../../tools/ScreenThumbnail.tsx";
-import { type GenerationBase, sections } from "../generation.ts";
+
 
 const ASPECTS = ProfileSchema.shape.aspect.unwrap().options;
 
@@ -31,6 +33,7 @@ export const GenerateDialog = ({
   theme,
   states,
   base,
+  sections,
   takenIds,
   onCreate,
   onClose,
@@ -38,6 +41,7 @@ export const GenerateDialog = ({
   theme: Show["theme"];
   states: Show["states"];
   base: GenerationBase;
+  sections: readonly Section[];
   takenIds: ReadonlySet<string>;
   onCreate: (screens: Screen[]) => Promise<string | undefined>;
   onClose: () => void;

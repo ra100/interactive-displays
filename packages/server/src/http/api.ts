@@ -1,5 +1,9 @@
 import {
+  ARCHETYPE_IDS,
+  type ArchetypeId,
   ARCHETYPES,
+  DENSITIES,
+  ProfileSchema,
   AssetNameSchema,
   assetContentType,
   catalog,
@@ -15,6 +19,7 @@ import { z } from "zod";
 import { bearerToken, tokenAccepted } from "../auth.ts";
 import { buildOverview } from "../overview.ts";
 import { connectedDisplayIds, type RealtimeServer } from "../realtime.ts";
+import type { Generation } from "../generation.ts";
 import type { CommandResult, ShowService } from "../showService.ts";
 
 export const ASSET_LIMIT_BYTES = 100 * 1024 * 1024;
@@ -35,6 +40,8 @@ const SettingsBody = z
     liveEdit: ShowSettingsSchema.shape.liveEdit.unwrap(),
     displayGlobalActions: ShowSettingsSchema.shape.displayGlobalActions.unwrap(),
     sounds: ShowSettingsSchema.shape.sounds.unwrap(),
+    aiPublish: ShowSettingsSchema.shape.aiPublish.unwrap(),
+    aiLiveControl: ShowSettingsSchema.shape.aiLiveControl.unwrap(),
   })
   .partial()
   .strict();
@@ -50,6 +57,27 @@ const DisplayBody = z
   .object({
     name: z.string().min(1).max(60).nullable().optional(),
     screen: IdSchema.nullable().optional(),
+  })
+  .strict();
+
+const PackParams = z.object({ pack: IdSchema });
+export const GenerateBody = z
+  .object({
+    section: z.string().min(1).max(130).describe('A section key such as "trek/engineering", or a recipe id'),
+    id: IdSchema.optional().describe("The new screen's id; made from the name when left out"),
+    name: z.string().min(1).max(120).optional(),
+    seed: z.number().int().min(0).max(0xffffffff).optional().describe("The same seed gives the same screen; random when left out"),
+    density: z.enum(DENSITIES).optional(),
+    aspect: ProfileSchema.shape.aspect.unwrap().optional(),
+    archetype: z.enum(ARCHETYPE_IDS as [ArchetypeId, ...ArchetypeId[]]).optional().describe("Layout; picked from the recipe's weights when left out"),
+    suite: z.boolean().optional().describe("Also one screen per system, linked by nav buttons"),
+  })
+  .strict();
+export const RegenerateBody = z
+  .object({
+    baseRevision: z.number().int().min(0),
+    seed: z.number().int().min(0).max(0xffffffff).optional(),
+    nodes: z.array(IdSchema).min(1).max(20).optional().describe("Panels to reroll; everything that is not locked when left out"),
   })
   .strict();
 
@@ -76,6 +104,7 @@ const isRead = (method: string) => method === "GET" || method === "HEAD";
 export const registerApi = (
   app: FastifyInstance,
   service: ShowService,
+  generation: Generation,
   io: RealtimeServer,
   { editorToken, publicUrl }: { editorToken?: string | undefined; publicUrl?: string | undefined } = {},
 ) => {
@@ -125,6 +154,39 @@ export const registerApi = (
       })),
     })),
   }));
+
+  // Content packs as the generator sees them: built in, with the show's own recipes and blocks.
+  app.get("/api/content", async () => ({ packs: generation.packs() }));
+
+  app.put("/api/content/:pack/recipes", async (request, reply) => {
+    const params = PackParams.safeParse(request.params);
+    if (!params.success) return badRequest(reply, params.error);
+    return send(reply, await generation.saveRecipe(params.data.pack, request.body), (recipe) => ({ recipe }));
+  });
+
+  app.put("/api/content/:pack/blocks", async (request, reply) => {
+    const params = PackParams.safeParse(request.params);
+    if (!params.success) return badRequest(reply, params.error);
+    return send(reply, await generation.saveBlock(params.data.pack, request.body), (block) => ({ block }));
+  });
+
+  app.post("/api/generate", async (request, reply) => {
+    const body = GenerateBody.safeParse(request.body);
+    if (!body.success) return badRequest(reply, body.error);
+    const { section, ...rest } = body.data;
+    const result = await generation.generate({ section, ...Object.fromEntries(Object.entries(rest).filter(([, value]) => value !== undefined)) });
+    return send(reply, result, (screens) => ({ screens, lint: screens.map((screen) => service.lint(screen)) }), 201);
+  });
+
+  app.post("/api/screens/:id/regenerate", async (request, reply) => {
+    const params = IdParams.safeParse(request.params);
+    if (!params.success) return badRequest(reply, params.error);
+    const body = RegenerateBody.safeParse(request.body);
+    if (!body.success) return badRequest(reply, body.error);
+    const { baseRevision, seed, nodes } = body.data;
+    const result = await generation.regenerate(params.data.id, { baseRevision, ...(seed === undefined ? {} : { seed }), ...(nodes ? { nodes } : {}) });
+    return send(reply, result, (screen) => ({ screen, lint: service.lint(screen) }));
+  });
 
   app.get("/api/show", async (_request, reply) => {
     const overview = buildOverview(service, connectedDisplayIds(io));
