@@ -303,6 +303,13 @@ describe("signals, settings and video", () => {
     expect(body.settings).toEqual({ liveEdit: false, displayGlobalActions: false, sounds: true });
   });
 
+  it("changes only the settings a request names", async () => {
+    await server.api("PUT", "/api/show/settings", { displayGlobalActions: false });
+    await server.api("PUT", "/api/show/settings", { liveEdit: true });
+    const { body } = await server.api<{ settings: object }>("PUT", "/api/show/settings", { sounds: true });
+    expect(body.settings).toEqual({ liveEdit: true, displayGlobalActions: false, sounds: true });
+  });
+
   it("sends video commands only for videos the display shows", async () => {
     expect(await server.api("POST", "/api/displays/viewscreen-1/video", { target: "feed", command: "toggle" })).toMatchObject({
       status: 200,
