@@ -3,6 +3,79 @@
 What each phase of the v2 rebuild looks like. Screenshots are captured by `tests/e2e/showcase.spec.ts`
 against the real server and built app (`pnpm build && SHOWCASE=phase-N pnpm test:e2e showcase`).
 
+## Phase 6: a second look and show tooling
+
+The same show now runs in three completely different looks: **LCARS**, **Holo HUD** (the translucent HUD chosen
+for this phase) and **Terminal** (a green-phosphor CRT, built while the choice was open and kept as a third look).
+Each theme has its own frames, widget renderers, decor, sounds and a content pack written for it. Screens are
+sized for the set's 4K panels of 80 to 100 inches, and the operator runs scenes from a cue list with one GO button.
+
+Every display shot below is a full 3840×2160 capture (reduced to 256 colours to keep the repository small).
+
+**One show, three looks.** The same bridge screen document, re-skinned from the operator's Look section. The LCARS
+bar in the screen is drawn by each theme's stand-in: a tick scale in the HUD, a double rule on the terminal.
+
+| LCARS | Holo HUD | Terminal (amber) |
+|---|---|---|
+| ![LCARS bridge at 4K](phase-6/4k-bridge-lcars.png) | ![HUD bridge at 4K](phase-6/4k-bridge-hud.png) | ![CRT bridge at 4K](phase-6/4k-bridge-crt-amber.png) |
+
+**Sized for large panels.** Shows draw at 70% by default. The operator can change the size for the whole show
+or for one display, and the editor can size one part on its own. Buttons keep a button's height instead of
+filling their whole row.
+
+| 50% | 70% (default) | 100% |
+|---|---|---|
+| ![HUD at 50%](phase-6/4k-bridge-hud-scale-50.png) | ![HUD at 70%](phase-6/4k-bridge-hud.png) | ![HUD at 100%](phase-6/4k-bridge-hud-scale-100.png) |
+
+**States restyle in every look.**
+
+| HUD red alert | Terminal hull breach |
+|---|---|
+| ![HUD red alert](phase-6/4k-bridge-hud-red-alert.png) | ![CRT damaged](phase-6/4k-bridge-crt-damaged.png) |
+
+**Generated screens that look designed for their theme.** The Generate dialog lists the pack written for the
+show's theme first: a patrol corvette for the HUD and a deep-space freighter for the terminal.
+
+| Corvette cockpit | Corvette weapons | Corvette sensors |
+|---|---|---|
+| ![Cockpit](phase-6/4k-corvette-cockpit.png) | ![Weapons](phase-6/4k-corvette-weapons.png) | ![Sensors](phase-6/4k-corvette-sensors.png) |
+
+| Freighter reactor room | Freighter airlock |
+|---|---|
+| ![Reactor room](phase-6/4k-freighter-reactor-room.png) | ![Airlock](phase-6/4k-freighter-airlock.png) |
+
+**Cues.** A running order of beats; each cue sets the state, shared values, display screens and videos at once.
+**GO** (or the space bar) runs the next one, any cue can run out of order, and **Record what is on air** turns a
+rehearsed beat into a new cue. Display buttons can run a cue too. The Look section picks theme, variant, size
+and sound pack.
+
+| Operator console | On a phone |
+|---|---|
+| ![Operator with cues and look](phase-6/operator-cues-and-look.png) | ![Operator on a phone](phase-6/operator-cues-phone.png) |
+
+**One part at its own size** (the readouts grid at 60%), and the new themes in the gallery.
+
+| Editor | HUD gallery | Terminal gallery |
+|---|---|---|
+| ![Part size in the editor](phase-6/editor-part-size.png) | ![HUD gallery](phase-6/gallery-hud.png) | ![CRT gallery](phase-6/gallery-crt.png) |
+
+### Under the hood
+
+- Theme packs: [`themes/src/hud/`](../../packages/themes/src/hud/) and [`themes/src/crt/`](../../packages/themes/src/crt/).
+  A manifest's `decorStandIns` maps another theme's decor to its own (`lcars.bar` → `hud.scale`), so re-skinning
+  never leaves holes; `resolveDecor` picks the piece at render time.
+- Content packs carry the theme they were written for: [`content/src/corvette/`](../../packages/content/src/corvette/)
+  (HUD) and [`content/src/freighter/`](../../packages/content/src/freighter/) (CRT).
+- Size: `show.scale` (default 0.7), `display.scale` and a node's `scale` multiply the screen unit `--u`; thumbnails
+  and previews use the same scale, so they match the panel.
+- Cues: `show.cues`, run by [`showService.ts`](../../packages/server/src/showService.ts) (`runCue`, `go`); REST
+  `PUT /api/show/cues` and `POST /api/cues/go|reset|:id/run`; MCP `set_cues` and gated `run_cue`; the last cue run
+  survives a restart.
+- Sound packs: `show.soundPack` plays another theme's sounds. Kiosk: a web app manifest (fullscreen, opens on its
+  own display), a screen wake lock, cursor hiding, no long-press menu, `F` and `?fullscreen` for fullscreen.
+- Tests: [`tests/e2e/show-tools.spec.ts`](../../tests/e2e/show-tools.spec.ts) plus unit and integration tests in each
+  package.
+
 ## Phase 5: AI and MCP
 
 AI works on screens through the same command layer as people: an MCP client (Claude Desktop, Claude Code or any
