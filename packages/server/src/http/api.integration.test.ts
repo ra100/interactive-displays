@@ -319,6 +319,17 @@ describe("signals, settings and video", () => {
     expect((await server.api("PUT", "/api/show/theme", { theme: "crt" })).status).toBe(400);
   });
 
+  it("plays another theme's sound pack on the displays", async () => {
+    const { client } = await server.display("test");
+    let snapshot = nextEvent(client, "snapshot");
+    expect(await server.api("PUT", "/api/show/sound-pack", { pack: "lcars" })).toMatchObject({ status: 200, body: { pack: "lcars" } });
+    expect(await snapshot).toMatchObject({ show: { soundPack: "lcars" } });
+    snapshot = nextEvent(client, "snapshot");
+    expect((await server.api("PUT", "/api/show/sound-pack", { pack: null })).status).toBe(200);
+    expect((await snapshot).show).not.toHaveProperty("soundPack");
+    expect((await server.api("PUT", "/api/show/sound-pack", { pack: "holodeck" })).status).toBe(422);
+  });
+
   it("sends each display the scale it draws at", async () => {
     const { client } = await server.display("test");
     let snapshot = nextEvent(client, "snapshot");
