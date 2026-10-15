@@ -59,6 +59,11 @@ export const ThemeManifestSchema = z.object({
   effects: z.partialRecord(EffectSchema, z.object({ tokens: ThemeTokenOverridesSchema })).default({}),
   // Archetypes this theme draws its own chrome for; others use the base frames.
   archetypes: z.array(z.enum(ARCHETYPE_IDS as [ArchetypeId, ...ArchetypeId[]])).default([]),
+  // How generated screens use the palette: nav buttons cycle through `nav`, neighbouring panels take turns
+  // through `panels`. A monochrome theme can list one tone.
+  tones: z
+    .object({ nav: z.array(ToneSchema).min(1).max(8), panels: z.array(ToneSchema).min(1).max(8) })
+    .default({ nav: ["primary", "secondary", "accent", "info"], panels: ["primary", "info", "accent", "secondary"] }),
   // "press" plays on every control; states and actions name others, such as "alert". Missing ones fall back
   // to the base theme's.
   sounds: z.record(IdSchema, SoundSchema).default({}),

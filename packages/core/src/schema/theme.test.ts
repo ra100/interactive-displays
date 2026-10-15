@@ -42,6 +42,13 @@ describe("defineTheme", () => {
       defineTheme({ ...manifest, tokens: { ...manifest.tokens, background: "black" } }),
     ).toThrow();
   });
+
+  it("gives the generator tone rules, which a theme can narrow to one tone", () => {
+    expect(defineTheme(manifest).tones.nav.length).toBeGreaterThan(1);
+    const mono = defineTheme({ ...manifest, tones: { nav: ["primary"], panels: ["primary"] } });
+    expect(mono.tones).toEqual({ nav: ["primary"], panels: ["primary"] });
+    expect(() => defineTheme({ ...manifest, tones: { nav: [], panels: ["primary"] } })).toThrow();
+  });
 });
 
 describe("themeCssVariables", () => {
