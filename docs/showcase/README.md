@@ -3,6 +3,75 @@
 What each phase of the v2 rebuild looks like. Screenshots are captured by `tests/e2e/showcase.spec.ts`
 against the real server and built app (`pnpm build && SHOWCASE=phase-N pnpm test:e2e showcase`).
 
+## Phase 3: living screens
+
+The demo show now moves and answers a touch. Numbers wander, gauges follow the values the story depends on,
+buttons on the displays change the whole show, move one display to another screen or play a video, and the
+operator steers it all from a phone.
+
+**Live values.** Main engineering is the phase's exit check: the core output gauge and its trace follow a shared
+signal the server ticks, the EPS taps wander on their own, numbers scroll in the cascade, plasma bars pulse and relay
+lamps blink, each at its own pace. On Tactical, the shield arc and hull gauge follow values the crew sets. The same
+widgets in the `base` theme, for comparison.
+
+| Engineering | Tactical |
+|---|---|
+| ![Main engineering, live](phase-3/engineering-live.png) | ![Tactical with shield and hull gauges](phase-3/tactical-live.png) |
+| **Bridge readouts bound to shields, hull and warp factor** | **Engineering in the base theme** |
+| ![Bridge with live readouts](phase-3/bridge-live.png) | ![Engineering in the base theme](phase-3/engineering-base-theme.png) |
+
+**Buttons that do something.** Red alert on the bridge puts every display on red alert and raises the shields;
+the button gives way to Stand down. Core eject on Main engineering damages the ship: the hull drops, a HULL BREACH
+banner flashes and the core output sinks. Diagnostics takes that one display to the ship schematic, whose Back
+button returns it.
+
+| Red alert from the bridge | Core eject |
+|---|---|
+| ![Bridge in red alert after its own button](phase-3/bridge-red-alert-from-button.png) | ![Engineering after core eject](phase-3/engineering-core-eject.png) |
+
+![Ship schematic with a Back button](phase-3/schematic-with-back.png)
+
+**Video.** The Viewscreen plays a sensor sweep; its own Play, Hold and Replay buttons and the operator console
+control it.
+
+![Viewscreen with video](phase-3/viewscreen-video.png)
+
+**Operator console.** Live values with big sliders and steps for the values the crew sets, a reading for the ones
+that move by themselves, switches for display buttons and sounds, and Play, Pause and Restart for each video on a
+display. A card says when a display's own buttons took it elsewhere, with Send back.
+
+| Phone | Tablet |
+|---|---|
+| <img src="phase-3/operator-phone-live.png" alt="Operator console with live values on a phone" width="300" /> | ![Operator console on a tablet](phase-3/operator-tablet-live.png) |
+
+**Editor.** The inspector binds a prop to a show signal or to a value that wanders by itself, and gives a control
+its actions in order. The library edits the show's signals. The preview follows shared values like a display.
+
+| Live value | Actions |
+|---|---|
+| ![Binding a gauge to a signal](phase-3/editor-live-value.png) | ![A button's actions](phase-3/editor-actions.png) |
+
+![Signals dialog](phase-3/signals-dialog.png)
+
+**Gallery.** All 14 new widgets in every slot, in both themes.
+
+<img src="phase-3/gallery.png" alt="Gallery with the new widgets" width="640" />
+
+### Under the hood
+
+- Signals are `ambient` (each display works the value out from a seed and the clock, no network) or `shared` (the
+  server owns it: set by the crew, or ticked every 250 ms and broadcast at most every 100 ms). Widgets follow them
+  through `bind`; red alert and damage change their ranges through `byState`.
+- Controls send `press { nodeId, value? }`; the server checks the node is a visible control on what that display
+  shows and runs navigation, show state and shared values. Show-wide actions can be switched off for a take.
+- Theme sounds are synthesised in the browser from the theme manifest; off by default.
+- Thumbnails stand still (frozen time, paused animations, no video) so a page of them stays cheap.
+- Protocol 4 adds `signals`, `video` and `press`.
+- Code: [`core/src/signals/`](../../packages/core/src/signals/),
+  [`signals.ts`](../../packages/server/src/signals.ts), [`press.ts`](../../packages/server/src/press.ts),
+  [`runtime/live.ts`](../../packages/app/src/runtime/live.ts); e2e flows in
+  [`tests/e2e/controls.spec.ts`](../../tests/e2e/controls.spec.ts).
+
 ## Phase 2: editor and operator console
 
 The show can now be run and changed without touching a file. `/operator` is a console for a phone or tablet in

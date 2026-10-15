@@ -1,6 +1,6 @@
 ---
 name: server
-description: Work on packages/server (command layer, REST API, Socket.io, data directory, seed show, Docker). Use when changing the protocol, persistence, show states, display assignment, configuration, health check, static serving or deployment.
+description: Work on packages/server (command layer, REST API, Socket.io, data directory, seed show, Docker). Use when changing the protocol, persistence, show states, signals, display controls, display assignment, configuration, health check, static serving or deployment.
 ---
 
 # Server
@@ -13,8 +13,8 @@ is no server build step: relative imports keep their `.ts` extension and only er
 
 `src/showService.ts` is the single write path. REST (`src/http/api.ts`), Socket.io (`src/realtime.ts`) and later
 MCP are thin adapters over it. Every command validates its input, persists, then emits a `ShowEvent`
-(`screen`, `published`, `state`, `display`, `identify`, `reload`, `preview`, …) that the realtime adapter turns
-into snapshots or small events. Writes that read-check-save (screens, displays) run through a queue, so two edits
+(`screen`, `published`, `state`, `display`, `identify`, `reload`, `preview`, `show`, `signals`, `video`, …) that
+the realtime adapter turns into snapshots or small events. Writes that read-check-save (screens, displays) run through a queue, so two edits
 on the same revision cannot both land. State changes are broadcast before they are saved: the 100 ms budget is
 for displays.
 
@@ -26,6 +26,19 @@ published copy (`published/<id>.json`); `publish` copies the current draft there
 (`previews`, in memory only) makes one display show a draft until it is ended, the screen is deleted or the
 server restarts.
 
+**Signals** (`src/signals.ts`). The server owns shared signals: manual ones hold the value someone set (kept in
+`runtime.json`), walking and waving ones are sampled from the clock every 250 ms (`SIGNAL_TICK_MS` in `app.ts`)
+and only changes go out, merged into one `signals` event at most every 100 ms. Ambient signals and clocks never
+reach the server: every display works them out from the same seed. Sampling lives in `core/signals`, so the
+server and the displays agree.
+
+**Controls.** A display emits `press { nodeId, value? }`. `press.ts` finds the node on the screen that display
+shows and accepts it only if it is a visible interactive widget with actions. The server runs `navigate` and
+`back` (not while previewing a draft) and, when the show setting `displayGlobalActions` is on, `setState` and
+`setSignal`; the display runs `sound` and `video` itself. Navigation is a per-display stack in memory: what a
+display shows is its draft preview, else where its buttons took it, else its assignment, else the show default.
+A new assignment, a preview or forgetting the display clears it.
+
 ## REST API
 
 Reads are open. With `EDITOR_TOKEN` set, every other method under `/api/` needs `authorization: Bearer <token>`
@@ -35,8 +48,11 @@ Reads are open. With `EDITOR_TOKEN` set, every other method under `/api/` needs 
 |---|---|
 | `GET /api/session` | `{ tokenRequired, tokenValid, publicUrl }` for the tools |
 | `GET /api/catalog` | widgets (JSON Schema props), archetypes, effects, themes with variants and decor |
-| `GET /api/show` | overview: show, current state, screen summaries (revision, published), displays (assigned, showing, preview, connected, lastSeen) |
-| `PUT /api/show/settings` | `{ liveEdit }` |
+| `GET /api/show` | overview: show, current state, shared signal values, screen summaries (revision, published), displays (assigned, showing, preview, navigated, videos, connected, lastSeen) |
+| `PUT /api/show/settings` | `{ liveEdit?, displayGlobalActions?, sounds? }` |
+| `PUT /api/show/signals` | `{ signals }`: replaces the show's signal definitions (422 with issue paths) |
+| `GET /api/signals` | `{ values }`: current values of the server-owned signals |
+| `PUT /api/signals/:id/value` | `{ value }` or `{ delta }` for a shared manual signal, clamped and snapped to its step; 409 for any other signal |
 | `GET /api/screens` | every draft |
 | `GET /api/screens/:id` | draft plus lint and `onAir` (displays showing its published copy) |
 | `GET /api/screens/:id/published` | the published copy |
@@ -53,6 +69,7 @@ Reads are open. With `EDITOR_TOKEN` set, every other method under `/api/` needs 
 | `DELETE /api/displays/:id` | forget a display |
 | `POST /api/displays/:id/identify` | flash the display's name |
 | `POST /api/displays/:id/reload` | reload the display's page |
+| `POST /api/displays/:id/video` | `{ target, command }`: play, pause, toggle or restart a video widget on the screen it shows (404 if there is none) |
 | `PUT /api/displays/:id/preview` | `{ screen }`: show that draft on the display |
 | `DELETE /api/displays/:id/preview` | end the preview |
 | `GET /api/assets` | uploaded files with kind, type, size |
@@ -76,7 +93,7 @@ Reads are open. With `EDITOR_TOKEN` set, every other method under `/api/` needs 
 ```
 settings.json                                    { "schemaVersion": 1, "activeShow": "demo" }
 shows/<showId>/show.json                         Show: theme (+variant), states, defaultScreen, displays[]
-shows/<showId>/runtime.json                      current state, last-seen displays (written by the server)
+shows/<showId>/runtime.json                      current state, shared manual signal values, last-seen displays
 shows/<showId>/screens/<screenId>.json           draft Screen; file name must equal its id
 shows/<showId>/screens/.history/<id>/<rev>.json  replaced revisions, last 50 kept
 shows/<showId>/screens/.trash/<id>-<time>.json   deleted drafts
@@ -90,13 +107,15 @@ show down. All writes are atomic (temp file + rename) and serialized per file.
 
 ## Protocol
 
-Typed in `packages/core/src/protocol` (`PROTOCOL_VERSION` 3). Clients emit `hello` with a role:
+Typed in `packages/core/src/protocol` (`PROTOCOL_VERSION` 4). Clients emit `hello` with a role:
 
-- `display { displayId }` joins `display:<id>` and gets a `snapshot` (show with theme and states, current state,
-  display, screen, `preview` flag). A new snapshot follows whenever what it shows changes; `state { state }` for
-  show-wide changes, `identify { label }` and `reload`.
+- `display { displayId }` joins `display:<id>` and gets a `snapshot` (show with theme, states, signals and the
+  sounds setting, current state, shared signal values, display, screen, `preview` and `navigated` flags). A new
+  snapshot follows whenever what it shows changes or the show's settings or signals change; `state { state }` for
+  show-wide changes, `signals { values }` with changed shared values, `video { target, command }`,
+  `identify { label }` and `reload`. A display emits `press { nodeId, value? }` when a control is used.
 - `operator { token }` and `builder { token }` join `operators` / `builders` and get the show `overview` (the
-  same shape as `GET /api/show`) on hello and after every change. A wrong token gets `error { code: "UNAUTHORIZED" }`.
+  same shape as `GET /api/show`) on hello and after every change, and `signals` like the displays. A wrong token gets `error { code: "UNAUTHORIZED" }`.
 - A builder emits `watch { screenId }` to join `screen:<id>` and receive `screen { screenId, screen, lint }` for
   every saved change to that draft (`screen: null` when it is deleted); `watch { screenId: null }` stops.
 

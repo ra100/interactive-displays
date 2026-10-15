@@ -16,9 +16,11 @@ The v1 code is kept read-only under `legacy/` for reference; never import from i
 packages/
   core/     @interactive-displays/core    pure TS, no React, no Node APIs; runs in browser and server
             schema/   Zod schemas: ids, tones, archetypes and slots, node tree, Screen (draft revision and
-                      published revision), Show (states, displays, settings), assets, theme manifest
+                      published revision), Show (states, signals, displays, settings), signals and bindings,
+                      actions, assets, theme manifest (with sounds)
             catalog/  defineWidget() registry (one file per widget) and defineDecor()
             tree/     walk/find nodes; nodeInState applies `when` overrides for a show state
+            signals/  sample a signal at a moment (seeded walk, wave, clock), per-state sources, bindProps
             validate/ validateScreen: schema, unique ids, known kinds, props, slots, grid areas, decor
             ops/      the operation language (insert, remove, move, update, set, place, layout, replace,
                       meta): all-or-nothing, returns inverse ops for undo, can respect locks
@@ -26,26 +28,32 @@ packages/
             fields/   describeFields: inspector form fields from a props schema
             migrate/  migrateScreen: upgrades older screen documents on read
             protocol/ typed Socket.io events: hello (display, operator, builder) → snapshot or overview,
-                      state, identify, reload, watch → screen, error
+                      state, signals, video, identify, reload, watch → screen, press, error
   themes/   @interactive-displays/themes
             ./manifest  pure data (server-safe): theme manifests, decor catalog
             ./react     browser only: widget, frame and decor renderers, CSS
             base/       neutral theme that renders every widget and frame; the fallback for all others
-            lcars/      LCARS: TNG palette + variants, effects, three frames, four decor pieces, Antonio font
+            lcars/      LCARS: TNG palette + variants, effects, sounds, three frames, four decor pieces, Antonio font
   server/   Fastify + Socket.io + static app, one process, one port; runs TS directly (no build)
             showService.ts  the command layer: every change is validated, persisted and broadcast here;
-                            drafts, publish, revisions, previews, assets
+                            drafts, publish, revisions, previews, assets, signals, display presses
+            signals.ts      shared signal values: manual ones set by people, walking ones ticked every 250 ms
+            press.ts        which node a display press may run (visible, interactive, with actions)
             http/api.ts     REST adapter over the command layer; EDITOR_TOKEN guards every write
             realtime.ts     Socket.io adapter: display snapshots, tool overviews, watched drafts
             storage/        data directory: atomic JSON writes, revision history, published copies, assets
             seed/           LCARS demo show copied into an empty data directory on first start
   app/      React 19 + Vite SPA
-            runtime/  ScreenView, NodeView (stack, grid, canvas, frame), WidgetView, DecorView
-            display/  /d/:displayId: connection, state changes, identify overlay, draft preview badge
+            runtime/  ScreenView, NodeView (stack, grid, canvas, frame), WidgetView, DecorView; live.ts
+                      (shared values store, controls), sound.ts (Web Audio player for theme sounds)
+            display/  /d/:displayId: connection, state changes, signals, presses, video commands, state
+                      sounds, identify overlay, draft preview badge
             gallery/  /gallery (lazy): every frame, widget-by-slot and decor per theme, variant and effect
-            operator/ /operator (lazy): state buttons, blackout, display cards (assign, identify, QR)
-            builder/  /builder (lazy): library/ (screens, templates) and editor/ (session with undo and
-                      rebase, outline, preview, inspector, history, assets, send to display)
+            operator/ /operator (lazy): state buttons, blackout, live value sliders, display switches,
+                      display cards (assign, identify, QR, video transport, send back)
+            builder/  /builder (lazy): library/ (screens, templates, signals) and editor/ (session with undo
+                      and rebase, outline, preview, inspector with live values and actions, history, assets,
+                      send to display)
             tools/    shared by operator and builder: connection, token gate, API client, dialogs
 tests/e2e/  Playwright, against the built app served by the real server
 data/       runtime data (gitignored): settings.json, shows/<id>/{show,runtime}.json, shows/<id>/screens/
@@ -63,8 +71,14 @@ imports `core` and `@interactive-displays/themes/manifest`. Only `app` imports `
   `grid` or `canvas`. Widgets learn their slot, so a theme can draw a nav button differently from a toolbar one.
 - Decor (`lcars.elbow`) is ornament that belongs to one theme and is hidden in every other theme.
 - A show defines its states (`normal`, `red-alert`, …), each naming an effect (`none`, `warning`, `alert`,
-  `damaged`, `blackout`). The theme restyles each effect; nodes can override props or visibility per state
-  with `when`.
+  `damaged`, `blackout`) and optionally a theme sound. The theme restyles each effect; nodes can override props
+  or visibility per state with `when`.
+- Live values are signals: `ambient` ones (walk, wave, clock) are worked out on every display from a seed and cost
+  no network; `shared` ones are owned by the server (set by the operator or display buttons, or ticked) and
+  broadcast at most every 100 ms. Widgets follow them through `bind`; per-state ranges go in `byState`.
+- Controls (button, button group, toggle, slider) carry `actions`: navigate and back (that display only),
+  setState and setSignal (show-wide, behind the `displayGlobalActions` setting), video and sound (run on the
+  display). A press goes to the server as `press { nodeId, value? }`; the server decides what it may do.
 - Every change goes through the command layer (`showService.ts`) as validated ops with revision checks.
   Ops change a screen's draft; displays show its published copy until someone publishes (or the show is in
   live edit mode). The editor and operator console are clients of the same REST API and socket.
