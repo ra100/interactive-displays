@@ -6,6 +6,68 @@ Docker smoke test); these steps are for a person with real displays.
 Report problems or ideas as a GitHub issue (label `v2`) or in the project thread, with the display type,
 browser, the URL you opened and a photo or screenshot if possible.
 
+## Phase 6: a second look and show tooling
+
+### Setup
+
+Any Phase 5 data directory works; a fresh one gets the demo show with five cues. You need:
+
+- `/operator` open on a laptop or phone;
+- `/builder` open on a laptop;
+- at least one real 4K panel at `/d/<name>`, and ideally a second display.
+
+Older shows start at 70% size the first time this version loads them. On the panels, use Chrome or Chromium. For
+a kiosk, open `/d/<name>?fullscreen` and touch once, or use **Install app** from the browser menu.
+
+### The Phase 6 exit check
+
+"An existing show re-skinned to the new theme looks native, and generated screens in that theme look designed for
+it."
+
+| # | Step | Expected |
+|---|---|---|
+| 1 | In `/operator` → **Look**, set Theme to **Holo HUD** | Every display redraws in the HUD within a second. No LCARS shapes are left: LCARS bars and brackets are drawn as HUD scales and corner marks |
+| 2 | Walk through every screen in the HUD on a panel, then set red alert, damaged and blackout | Each screen reads as a HUD design, not as LCARS with new colours. Text fits, nothing overlaps, and the states look like HUD alerts |
+| 3 | Try the **Amber visor** and **Stealth white** variants, then Theme **Terminal** with its variants | Every display follows each change |
+| 4 | With the theme on HUD, open `/builder` → **Generate** | The **Patrol corvette** sections are listed first |
+| 5 | Generate Cockpit, Weapons and Sensors, publish them and put them on a panel | They look designed for the HUD. Their buttons work and they react to red alert |
+| 6 | Set the theme to Terminal and generate from **Deep-space freighter** | The same holds in the terminal look |
+
+### Sizing for the 4K panels
+
+| Step | Expected |
+|---|---|
+| Look at a screen from where the camera and actors will be | Text and buttons are a sensible size; 70% is the default |
+| **Look → Size**: try 50% and 100% | Every display resizes at once. Buttons keep a button's height and are never smaller than a fingertip |
+| On one display's card, set **Size** to 100%, then back to **Show size** | Only that display changes |
+| In the editor, select a panel and set **Size** to 60% in the inspector | Only that panel and what is inside it shrink; Undo puts it back |
+| Generate a screen | At sizes below 80% the dialog starts at **Dense**, so more parts fit on the large panel |
+
+### Cues
+
+| Step | Expected |
+|---|---|
+| In **Cues**, press **GO** | **Top of scene** runs and is marked green. **Next** shows **Contact** with its note |
+| Press **GO** again, then the space bar | Yellow alert, then red alert. Shields drop to 40 on every display that shows them |
+| Press **Run** on **Hull breach** | Damaged; the corridor panel switches to the ship schematic |
+| Press **Back to top** | Nothing on the displays changes, and **Next** is **Top of scene** again |
+| Set a state and a value by hand, type a name and press **Record what is on air** | A new cue at the end of the list; running it later brings that state, those values and the current screens back |
+| Move a cue up or down, delete one | The list updates on every operator console |
+| Restart the server mid-scene | **GO** carries on from the last cue that ran |
+| In the editor, give a button the action **Run a cue**, publish it and press it on a display | The cue runs; with **Display buttons run the show** off, it does not |
+| Ask an MCP client (with **AI may run the show** on) to "run the next cue" | It runs, the same as GO |
+
+### Sounds and kiosk
+
+| Step | Expected |
+|---|---|
+| Turn on display sounds, set **Look → Sounds** to LCARS while the theme is HUD, then change state | The displays play LCARS chirps |
+| Leave the mouse still on a display for 3 seconds | The cursor disappears, and comes back when the mouse moves |
+| Long-press on a display | No menu or text selection appears |
+| Press **F** on a display with a keyboard, or open `/d/<name>?fullscreen` and touch once | It goes fullscreen |
+| Leave a display idle for longer than its screen-off timeout | The screen stays on (wake lock) |
+| On a tablet, choose **Add to Home Screen** or **Install app** on `/d/<name>`, then open the icon | It opens fullscreen on that same display |
+
 ## Phase 5: AI and MCP
 
 ### Setup
