@@ -8,6 +8,7 @@ import {
   generateScreen,
   generateSuite,
   lintScreen,
+  type ContentPack,
   type Node,
   regenerateOps,
   type Screen,
@@ -28,11 +29,8 @@ const theme = {
   tones: { nav: ["primary", "secondary", "accent", "info", "neutral"], panels: ["primary", "info", "accent", "secondary", "neutral"] },
 } as const;
 
-const [trek] = packs;
-if (!trek) throw new Error("No trek pack");
-
-const options = (recipe: string, extra: Partial<GenerateOptions> = {}): GenerateOptions => {
-  const found = findRecipe(`trek/${recipe}`);
+const optionsIn = (packId: string) => (recipe: string, extra: Partial<GenerateOptions> = {}): GenerateOptions => {
+  const found = findRecipe(`${packId}/${recipe}`);
   if (!found) throw new Error(`No recipe ${recipe}`);
   return { ...found, theme: { archetypes: [...theme.archetypes], tones: { nav: [...theme.tones.nav], panels: [...theme.tones.panels] } }, show: showContext, seed: 1, id: "screen", ...extra };
 };
@@ -40,13 +38,14 @@ const options = (recipe: string, extra: Partial<GenerateOptions> = {}): Generate
 const problems = (screen: Screen) =>
   lintScreen(screen, { show, screens: new Set(["bridge", screen.id]) }).filter((issue) => issue.level === "warning");
 
-const arbitrary = fc.record({
-  recipe: fc.constantFrom(...trek.recipes.map((recipe) => recipe.id)),
-  seed: fc.integer({ min: 0, max: 0xffffffff }),
-  density: fc.constantFrom(...DENSITIES),
-  aspect: fc.constantFrom("16:9" as const, "4:3" as const, "9:16" as const, "21:9" as const),
-  archetype: fc.constantFrom(undefined, ...ARCHETYPE_IDS),
-});
+const arbitraryIn = (pack: ContentPack) =>
+  fc.record({
+    recipe: fc.constantFrom(...pack.recipes.map((recipe) => recipe.id)),
+    seed: fc.integer({ min: 0, max: 0xffffffff }),
+    density: fc.constantFrom(...DENSITIES),
+    aspect: fc.constantFrom("16:9" as const, "4:3" as const, "9:16" as const, "21:9" as const),
+    archetype: fc.constantFrom(undefined, ...ARCHETYPE_IDS),
+  });
 
 const widgets = (root: Node) => {
   const found: Node[] = [];
@@ -56,15 +55,27 @@ const widgets = (root: Node) => {
   return found;
 };
 
-describe("the trek pack", () => {
-  it("has at least eight sections, each with several systems", () => {
-    expect(trek.recipes.length).toBeGreaterThanOrEqual(8);
-    for (const recipe of trek.recipes) expect(recipe.systems.length).toBeGreaterThanOrEqual(3);
+describe("the packs", () => {
+  it("has the starship pack for LCARS and the freighter pack for the terminal", () => {
+    expect(packs.map((pack) => [pack.id, pack.theme])).toEqual([
+      ["trek", "lcars"],
+      ["freighter", "crt"],
+    ]);
+  });
+});
+
+describe.each(packs)("the $id pack", (pack) => {
+  const options = optionsIn(pack.id);
+  const arbitrary = arbitraryIn(pack);
+
+  it("has at least six sections, each with several systems", () => {
+    expect(pack.recipes.length).toBeGreaterThanOrEqual(6);
+    for (const recipe of pack.recipes) expect(recipe.systems.length).toBeGreaterThanOrEqual(3);
   });
 
   it("only links readings to signals the demo show has", () => {
     const signals = new Set(show.signals.map((signal) => signal.id));
-    for (const recipe of trek.recipes)
+    for (const recipe of pack.recipes)
       for (const system of recipe.systems) for (const metric of system.metrics) if (metric.signal) expect(signals).toContain(metric.signal);
   });
 
@@ -121,7 +132,7 @@ describe("the trek pack", () => {
   });
 
   it("generates a linked suite for every section", () => {
-    for (const recipe of trek.recipes) {
+    for (const recipe of pack.recipes) {
       const suite = generateSuite({ ...options(recipe.id), id: recipe.id });
       expect(suite).toHaveLength(recipe.systems.length + 1);
       const screens = new Set(["bridge", ...suite.map((screen) => screen.id)]);

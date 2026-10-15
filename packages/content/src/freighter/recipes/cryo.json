@@ -1,0 +1,219 @@
+{
+  "id": "cryo",
+  "label": "Cryo bay",
+  "description": "Hypersleep pods, crew vitals and the wake-up cycle.",
+  "code": "CRY",
+  "archetypes": {
+    "dashboard": 3,
+    "sidebar": 2,
+    "header-main": 1
+  },
+  "titles": [
+    "CRYO BAY",
+    "HYPERSLEEP",
+    "CREW VITALS",
+    "MEDICAL"
+  ],
+  "nav": [
+    "PODS",
+    "VITALS",
+    "WAKE CYCLE",
+    "MEDICAL",
+    "AUTODOC"
+  ],
+  "status": [
+    "7 OF 7 PODS OCCUPIED",
+    "WAKE CYCLE NOT SCHEDULED",
+    "AUTODOC STANDBY"
+  ],
+  "systems": [
+    {
+      "id": "pods",
+      "label": "HYPERSLEEP PODS",
+      "metrics": [
+        {
+          "id": "temp",
+          "label": "POD TEMP",
+          "range": [
+            -4,
+            -2
+          ],
+          "unit": "°C",
+          "alertRange": [
+            10,
+            20
+          ],
+          "precision": 1
+        },
+        {
+          "id": "fluid",
+          "label": "SUSPENSION FLUID",
+          "range": [
+            80,
+            95
+          ],
+          "unit": "%",
+          "alertRange": [
+            10,
+            30
+          ],
+          "prefer": [
+            "gauge"
+          ]
+        },
+        {
+          "id": "depth",
+          "label": "STASIS DEPTH",
+          "unit": "%",
+          "range": [
+            92,
+            98
+          ],
+          "prefer": [
+            "readout"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "label": "OPEN POD"
+        },
+        {
+          "label": "SEAL ALL PODS"
+        }
+      ],
+      "short": "PODS",
+      "notes": [
+        "All occupants in deep stasis"
+      ]
+    },
+    {
+      "id": "vitals",
+      "label": "CREW VITALS",
+      "metrics": [
+        {
+          "id": "pulse",
+          "label": "PULSE",
+          "range": [
+            4,
+            8
+          ],
+          "unit": "bpm",
+          "alertRange": [
+            90,
+            140
+          ]
+        },
+        {
+          "id": "core",
+          "label": "CORE TEMP",
+          "range": [
+            31,
+            33
+          ],
+          "unit": "°C",
+          "precision": 1
+        },
+        {
+          "id": "brain",
+          "label": "BRAIN ACTIVITY",
+          "range": [
+            5,
+            12
+          ],
+          "unit": "%",
+          "motion": "wave"
+        }
+      ],
+      "actions": [
+        {
+          "label": "ALERT MEDIC",
+          "actions": [
+            {
+              "do": "setState",
+              "state": "yellow-alert"
+            }
+          ]
+        }
+      ],
+      "short": "VITALS",
+      "notes": [
+        "Biomonitors reporting every 30 s"
+      ]
+    },
+    {
+      "id": "wake",
+      "label": "WAKE CYCLE",
+      "metrics": [
+        {
+          "id": "progress",
+          "label": "WAKE PROGRESS",
+          "range": [
+            0,
+            100
+          ],
+          "unit": "%",
+          "prefer": [
+            "gauge"
+          ],
+          "motion": "wave"
+        },
+        {
+          "id": "warm",
+          "label": "WARMING RATE",
+          "range": [
+            0.4,
+            0.6
+          ],
+          "unit": "°C/min",
+          "precision": 2
+        }
+      ],
+      "actions": [
+        {
+          "label": "WAKE CREW"
+        },
+        {
+          "label": "ABORT WAKE",
+          "danger": true,
+          "actions": [
+            {
+              "do": "setState",
+              "state": "red-alert"
+            }
+          ]
+        }
+      ],
+      "short": "WAKE"
+    }
+  ],
+  "blocks": {
+    "prefer": [
+      "telemetry",
+      "status-board",
+      "hero-gauge"
+    ],
+    "avoid": []
+  },
+  "alert": {
+    "banner": true,
+    "emphasise": [
+      "temp",
+      "pulse",
+      "fluid"
+    ],
+    "status": [
+      "POD FAILURE · OCCUPANT AT RISK",
+      "EMERGENCY WAKE IN PROGRESS",
+      "BIOMONITOR ALARM"
+    ]
+  },
+  "tags": [
+    "cryo",
+    "sleep",
+    "medical",
+    "crew",
+    "vitals",
+    "pods"
+  ]
+}

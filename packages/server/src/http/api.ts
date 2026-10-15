@@ -43,6 +43,7 @@ const SettingsBody = z
   })
   .partial()
   .strict();
+const ThemeBody = z.object({ id: IdSchema, variant: IdSchema.optional() }).strict();
 const SignalsBody = z.object({ signals: z.unknown() }).strict();
 const SignalParams = z.object({ id: SignalIdSchema });
 const SignalValueBody = z
@@ -193,6 +194,13 @@ export const registerApi = (
     const body = SettingsBody.safeParse(request.body);
     if (!body.success) return badRequest(reply, body.error);
     return send(reply, await service.updateSettings(defined(body.data)), (settings) => ({ settings }));
+  });
+
+  // Re-skins the show: every display redraws in this theme and variant.
+  app.put("/api/show/theme", async (request, reply) => {
+    const body = ThemeBody.safeParse(request.body);
+    if (!body.success) return badRequest(reply, body.error);
+    return send(reply, await service.setTheme(body.data), (theme) => ({ theme }));
   });
 
   // Replaces the show's signal definitions.

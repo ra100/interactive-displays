@@ -1,0 +1,261 @@
+{
+  "id": "life-support",
+  "label": "Life support",
+  "description": "Air, water, gravity and the scrubbers that keep the crew alive.",
+  "code": "ENV",
+  "archetypes": {
+    "sidebar": 2,
+    "dashboard": 2,
+    "header-main": 1
+  },
+  "titles": [
+    "LIFE SUPPORT",
+    "ATMOSPHERE",
+    "ENVIRONMENT",
+    "HABITAT CONTROL"
+  ],
+  "nav": [
+    "ATMOSPHERE",
+    "SCRUBBERS",
+    "WATER",
+    "GRAVITY",
+    "HEATING",
+    "LOG"
+  ],
+  "status": [
+    "ATMOSPHERE NOMINAL",
+    "SCRUBBER 2 CYCLING",
+    "WATER RECLAMATION 94%"
+  ],
+  "systems": [
+    {
+      "id": "air",
+      "label": "ATMOSPHERE",
+      "metrics": [
+        {
+          "id": "o2",
+          "label": "OXYGEN",
+          "range": [
+            20,
+            21.5
+          ],
+          "unit": "%",
+          "alertRange": [
+            14,
+            17
+          ],
+          "prefer": [
+            "readout",
+            "gauge"
+          ],
+          "precision": 1
+        },
+        {
+          "id": "co2",
+          "label": "CARBON DIOXIDE",
+          "range": [
+            400,
+            800
+          ],
+          "unit": "ppm",
+          "alertRange": [
+            4000,
+            6000
+          ]
+        },
+        {
+          "id": "pressure",
+          "label": "CABIN PRESSURE",
+          "range": [
+            99,
+            102
+          ],
+          "unit": "kPa",
+          "alertRange": [
+            60,
+            80
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "label": "PURGE AIR",
+          "danger": true
+        },
+        {
+          "label": "SEAL DECKS",
+          "actions": [
+            {
+              "do": "setState",
+              "state": "yellow-alert"
+            }
+          ]
+        }
+      ],
+      "short": "AIR",
+      "notes": [
+        "Oxygen reserve at 61 days"
+      ]
+    },
+    {
+      "id": "scrubbers",
+      "label": "SCRUBBERS",
+      "metrics": [
+        {
+          "id": "filter",
+          "label": "FILTER LIFE",
+          "range": [
+            60,
+            80
+          ],
+          "unit": "%",
+          "alertRange": [
+            5,
+            15
+          ],
+          "prefer": [
+            "gauge"
+          ]
+        },
+        {
+          "id": "flow",
+          "label": "AIRFLOW",
+          "range": [
+            30,
+            40
+          ],
+          "unit": "m³/min",
+          "motion": "wave"
+        }
+      ],
+      "actions": [
+        {
+          "label": "SWAP FILTERS"
+        },
+        {
+          "label": "CYCLE SCRUBBERS"
+        }
+      ]
+    },
+    {
+      "id": "water",
+      "label": "WATER",
+      "metrics": [
+        {
+          "id": "reserve",
+          "label": "RESERVE",
+          "range": [
+            40,
+            48
+          ],
+          "unit": "kL"
+        },
+        {
+          "id": "recovery",
+          "label": "RECLAMATION",
+          "range": [
+            90,
+            96
+          ],
+          "unit": "%",
+          "alertRange": [
+            40,
+            60
+          ],
+          "prefer": [
+            "gauge"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "label": "FLUSH LINES"
+        },
+        {
+          "label": "RATION WATER",
+          "actions": [
+            {
+              "do": "setState",
+              "state": "yellow-alert"
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "Grey water recycled every 4 hours"
+      ]
+    },
+    {
+      "id": "gravity",
+      "label": "GRAVITY",
+      "metrics": [
+        {
+          "id": "g",
+          "label": "ARTIFICIAL GRAVITY",
+          "range": [
+            0.97,
+            1.02
+          ],
+          "unit": "g",
+          "alertRange": [
+            0.2,
+            0.6
+          ],
+          "prefer": [
+            "readout"
+          ],
+          "precision": 2
+        },
+        {
+          "id": "spin",
+          "label": "RING SPIN",
+          "range": [
+            2.8,
+            3.1
+          ],
+          "unit": "rpm",
+          "precision": 1
+        }
+      ],
+      "actions": [
+        {
+          "label": "SPIN UP"
+        },
+        {
+          "label": "ZERO G",
+          "danger": true
+        }
+      ]
+    }
+  ],
+  "blocks": {
+    "prefer": [
+      "status-board",
+      "trend-panel",
+      "gauge-bank"
+    ],
+    "avoid": []
+  },
+  "alert": {
+    "banner": true,
+    "emphasise": [
+      "o2",
+      "co2",
+      "pressure",
+      "g"
+    ],
+    "status": [
+      "OXYGEN LOW · DON MASKS",
+      "DECOMPRESSION · DECK 3",
+      "SCRUBBER FAILURE"
+    ]
+  },
+  "tags": [
+    "air",
+    "oxygen",
+    "environment",
+    "life",
+    "water",
+    "gravity"
+  ]
+}
