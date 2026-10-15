@@ -15,33 +15,55 @@ The v1 code is kept read-only under `legacy/` for reference; never import from i
 ```
 packages/
   core/     @interactive-displays/core    pure TS, no React, no Node APIs; runs in browser and server
-            schema/   Zod schemas: ids, tones, node tree, Screen, Show, theme manifest
-            catalog/  defineWidget() registry; one file per widget
-            validate/ validateScreen: schema + unique ids + known kinds + props
-            protocol/ typed Socket.io events (hello → snapshot)
+            schema/   Zod schemas: ids, tones, archetypes and slots, node tree, Screen, Show (states,
+                      displays), theme manifest (tokens, variants, effects)
+            catalog/  defineWidget() registry (one file per widget) and defineDecor()
+            tree/     walk/find nodes; nodeInState applies `when` overrides for a show state
+            validate/ validateScreen: schema, unique ids, known kinds, props, slots, grid areas, decor
+            ops/      the operation language (insert, remove, move, update, set, place, layout, replace,
+                      meta): all-or-nothing, returns inverse ops for undo, can respect locks
+            lint/     lintScreen: structural warnings (empty containers, missing main slot, long labels…)
+            protocol/ typed Socket.io events: hello → snapshot, state, identify, error
   themes/   @interactive-displays/themes
-            ./manifest  pure data (server-safe): theme tokens
-            ./react     browser only: widget renderers, CSS
-            base/       neutral theme that renders every widget; the fallback for all other themes
+            ./manifest  pure data (server-safe): theme manifests, decor catalog
+            ./react     browser only: widget, frame and decor renderers, CSS
+            base/       neutral theme that renders every widget and frame; the fallback for all others
+            lcars/      LCARS: TNG palette + variants, effects, three frames, four decor pieces, Antonio font
   server/   Fastify + Socket.io + static app, one process, one port; runs TS directly (no build)
-            seed/     demo show copied into an empty data directory on first start
-  app/      React 19 + Vite SPA: /d/:displayId display route and runtime (ScreenView, NodeView)
+            showService.ts  the command layer: every change is validated, persisted and broadcast here
+            http/api.ts     REST adapter over the command layer
+            realtime.ts     Socket.io adapter: snapshots, state and identify events
+            storage/        data directory: atomic JSON writes, revision history, runtime.json
+            seed/           LCARS demo show copied into an empty data directory on first start
+  app/      React 19 + Vite SPA
+            runtime/  ScreenView, NodeView (stack, grid, canvas, frame), WidgetView, DecorView
+            display/  /d/:displayId: connection, state changes, identify overlay
+            gallery/  /gallery (lazy): every frame, widget-by-slot and decor per theme, variant and effect
 tests/e2e/  Playwright, against the built app served by the real server
-data/       runtime data (gitignored): settings.json, shows/<id>/show.json, shows/<id>/screens/*.json
+data/       runtime data (gitignored): settings.json, shows/<id>/{show,runtime}.json, shows/<id>/screens/
 ```
 
-**Import boundaries:** `core` imports only `zod`. Theme manifests import only `core`. The server imports `core`
-(and later theme manifests). Only `app` imports `@interactive-displays/themes/react`.
+**Import boundaries:** `core` imports only `zod`. Theme manifests import only `core` and `zod`. The server
+imports `core` and `@interactive-displays/themes/manifest`. Only `app` imports `@interactive-displays/themes/react`.
 
 **Key ideas** (details in the plan):
 
-- Documents store *meaning*, themes decide *look*. Screens are a tree of containers and widgets; colours are
-  tone roles (`primary`, `accent`, `danger`, …), never hex values.
+- Documents store *meaning*, themes decide *look*. Screens are a tree of containers, widgets and decor;
+  colours are tone roles (`primary`, `accent`, `danger`, …), never hex values.
+- Containers lay out as a `frame` (an archetype with named slots whose chrome the theme draws), `stack`,
+  `grid` or `canvas`. Widgets learn their slot, so a theme can draw a nav button differently from a toolbar one.
+- Decor (`lcars.elbow`) is ornament that belongs to one theme and is hidden in every other theme.
+- A show defines its states (`normal`, `red-alert`, …), each naming an effect (`none`, `warning`, `alert`,
+  `damaged`, `blackout`). The theme restyles each effect; nodes can override props or visibility per state
+  with `when`.
+- Every change goes through the command layer (`showService.ts`) as validated ops with revision checks.
 - Every widget is one `defineWidget()` definition: Zod props schema, defaults, an example, a description for AI.
   Types, validation, JSON Schema, contract tests and (later) the editor inspector all come from it.
-- Themes are packs: a pure-data manifest plus React renderers. Missing renderers fall back to `base`.
+- Themes are packs: a pure-data manifest (tokens, variants, effects, decor) plus React renderers for widgets,
+  frames and decor. Missing renderers fall back to `base`.
 - Layout is fluid: stacks with weights, `--u` (1% of the display's shorter side) and container query units.
-- A display says `hello` and gets a full `snapshot`; reconnecting is just another hello.
+- A display says `hello` and gets a full `snapshot`; reconnecting is just another hello. Show state changes
+  arrive as a small `state` event so they reach every display within 100 ms.
 
 ## Commands
 
@@ -69,7 +91,8 @@ In a container without a matching Playwright browser, set `PLAYWRIGHT_CHROMIUM_E
   stripping), and only erasable syntax is allowed (no enums, namespaces or parameter properties).
 - **Zod 4 is the single schema source.** Derive types with `z.infer`; never hand-write a type that mirrors a schema.
 - **No hex colours in documents or renderers**; renderers read CSS variables (`var(--tone)`, `var(--theme-bg)`).
-- **Touch targets ≥ 60 px.** Buttons give immediate `:active` feedback.
+- **Touch targets ≥ 60 px.** Theme CSS uses `var(--touch)` (60 px on a display, scaled down in previews) for
+  anything pressable; buttons give immediate `:active` feedback.
 - **A broken widget never breaks a display**: props are re-validated in the runtime and each widget has an
   error boundary.
 
@@ -82,9 +105,12 @@ In a container without a matching Playwright browser, set `PLAYWRIGHT_CHROMIUM_E
 
 ### Adding a theme
 
-1. `packages/themes/src/<id>/manifest.ts` with `defineTheme({ id, name, tokens })`; register it in `src/manifest.ts`.
-2. Optional renderers in `packages/themes/src/<id>/renderers.ts`; register them in `src/react.ts`.
-3. The contract test covers the new theme automatically.
+1. `packages/themes/src/<id>/manifest.ts` with `defineTheme({ id, name, tokens, variants, effects, archetypes,
+   decor })`; register it in `src/manifest.ts`. Decor kinds must be named `<id>.<name>`.
+2. Renderers for widgets, frames and decor in `packages/themes/src/<id>/renderers.ts` (all optional except
+   decor); register them in `src/react.ts`.
+3. The contract tests render every widget in every slot, every frame and every decor piece in the new theme
+   automatically; check it by eye at `/gallery?theme=<id>`.
 
 ## Workflow
 
@@ -125,5 +151,5 @@ Date, Original Plan, What Changed, Justification and Impact.
 
 ## Skills
 
-Task-specific guidance lives in `.claude/skills/`: `widgets` (catalog and renderers), `themes` (theme packs),
-`server` (data, protocol, deployment).
+Task-specific guidance lives in `.claude/skills/`: `widgets` (catalog and renderers), `themes` (theme packs,
+frames, decor, effects), `server` (command layer, REST API, data, protocol, deployment).

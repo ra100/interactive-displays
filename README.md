@@ -4,13 +4,13 @@ Self-hosted sci-fi interface displays for film and video sets. One server drives
 (TVs, tablets, monitors) in real time; screens are documents you can hand-write, generate or let AI edit, and
 the look comes from swappable theme packs (Star Trek LCARS first, other UI families later).
 
-> **Status: v2 rebuild, Phase 0 (walking skeleton).** The design and roadmap live in
+> **Status: v2 rebuild, Phase 1 (core model and LCARS).** The design and roadmap live in
 > [docs/plans/2026-10-14-feat-interactive-displays-v2-plan.md](docs/plans/2026-10-14-feat-interactive-displays-v2-plan.md).
 > What works today and how to try it: [docs/showcase](docs/showcase/README.md) and
 > [docs/ACCEPTANCE-TESTING.md](docs/ACCEPTANCE-TESTING.md). The v1 code is archived in [legacy/](legacy/README.md).
 
 <p align="center">
-  <img src="docs/showcase/phase-0/welcome-16x9.png" alt="The demo screen on a 16:9 display" width="720" />
+  <img src="docs/showcase/phase-1/bridge-sidebar.png" alt="The LCARS bridge screen of the demo show" width="720" />
 </p>
 
 ## Run it
@@ -40,6 +40,17 @@ pnpm start            # http://localhost:3010/d
   show's default screen.
 - If the network drops or the server restarts, the display keeps its last screen and shows a small
   `RECONNECTING` badge until it is back.
+- Show states (normal, yellow alert, red alert, damaged, blackout in the demo) switch every display at once.
+- `/d/<id>?theme=base` or `?variant=nemesis` previews another look on that display only; `/gallery` shows every
+  frame, widget and decor piece of a theme.
+
+Until the operator console arrives (Phase 2), drive the show over the REST API, for example:
+
+```bash
+curl -X POST http://<server>:3010/api/state -H 'content-type: application/json' -d '{"state":"red-alert"}'
+curl -X PUT http://<server>:3010/api/displays/bridge-2 -H 'content-type: application/json' -d '{"screen":"tactical"}'
+curl -X POST http://<server>:3010/api/displays/bridge-2/identify
+```
 
 ## Configuration
 
