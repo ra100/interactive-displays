@@ -1,9 +1,10 @@
 import { type ContentPack, ContentPackSchema, type Recipe } from "@interactive-displays/core";
+import { corvette } from "./corvette/pack.ts";
 import { freighter } from "./freighter/pack.ts";
 import { trek } from "./trek/pack.ts";
 
 // Every content pack, checked against the schema once when this module loads.
-export const packs: readonly ContentPack[] = [ContentPackSchema.parse(trek), ContentPackSchema.parse(freighter)];
+export const packs: readonly ContentPack[] = [trek, corvette, freighter].map((pack) => ContentPackSchema.parse(pack));
 
 // "trek/engineering" → the pack and the recipe, or undefined.
 export const findRecipe = (key: string): { pack: ContentPack; recipe: Recipe } | undefined => {

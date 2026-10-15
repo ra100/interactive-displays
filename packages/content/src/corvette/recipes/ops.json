@@ -1,0 +1,219 @@
+{
+  "id": "ops",
+  "label": "Ops deck",
+  "description": "Comms, the tight-beam and the ship's systems overview.",
+  "code": "OPS",
+  "archetypes": {
+    "header-main": 2,
+    "dashboard": 2,
+    "sidebar": 1
+  },
+  "titles": [
+    "OPS",
+    "OPERATIONS",
+    "COMMS",
+    "SHIP STATUS"
+  ],
+  "nav": [
+    "COMMS",
+    "TIGHT-BEAM",
+    "SYSTEMS",
+    "CREW",
+    "LOG"
+  ],
+  "status": [
+    "TIGHT-BEAM STANDBY",
+    "ALL HANDS AT STATIONS",
+    "LIGHT DELAY 4 MIN"
+  ],
+  "systems": [
+    {
+      "id": "comms",
+      "label": "COMMS",
+      "metrics": [
+        {
+          "id": "signal",
+          "label": "SIGNAL",
+          "range": [
+            -80,
+            -60
+          ],
+          "unit": "dB",
+          "motion": "wave"
+        },
+        {
+          "id": "delay",
+          "label": "LIGHT DELAY",
+          "range": [
+            3,
+            5
+          ],
+          "unit": "min",
+          "prefer": [
+            "readout"
+          ],
+          "precision": 1
+        },
+        {
+          "id": "queue",
+          "label": "QUEUED MESSAGES",
+          "range": [
+            0,
+            4
+          ],
+          "unit": "",
+          "precision": 0
+        }
+      ],
+      "actions": [
+        {
+          "label": "OPEN CHANNEL"
+        },
+        {
+          "label": "SEND TIGHT-BEAM"
+        },
+        {
+          "label": "RADIO SILENCE",
+          "actions": [
+            {
+              "do": "setState",
+              "state": "yellow-alert"
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "Encryption keys rotated"
+      ]
+    },
+    {
+      "id": "systems",
+      "label": "SYSTEMS",
+      "metrics": [
+        {
+          "id": "health",
+          "label": "SHIP HEALTH",
+          "range": [
+            92,
+            99
+          ],
+          "unit": "%",
+          "alertRange": [
+            30,
+            60
+          ],
+          "prefer": [
+            "gauge"
+          ]
+        },
+        {
+          "id": "faults",
+          "label": "OPEN FAULTS",
+          "range": [
+            0,
+            2
+          ],
+          "unit": "",
+          "alertRange": [
+            8,
+            15
+          ],
+          "prefer": [
+            "readout"
+          ],
+          "precision": 0
+        }
+      ],
+      "actions": [
+        {
+          "label": "RUN DIAGNOSTIC"
+        },
+        {
+          "label": "GENERAL QUARTERS",
+          "danger": true,
+          "actions": [
+            {
+              "do": "setState",
+              "state": "red-alert"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "crew",
+      "label": "CREW",
+      "metrics": [
+        {
+          "id": "stations",
+          "label": "AT STATIONS",
+          "range": [
+            80,
+            100
+          ],
+          "unit": "%",
+          "prefer": [
+            "gauge"
+          ]
+        },
+        {
+          "id": "juice",
+          "label": "COMBAT DRUGS",
+          "range": [
+            90,
+            100
+          ],
+          "unit": "%",
+          "alertRange": [
+            10,
+            30
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "label": "CALL ALL HANDS"
+        },
+        {
+          "label": "STAND DOWN",
+          "actions": [
+            {
+              "do": "setState",
+              "state": "normal"
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "Crash couches checked"
+      ]
+    }
+  ],
+  "blocks": {
+    "prefer": [
+      "control-panel",
+      "status-board",
+      "trend-panel"
+    ],
+    "avoid": []
+  },
+  "alert": {
+    "banner": true,
+    "emphasise": [
+      "health",
+      "faults"
+    ],
+    "status": [
+      "GENERAL QUARTERS",
+      "COMMS JAMMED",
+      "BOARDING PARTY DETECTED"
+    ]
+  },
+  "tags": [
+    "ops",
+    "comms",
+    "systems",
+    "crew",
+    "overview"
+  ]
+}

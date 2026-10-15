@@ -56,9 +56,10 @@ const widgets = (root: Node) => {
 };
 
 describe("the packs", () => {
-  it("has the starship pack for LCARS and the freighter pack for the terminal", () => {
+  it("has a pack written for each theme", () => {
     expect(packs.map((pack) => [pack.id, pack.theme])).toEqual([
       ["trek", "lcars"],
+      ["corvette", "hud"],
       ["freighter", "crt"],
     ]);
   });

@@ -7,8 +7,8 @@ describe("packGroups", () => {
   const sections = sectionsOf(packs);
 
   it("lists the packs written for the show's theme first", () => {
-    expect(packGroups(sections, "crt").map((group) => group.name)).toEqual(["Deep-space freighter", "Starship"]);
-    expect(packGroups(sections, "lcars").map((group) => group.name)).toEqual(["Starship", "Deep-space freighter"]);
+    expect(packGroups(sections, "hud").map((group) => group.name)).toEqual(["Patrol corvette", "Starship", "Deep-space freighter"]);
+    expect(packGroups(sections, "lcars").map((group) => group.name)).toEqual(["Starship", "Patrol corvette", "Deep-space freighter"]);
   });
 
   it("keeps every section, in pack order", () => {
