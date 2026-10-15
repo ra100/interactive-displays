@@ -79,6 +79,33 @@ describe("lintScreen", () => {
     expect(rules(screen, { show })).toEqual(["unknown-state"]);
   });
 
+  it("flags live values that change in states the show does not have", () => {
+    const show = ShowSchema.parse({ schemaVersion: 1, id: "s", name: "S", theme: { id: "base" } });
+    const gauge = {
+      id: "g",
+      type: "widget",
+      kind: "gauge",
+      props: { label: "OUTPUT" },
+      bind: { value: { ambient: { kind: "walk", min: 1, max: 2 }, byState: { "red-alert": { max: 9 }, normal: { min: 0 } } } },
+    };
+    const screen = screenWith({ id: "root", type: "container", layout: { kind: "stack", direction: "row" }, children: [{ node: gauge }] });
+    expect(lintScreen(screen, { show }).map((issue) => issue.message)).toEqual([
+      'A live value changes in "red-alert", which the show does not have',
+    ]);
+  });
+
+  it("flags placeholders still waiting to be filled", () => {
+    const screen = screenWith({
+      id: "root",
+      type: "container",
+      layout: { kind: "stack", direction: "row" },
+      children: [{ node: { id: "p", type: "widget", kind: "placeholder", props: { intent: "Containment status" } } }],
+    });
+    expect(lintScreen(screen).map((issue) => issue.message)).toEqual([
+      'Still a placeholder for "Containment status"; Regenerate fills it',
+    ]);
+  });
+
   it("notes decor from another theme", () => {
     const screen = screenWith({
       id: "root",

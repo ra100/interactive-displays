@@ -32,6 +32,7 @@ describe("catalog", () => {
       "alert-banner",
       "image",
       "video",
+      "placeholder",
     ]);
   });
 

@@ -144,6 +144,28 @@ export const lintScreen = (screen: Screen, context: LintContext = {}): LintIssue
 
     if (node.type === "widget") lintLiveParts(node, videos, context, issues);
 
+    if (node.type === "widget" && node.kind === "placeholder" && !node.hidden) {
+      const intent = node.props["intent"];
+      issues.push({
+        level: "warning",
+        rule: "placeholder",
+        nodeId: node.id,
+        message: `Still a placeholder${typeof intent === "string" ? ` for "${intent}"` : ""}; Regenerate fills it`,
+      });
+    }
+
+    const perState = node.type === "widget" ? Object.values(node.bind ?? {}).flatMap((binding) => Object.keys(("byState" in binding && binding.byState) || {})) : [];
+    for (const state of new Set(perState)) {
+      if (states && !states.has(state)) {
+        issues.push({
+          level: "warning",
+          rule: "unknown-state",
+          nodeId: node.id,
+          message: `A live value changes in "${state}", which the show does not have`,
+        });
+      }
+    }
+
     for (const override of node.when ?? []) {
       if (states && !states.has(override.state)) {
         issues.push({

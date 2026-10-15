@@ -8,6 +8,7 @@ import { dataGrid } from "./dataGrid.ts";
 import { createCatalog, type WidgetProps } from "./defineWidget.ts";
 import { gauge } from "./gauge.ts";
 import { image } from "./image.ts";
+import { placeholder } from "./placeholder.ts";
 import { readout } from "./readout.ts";
 import { slider } from "./slider.ts";
 import { sparkline } from "./sparkline.ts";
@@ -38,6 +39,7 @@ export const widgets = {
   "alert-banner": alertBanner,
   image,
   video,
+  placeholder,
 } as const;
 
 export type WidgetKind = keyof typeof widgets;
