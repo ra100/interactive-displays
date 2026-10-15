@@ -19,6 +19,9 @@ export const registerMcp = (app: FastifyInstance, deps: McpDeps, { editorToken }
       if (request.method !== "POST") {
         return reply.code(405).header("allow", "POST").send({ error: "Send MCP requests with POST" });
       }
+      // Every tool call is logged, so who changed what can be traced from the server log.
+      const call = request.body as { method?: unknown; params?: { name?: unknown } } | undefined;
+      if (call?.method === "tools/call") request.log.info({ tool: call.params?.name }, "MCP tool call");
       const server = createMcpServer(deps);
       const transport = new StreamableHTTPServerTransport({ enableJsonResponse: true });
       reply.hijack();
