@@ -109,6 +109,9 @@ const lintLiveParts = (node: WidgetNode, videos: ReadonlySet<string>, context: L
     if (action.do === "setState" && show && !show.states.some((state) => state.id === action.state)) {
       warn("unknown-state", `The show has no state "${action.state}"`);
     }
+    if (action.do === "cue" && show && !show.cues.some((cue) => cue.id === action.cue)) {
+      warn("unknown-cue", `The show has no cue "${action.cue}"`);
+    }
     if (action.do === "navigate" && screens && !screens.has(action.screen)) {
       warn("unknown-screen", `There is no screen "${action.screen}" to go to`);
     }

@@ -623,8 +623,8 @@ export const createShowService = ({
     },
 
     // An actor used a control on a display. Runs the actions that are the server's: navigation for that display
-    // (not while it previews a draft), and show state and shared signals while the show allows displays to change
-    // them. The display plays its own sounds and videos. Returns what ran.
+    // (not while it previews a draft), and show state, shared signals and cues while the show allows displays to
+    // change them. The display plays its own sounds and videos. Returns what ran.
     press: async (displayId: string, input: Press): Promise<Action["do"][]> => {
       if (!loaded) return [];
       const { screen, preview } = screenFor(loaded, displayId);
@@ -636,6 +636,7 @@ export const createShowService = ({
         if (action.do === "navigate" && !preview && navigate(loaded, displayId, action.screen)) ran.push(action.do);
         if (action.do === "back" && !preview && back(displayId)) ran.push(action.do);
         if (action.do === "setState" && global && (await stateFromDisplay(action.state)).ok) ran.push(action.do);
+        if (action.do === "cue" && global && (await serialize(() => runCue(action.cue))).ok) ran.push(action.do);
         if (action.do === "setSignal" && global) {
           // A fixed value or delta from the action, or else the control's own value.
           const value = action.value ?? (action.delta === undefined ? input.value : undefined);

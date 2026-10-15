@@ -63,7 +63,8 @@ export const phrase = (vocab: Vocab, system: string, random: Random): string =>
     .replace(/\{word\}/g, () => random.pick(vocab.words));
 
 // Actions a generated button may carry: only what this show can do, so nothing points at a missing state,
-// signal or screen. Video actions need a video on the same screen, which generated screens do not have.
+// signal or screen. Video actions need a video on the same screen, which generated screens do not have, and cues
+// belong to one show's running order.
 export const usableActions = (actions: readonly Action[] | undefined, show: ShowContext): Action[] =>
   (actions ?? []).filter((action) => {
     switch (action.do) {
@@ -74,6 +75,7 @@ export const usableActions = (actions: readonly Action[] | undefined, show: Show
       case "navigate":
         return (show.screens ?? []).includes(action.screen);
       case "video":
+      case "cue":
         return false;
       default:
         return true;

@@ -29,8 +29,12 @@ decor is theme-only ornament. Documents store meaning; the theme decides the loo
   Per-state ranges go in "byState".
 
 ## Controls
-- Buttons, toggles, sliders and button groups carry "actions": navigate/back (that display only), setState and
-  setSignal (show-wide), video, sound. Only point at states, signals and screens that exist.
+- Buttons, toggles, sliders and button groups carry "actions": navigate/back (that display only), setState,
+  setSignal and cue (show-wide), video, sound. Only point at states, signals, cues and screens that exist.
+
+## Sizing
+- Target panels are large 4K screens; the show draws everything at its scale (70% by default) and a display can
+  have its own. To make one part larger or smaller than the rest, use the set op with scale (0.25–4).
 
 ## Editing safely
 - Every edit is a list of ops applied all or nothing against the screen's revision (baseRevision). On a 409, call
