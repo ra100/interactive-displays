@@ -21,6 +21,10 @@ describe("displays", () => {
   it("sends a state change to every display within the 100 ms budget", async () => {
     await boot();
     const displays = await Promise.all(["a", "b", "c", "engineering-1"].map((id) => server.display(id)));
+    // One change first, so the budget measures a warm server rather than its first request.
+    const warmed = displays.map(({ client }) => nextEvent(client, "state"));
+    await server.api("POST", "/api/state", { state: "yellow-alert" });
+    await Promise.all(warmed);
     const received = displays.map(({ client }) => nextEvent(client, "state"));
 
     const sent = performance.now();
