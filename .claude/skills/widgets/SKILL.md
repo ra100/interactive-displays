@@ -7,7 +7,7 @@ description: Add or change widgets in the catalog (packages/core/src/catalog) an
 
 A widget is one `defineWidget()` definition in `packages/core/src/catalog/<kind>.ts`. Everything else is derived:
 types (`WidgetPropsOf<'kind'>`), validation (`validateScreen`), JSON Schema (`/api/catalog`), contract tests,
-the gallery, and later the editor inspector and MCP tool schemas.
+the gallery, the editor's Add panel and inspector, and later the MCP tool schemas.
 
 ## Checklist
 
@@ -31,6 +31,17 @@ the gallery, and later the editor inspector and MCP tool schemas.
 4. Add `Base<Kind>.tsx` in `packages/themes/src/base/`, register in `base/renderers.ts`, style in `base.css`
    (the compiler requires a base renderer). Theme renderers (e.g. LCARS) are optional.
 5. `pnpm test && pnpm typecheck`, then look at it in every slot at `/gallery`.
+
+## Editor inspector
+
+`describeFields` (`packages/core/src/fields/`) turns the props schema into form fields: strings become text
+(multiline unless `.max()` is 120 or less), numbers keep `min`/`max`, enums become selects, `ToneSchema` becomes tone
+swatches, anything else falls back to a JSON field. Steer it from the schema, never with a hand-written form:
+
+- `.meta({ title, description })` sets the field's label and hint (`description` on the widget is for AI).
+- `.meta({ "x-editor": "asset:image" })` (or `asset:video`, `asset`) on a string makes it a picker of the show's
+  uploaded files, as in `catalog/image.ts`.
+- Defaults decide when the inspector offers Reset.
 
 ## Rendering
 

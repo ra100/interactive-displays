@@ -13,24 +13,51 @@ is no server build step: relative imports keep their `.ts` extension and only er
 
 `src/showService.ts` is the single write path. REST (`src/http/api.ts`), Socket.io (`src/realtime.ts`) and later
 MCP are thin adapters over it. Every command validates its input, persists, then emits a `ShowEvent`
-(`screen`, `state`, `display`, `identify`) that the realtime adapter turns into snapshots or small events.
-Writes that read-check-save (screens, displays) run through a queue, so two edits on the same revision cannot
-both land. State changes are broadcast before they are saved: the 100 ms budget is for displays.
+(`screen`, `published`, `state`, `display`, `identify`, `reload`, `preview`, …) that the realtime adapter turns
+into snapshots or small events. Writes that read-check-save (screens, displays) run through a queue, so two edits
+on the same revision cannot both land. State changes are broadcast before they are saved: the 100 ms budget is
+for displays.
 
 Failures are values (`{ ok: false, status, message, issues?, revision? }`), mapped to HTTP status codes.
 
+**Drafts and publishing.** Ops edit the draft (`screens/<id>.json`) and bump its `revision`. Displays show the
+published copy (`published/<id>.json`); `publish` copies the current draft there and records it in the draft's
+`published`. With the show setting `liveEdit` on, every saved edit publishes itself. A draft preview
+(`previews`, in memory only) makes one display show a draft until it is ended, the screen is deleted or the
+server restarts.
+
 ## REST API
+
+Reads are open. With `EDITOR_TOKEN` set, every other method under `/api/` needs `authorization: Bearer <token>`
+(401 otherwise).
 
 | Route | Does |
 |---|---|
+| `GET /api/session` | `{ tokenRequired, tokenValid, publicUrl }` for the tools |
 | `GET /api/catalog` | widgets (JSON Schema props), archetypes, effects, themes with variants and decor |
-| `GET /api/show` | show, current state, screen summaries, displays (assigned, showing, connected, lastSeen) |
-| `GET /api/screens/:id` | screen plus lint |
+| `GET /api/show` | overview: show, current state, screen summaries (revision, published), displays (assigned, showing, preview, connected, lastSeen) |
+| `PUT /api/show/settings` | `{ liveEdit }` |
+| `GET /api/screens` | every draft |
+| `GET /api/screens/:id` | draft plus lint and `onAir` (displays showing its published copy) |
+| `GET /api/screens/:id/published` | the published copy |
 | `POST /api/screens` | create a screen (201) |
 | `POST /api/screens/:id/ops` | `{ baseRevision, ops }`; 409 with `revision` when stale, 422 with issue paths |
+| `POST /api/screens/:id/publish` | publish the current draft; `{ revision }` guards it (409 if the draft moved on) |
+| `GET /api/screens/:id/revisions` | `[{ revision, savedAt }]`, current first |
+| `GET /api/screens/:id/revisions/:revision` | one revision |
+| `POST /api/screens/:id/revert` | `{ baseRevision, revision }`: a new revision with the old content |
+| `POST /api/screens/:id/duplicate` | `{ id?, name? }` (201) |
+| `DELETE /api/screens/:id` | 409 while a display or the show default uses it; moves it to `.trash/` |
 | `POST /api/state` | `{ state }` |
 | `PUT /api/displays/:id` | `{ name?, screen? }`; `null` clears |
+| `DELETE /api/displays/:id` | forget a display |
 | `POST /api/displays/:id/identify` | flash the display's name |
+| `POST /api/displays/:id/reload` | reload the display's page |
+| `PUT /api/displays/:id/preview` | `{ screen }`: show that draft on the display |
+| `DELETE /api/displays/:id/preview` | end the preview |
+| `GET /api/assets` | uploaded files with kind, type, size |
+| `PUT /api/assets/:name` | raw file body (≤ 100 MB); served at `/media/<name>` |
+| `DELETE /api/assets/:name` | remove a file |
 
 ## Configuration (environment)
 
@@ -41,6 +68,8 @@ Failures are values (`{ ok: false, status, message, issues?, revision? }`), mapp
 | `DATA_DIR` | `<repo>/data` (`/data` in Docker) |
 | `APP_DIST` | `<repo>/packages/app/dist` |
 | `LOG_LEVEL` | `info` |
+| `EDITOR_TOKEN` | unset: no protection; ≥ 8 characters |
+| `PUBLIC_URL` | unset: QR codes use the browser's address |
 
 ## Data directory
 
@@ -48,8 +77,11 @@ Failures are values (`{ ok: false, status, message, issues?, revision? }`), mapp
 settings.json                                    { "schemaVersion": 1, "activeShow": "demo" }
 shows/<showId>/show.json                         Show: theme (+variant), states, defaultScreen, displays[]
 shows/<showId>/runtime.json                      current state, last-seen displays (written by the server)
-shows/<showId>/screens/<screenId>.json           Screen; file name must equal its id
+shows/<showId>/screens/<screenId>.json           draft Screen; file name must equal its id
 shows/<showId>/screens/.history/<id>/<rev>.json  replaced revisions, last 50 kept
+shows/<showId>/screens/.trash/<id>-<time>.json   deleted drafts
+shows/<showId>/published/<screenId>.json         what displays show
+shows/<showId>/assets/<name>                     uploaded images and video, served at /media/<name>
 ```
 
 A data directory without `settings.json` is seeded from `packages/server/seed/` once; existing files are never
@@ -58,10 +90,17 @@ show down. All writes are atomic (temp file + rename) and serialized per file.
 
 ## Protocol
 
-Typed in `packages/core/src/protocol`. A display emits `hello { role: 'display', displayId, protocol }` and gets a
-`snapshot` (show with theme and states, current state, display, screen). Afterwards it gets a new snapshot when
-its screen or assignment changes, `state { state }` for show-wide state changes, and `identify { label }`.
-Errors arrive as `error { code, message }`. Bump `PROTOCOL_VERSION` on any breaking change: displays reload once
+Typed in `packages/core/src/protocol` (`PROTOCOL_VERSION` 3). Clients emit `hello` with a role:
+
+- `display { displayId }` joins `display:<id>` and gets a `snapshot` (show with theme and states, current state,
+  display, screen, `preview` flag). A new snapshot follows whenever what it shows changes; `state { state }` for
+  show-wide changes, `identify { label }` and `reload`.
+- `operator { token }` and `builder { token }` join `operators` / `builders` and get the show `overview` (the
+  same shape as `GET /api/show`) on hello and after every change. A wrong token gets `error { code: "UNAUTHORIZED" }`.
+- A builder emits `watch { screenId }` to join `screen:<id>` and receive `screen { screenId, screen, lint }` for
+  every saved change to that draft (`screen: null` when it is deleted); `watch { screenId: null }` stops.
+
+Errors arrive as `error { code, message }`. Bump `PROTOCOL_VERSION` on any breaking change: clients reload once
 to fetch the matching bundle.
 
 ## Rules
@@ -71,6 +110,7 @@ to fetch the matching bundle.
 - Graceful shutdown closes transports (`io.engine.close()`) and flushes runtime state, so displays reconnect on
   their own and the scene is restored.
 - Tests: `showService.test.ts` against a temp data dir; integration tests start the real server on port 0 via
-  `src/testing/testServer.ts` (`app`, `http/api`, `realtime`).
+  `src/testing/testServer.ts` (`app`, `http/api`, `realtime`). E2e specs that need their own server or
+  environment (restart, `EDITOR_TOKEN`) use `createManagedServer(port, env)` from `tests/e2e/support/server.ts`.
 - Docker: keep the pnpm workspace layout in the image (see `Dockerfile`), including `packages/themes/src` for
   the manifests; test with `docker build` and the restart smoke test from CI.

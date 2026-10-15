@@ -15,32 +15,41 @@ The v1 code is kept read-only under `legacy/` for reference; never import from i
 ```
 packages/
   core/     @interactive-displays/core    pure TS, no React, no Node APIs; runs in browser and server
-            schema/   Zod schemas: ids, tones, archetypes and slots, node tree, Screen, Show (states,
-                      displays), theme manifest (tokens, variants, effects)
+            schema/   Zod schemas: ids, tones, archetypes and slots, node tree, Screen (draft revision and
+                      published revision), Show (states, displays, settings), assets, theme manifest
             catalog/  defineWidget() registry (one file per widget) and defineDecor()
             tree/     walk/find nodes; nodeInState applies `when` overrides for a show state
             validate/ validateScreen: schema, unique ids, known kinds, props, slots, grid areas, decor
             ops/      the operation language (insert, remove, move, update, set, place, layout, replace,
                       meta): all-or-nothing, returns inverse ops for undo, can respect locks
             lint/     lintScreen: structural warnings (empty containers, missing main slot, long labels…)
-            protocol/ typed Socket.io events: hello → snapshot, state, identify, error
+            fields/   describeFields: inspector form fields from a props schema
+            migrate/  migrateScreen: upgrades older screen documents on read
+            protocol/ typed Socket.io events: hello (display, operator, builder) → snapshot or overview,
+                      state, identify, reload, watch → screen, error
   themes/   @interactive-displays/themes
             ./manifest  pure data (server-safe): theme manifests, decor catalog
             ./react     browser only: widget, frame and decor renderers, CSS
             base/       neutral theme that renders every widget and frame; the fallback for all others
             lcars/      LCARS: TNG palette + variants, effects, three frames, four decor pieces, Antonio font
   server/   Fastify + Socket.io + static app, one process, one port; runs TS directly (no build)
-            showService.ts  the command layer: every change is validated, persisted and broadcast here
-            http/api.ts     REST adapter over the command layer
-            realtime.ts     Socket.io adapter: snapshots, state and identify events
-            storage/        data directory: atomic JSON writes, revision history, runtime.json
+            showService.ts  the command layer: every change is validated, persisted and broadcast here;
+                            drafts, publish, revisions, previews, assets
+            http/api.ts     REST adapter over the command layer; EDITOR_TOKEN guards every write
+            realtime.ts     Socket.io adapter: display snapshots, tool overviews, watched drafts
+            storage/        data directory: atomic JSON writes, revision history, published copies, assets
             seed/           LCARS demo show copied into an empty data directory on first start
   app/      React 19 + Vite SPA
             runtime/  ScreenView, NodeView (stack, grid, canvas, frame), WidgetView, DecorView
-            display/  /d/:displayId: connection, state changes, identify overlay
+            display/  /d/:displayId: connection, state changes, identify overlay, draft preview badge
             gallery/  /gallery (lazy): every frame, widget-by-slot and decor per theme, variant and effect
+            operator/ /operator (lazy): state buttons, blackout, display cards (assign, identify, QR)
+            builder/  /builder (lazy): library/ (screens, templates) and editor/ (session with undo and
+                      rebase, outline, preview, inspector, history, assets, send to display)
+            tools/    shared by operator and builder: connection, token gate, API client, dialogs
 tests/e2e/  Playwright, against the built app served by the real server
 data/       runtime data (gitignored): settings.json, shows/<id>/{show,runtime}.json, shows/<id>/screens/
+            (drafts and .history/), shows/<id>/published/, shows/<id>/assets/
 ```
 
 **Import boundaries:** `core` imports only `zod`. Theme manifests import only `core` and `zod`. The server
@@ -57,8 +66,10 @@ imports `core` and `@interactive-displays/themes/manifest`. Only `app` imports `
   `damaged`, `blackout`). The theme restyles each effect; nodes can override props or visibility per state
   with `when`.
 - Every change goes through the command layer (`showService.ts`) as validated ops with revision checks.
+  Ops change a screen's draft; displays show its published copy until someone publishes (or the show is in
+  live edit mode). The editor and operator console are clients of the same REST API and socket.
 - Every widget is one `defineWidget()` definition: Zod props schema, defaults, an example, a description for AI.
-  Types, validation, JSON Schema, contract tests and (later) the editor inspector all come from it.
+  Types, validation, JSON Schema, contract tests and the editor's inspector all come from it.
 - Themes are packs: a pure-data manifest (tokens, variants, effects, decor) plus React renderers for widgets,
   frames and decor. Missing renderers fall back to `base`.
 - Layout is fluid: stacks with weights, `--u` (1% of the display's shorter side) and container query units.
@@ -69,7 +80,7 @@ imports `core` and `@interactive-displays/themes/manifest`. Only `app` imports `
 
 ```bash
 pnpm install          # Node >= 22.18 (Node 24 in Docker/CI), pnpm 9
-pnpm dev              # server on :3010 (node --watch) + Vite on :5176 (proxies /socket.io)
+pnpm dev              # server on :3010 (node --watch) + Vite on :5176 (proxies /api, /socket.io, /media)
 pnpm test             # unit + integration tests in every package (Vitest)
 pnpm build            # builds the app into packages/app/dist
 pnpm test:e2e         # Playwright; run `pnpm build` first

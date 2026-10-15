@@ -3,6 +3,75 @@
 What each phase of the v2 rebuild looks like. Screenshots are captured by `tests/e2e/showcase.spec.ts`
 against the real server and built app (`pnpm build && SHOWCASE=phase-N pnpm test:e2e showcase`).
 
+## Phase 2: editor and operator console
+
+The show can now be run and changed without touching a file. `/operator` is a console for a phone or tablet in
+a crew member's hand; `/builder` is the screen library and editor for a laptop. Edits are saved as drafts and
+reach the displays only when someone presses Publish, unless the show is in live edit mode for rehearsals.
+
+**Operator console (`/operator`).** One big button per show state, read from the show itself, and a separate
+blackout panic button that turns into "End blackout". Every display is listed with a live thumbnail of what it
+shows in the current state, a screen picker, Identify, Reload, Rename and a QR code with its address. "Add a
+display" shows a QR code that opens `/d` on a tablet.
+
+| Phone | Tablet, in red alert |
+|---|---|
+| <img src="phase-2/operator-phone.png" alt="Operator console on a phone" width="300" /> | ![Operator console on a tablet](phase-2/operator-tablet.png) |
+
+**Screen library (`/builder`).** Thumbnails of every draft, publish status, how many displays show it, search by
+name, id, section or tag, and Duplicate. Delete is offered only for screens that no display and no default use.
+A new screen starts from one of five layouts, previewed live in the show's theme.
+
+| Library | New screen |
+|---|---|
+| ![Screen library](phase-2/library.png) | ![New screen dialog](phase-2/new-screen.png) |
+
+**Editor (`/builder/<screen>`).** Add widgets, layouts, decor and uploaded files on the left; the outline shows
+the screen as a tree with its slots, and parts are moved by dragging them there. The preview in the middle is the
+display runtime itself, so it shows exactly what a display will. The inspector on the right is generated from each
+widget's schema: text, tone swatches in the theme's colours, choices, files. Undo and redo cover every change.
+
+![Editor](phase-2/editor.png)
+
+**Per-state changes.** With the preview in Red alert, "Only in Red alert" edits apply to that state alone; the
+outline marks nodes with per-state changes (⚡) and the inspector lists them with a Clear button. The same screen in
+the `base` theme on a 9:16 display, for comparison.
+
+| Editing Red alert | Portrait, base theme |
+|---|---|
+| ![Per-state edit](phase-2/editor-per-state.png) | ![Portrait base preview](phase-2/editor-portrait-base.png) |
+
+**Canvas and files.** On a free canvas, parts are dragged and resized in the preview with snapping, nudged with
+the arrow keys, or placed with exact percentages. Files are uploaded once per show; the new image widget uses
+the images, and videos wait for Phase 3's video widget.
+
+| Canvas | Assets |
+|---|---|
+| ![Canvas editing](phase-2/editor-canvas.png) | ![Assets and the image widget](phase-2/editor-assets.png) |
+
+**History and send to display.** Every saved change is a revision; any one can be viewed in the preview and
+restored, which adds a new revision so nothing is lost. "Send to display" shows the draft on one physical display
+with a DRAFT PREVIEW badge, following each edit, without publishing it.
+
+| History | Send to a display |
+|---|---|
+| ![Revision history](phase-2/editor-history.png) | ![Send to a display](phase-2/send-to-display.png) |
+
+![The draft on the display](phase-2/display-draft-preview.png)
+
+### Under the hood
+
+- Drafts and published copies are stored apart (`screens/` and `published/`); Publish copies a saved revision
+  and every display showing it switches at once. The show setting `liveEdit` publishes each edit instead.
+- Editor edits are ops sent with `baseRevision`; a stale edit is rebased on the server's copy, and edits made
+  elsewhere (another laptop, later the AI) appear in the open editor live. Undo sends the inverse ops.
+- Optional `EDITOR_TOKEN` protects `/operator`, `/builder` and every API write; displays never need it. QR codes use
+  `PUBLIC_URL` when set.
+- Protocol 3 adds the `operator` and `builder` roles, a show `overview` for tools and `watch` for a screen's draft.
+- Code: [`operator/`](../../packages/app/src/operator/), [`builder/`](../../packages/app/src/builder/),
+  [`showService.ts`](../../packages/server/src/showService.ts); e2e flows in
+  [`tests/e2e/`](../../tests/e2e/) (`operator`, `editor`, `auth`).
+
 ## Phase 1: core model and LCARS
 
 The demo show is now LCARS. Four hand-written screens cover the three frame archetypes and a free canvas;

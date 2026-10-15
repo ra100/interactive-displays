@@ -6,6 +6,128 @@ Docker smoke test); these steps are for a person with real displays.
 Report problems or ideas as a GitHub issue (label `v2`) or in the project thread, with the display type,
 browser, the URL you opened and a photo or screenshot if possible.
 
+## Phase 2: editor and operator console
+
+### Setup
+
+Start from a **fresh data directory** so the demo show gains the Ship schematic screen and its image
+(`docker compose down -v`; from source, delete `data/`). A Phase 1 data directory also works: its screens are
+upgraded on load and stay on air, it just lacks the new screen.
+
+Optional, in a `.env` file next to `docker-compose.yml` (or as environment variables):
+
+```bash
+EDITOR_TOKEN=pick-a-long-secret        # protects /operator, /builder and every change; displays never need it
+PUBLIC_URL=http://192.168.1.20:3010    # the address tablets use, for QR codes (default: the browser's address)
+```
+
+`http://<server>:3010/health` should say `"protocol":3`. You need: two or three displays opened at `/d/test`,
+`/d/engineering-1` and `/d/tactical-1`, a phone or tablet for `/operator`, and a laptop for `/builder`.
+
+### Five-minute crew training (the Phase 2 exit check)
+
+Give a crew member who has not seen the system the phone with `http://<server>:3010/operator` open and say, in
+about five minutes:
+
+1. "The big buttons at the top set the look of every screen at once: Normal, Yellow alert, Red alert, Damaged.
+   Try Red alert, then Normal."
+2. "Blackout is the panic button: every screen goes black. Press it again (it now says End blackout) to bring them
+   back."
+3. "Below is one card per display. Green dot means it is on. The picture is what it shows right now."
+4. "To change what a display shows, pick a screen in its Screen box. 'Show default' gives it the standard screen."
+5. "Not sure which physical screen is which? Press Identify: that screen flashes its name for five seconds."
+6. "Reload fixes a display that looks stuck. QR shows a code to open that display on a tablet; Add a display shows
+   the code for a brand-new one."
+
+Then, without help, ask them to:
+
+| # | Task | Pass when |
+|---|---|---|
+| 1 | "Put the ship in yellow alert" | Every display turns amber |
+| 2 | "Find the Engineering 1 display in the room" | They use Identify and point at the right screen |
+| 3 | "Show Tactical on the test display" | `/d/test` switches to Tactical; nothing else changes |
+| 4 | "Black everything out, then bring it back in red alert" | Blackout, then Red alert (or End blackout, then Red alert) |
+| 5 | "Put the test display back to normal" | Screen box back to Show default, state Normal |
+| 6 | "Add this tablet as a new display" (hand them a second tablet) | They scan the Add a display QR code; the tablet appears in the list and they assign it a screen |
+
+Note anything they hesitate over; that is the feedback this phase needs.
+
+### Operator console (`/operator`)
+
+| # | Step | Expected |
+|---|---|---|
+| 1 | Open `/operator` on a phone | Two columns of state buttons, a full-width Blackout, then the display cards; nothing needs zooming; every button is at least a fingertip tall |
+| 2 | Open it on a tablet in landscape | States on the left, display cards in two columns on the right |
+| 3 | Press each state | Every display follows within a blink; the pressed button stays highlighted; the thumbnails recolour too |
+| 4 | Press Blackout, then End blackout | Displays go black, then return to Normal |
+| 5 | Change a display's Screen | That display switches at once; its thumbnail updates |
+| 6 | Rename a display ("Bridge left") | The new name shows on the card, in Identify, and in the editor's Send to display list |
+| 7 | Close a display's browser tab | Its dot turns grey and the card says "seen … ago"; Identify and Reload are disabled; Forget removes it |
+| 8 | Reload a display | It reloads itself and comes back on the same screen |
+| 9 | QR on a card; scan it with a tablet | The tablet opens that display's address (with `PUBLIC_URL` set, that address) |
+| 10 | Open `/operator` on a second phone and change the state on the first | The second phone updates within a second |
+| 11 | Stop the server for a few seconds | The Live chip turns into Offline; buttons do nothing harmful; it reconnects on its own |
+
+### Screen library and editor (`/builder`)
+
+| # | Step | Expected |
+|---|---|---|
+| 1 | Open `/builder` on a laptop | Cards for Bridge operations, Main engineering, Ship schematic, Standby and Tactical, each with a thumbnail, "Published" and "On 1 display" where it applies |
+| 2 | Type `eng` in the search box | Only Main engineering and the screens with engineering as section remain |
+| 3 | New screen: name "Warp core", section "engineering", template Header and main, Create and edit | The editor opens a LCARS screen with a title, three toolbar pills and a main area; the library shows it as Never published |
+| 4 | In the editor, click a button in the preview, change its Label | The preview changes as you type; the top bar says Saving…, then Saved |
+| 5 | Pick a tone swatch, then press Undo and Redo (or Ctrl+Z, Ctrl+Shift+Z) | The colour reverts and comes back |
+| 6 | Drag a widget from the Widgets tab into the outline, between two rows | It lands there; the inspector shows it |
+| 7 | Drag a row in the outline to another place, or another slot | It moves; the preview re-flows |
+| 8 | Select a node, press Delete, then Ctrl+Z | It disappears and comes back |
+| 9 | Select a button, Ctrl+D, then Alt+↑ | A copy appears and moves up one place |
+| 10 | Switch the preview between 16:9, 4:3 and 9:16, between LCARS and Base, and through the states | The preview matches what a display of that shape shows in that theme and state |
+| 11 | With State set to Red alert, select a text, choose "Only in Red alert", change the text | Normal still shows the old text; Red alert shows the new one; the outline marks it with ⚡; "Changes per state" lists it with Clear |
+| 12 | Check Locked on a node | The outline shows a lock; locks matter for the generator and AI in later phases |
+| 13 | Screen tab: change the name and section | The library card follows |
+| 14 | Open Standby (a canvas): drag the text box in the preview, then drag a corner | It moves and resizes in steps; arrow keys nudge it by 1%, Shift+arrow by 5% |
+| 15 | Assets tab: Upload files, pick a PNG or JPG | It appears in the list; Add puts an image widget with it on the screen |
+| 16 | Open Bridge operations, make a change, look at a display showing the bridge | The display does **not** change yet; the top bar says Unpublished changes |
+| 17 | Press Publish | A dialog names the displays it goes on air on; after Publish they switch at once |
+| 18 | History tab: View an older revision, then Restore it | The preview shows the old version read-only; Restore makes it the current draft as a new revision; publish it to put it on air |
+| 19 | Send to display: Preview here on the test display, then edit | `/d/test` shows the draft with a DRAFT PREVIEW badge and follows every edit; the operator card says Draft preview; End preview puts it back |
+| 20 | Turn on Live edit (confirm "Go live") and change something | It goes on air without Publish; the Publish button is gone. Turn it off again before a take |
+| 21 | Open the same screen on two laptops and edit on one | The other editor shows the change within a second |
+| 22 | Checks (bottom right) | "All good" for the demo screens; an empty stack or a very long button label shows a warning you can click to select the node |
+| 23 | Library: Delete on a screen a display uses | Disabled, with a tooltip saying why; on an unused screen it asks first, then removes it |
+
+### Editor token
+
+Restart the server with `EDITOR_TOKEN` set, then:
+
+| # | Step | Expected |
+|---|---|---|
+| 1 | Open `/operator` in a fresh browser | It asks for the editor token; a wrong one says "That token was not accepted"; the right one opens the console and is remembered in that browser |
+| 2 | Open `/operator?token=<token>` on another device | It opens straight away and the token disappears from the address bar |
+| 3 | Open `/d/test` | Displays need no token |
+| 4 | `curl -X POST http://<server>:3010/api/state -H 'content-type: application/json' -d '{"state":"red-alert"}'` | `401`; with `-H 'authorization: Bearer <token>'` it works |
+
+### Edge cases worth trying
+
+- Pull the laptop's network while editing: the top bar says "Offline, retrying"; edits made meanwhile are saved
+  once it is back.
+- Delete a screen in one tab while it is open in another: the editor says "This screen was deleted".
+- Upload a file with spaces and capitals in its name: it is renamed to a safe name (`Warp Core.PNG` →
+  `warp-core.png`).
+- Select a slot row in the outline (TITLE, NAV, MAIN …) and click a widget in the Add panel: it goes into that slot.
+- Restart the server with a draft that differs from the published copy: displays keep the published copy, the
+  editor keeps the draft.
+
+### Known limitations (Phase 2)
+
+- No video widget, video transport or signal sliders on the operator console yet; they come with Phase 3's
+  living screens (see `docs/deviations/2026-10-15-phase-2-editor-operator.md`).
+- Draft previews last until ended or until the server restarts.
+- With `EDITOR_TOKEN`, reading the show and screens stays open on the network (displays need it); only changes
+  are protected. There is no audit log yet (Phase 5).
+- No generator or AI yet (Phases 4 and 5); new screens start from five fixed layouts.
+- One show; switching between shows comes later.
+
 ## Phase 1: core model and LCARS
 
 ### Setup
