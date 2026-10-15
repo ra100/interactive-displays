@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { IdSchema } from "./ids.ts";
+import { type SignalDef, SignalDefSchema } from "./signal.ts";
 
 // What a state looks like is up to the theme; the show only names the effect.
 export const EFFECTS = ["none", "warning", "alert", "damaged", "blackout"] as const;
@@ -12,6 +13,8 @@ export const StateDefSchema = z.object({
   effect: EffectSchema.default("none"),
   // Text for alert banners, e.g. "RED ALERT".
   banner: z.string().min(1).max(40).optional(),
+  // A theme sound played on every display when the show enters this state, e.g. "alert".
+  sound: IdSchema.optional(),
 });
 
 export const DisplayDefSchema = z.object({
@@ -23,11 +26,20 @@ export const DisplayDefSchema = z.object({
 export const ShowSettingsSchema = z.object({
   // Rehearsal mode: every edit goes on air at once instead of waiting for Publish.
   liveEdit: z.boolean().default(false),
+  // Display controls may change the show state and shared signals. Off locks them during a take.
+  displayGlobalActions: z.boolean().default(true),
+  // Displays play theme sounds (button presses, state changes). Off by default: sets record their own sound.
+  sounds: z.boolean().default(false),
 });
+
+export const DEFAULT_SETTINGS: ShowSettings = { liveEdit: false, displayGlobalActions: true, sounds: false };
 
 export const DEFAULT_STATES: StateDef[] = [{ id: "normal", label: "Normal", effect: "none" }];
 
 const uniqueIds = (items: readonly { id: string }[]) => new Set(items.map((item) => item.id)).size === items.length;
+
+// Live values that screens bind to.
+export const SignalListSchema = z.array(SignalDefSchema).max(200).refine(uniqueIds, "Signal ids must be unique");
 
 export const ShowSchema = z.object({
   schemaVersion: z.literal(1),
@@ -44,7 +56,8 @@ export const ShowSchema = z.object({
   // Shown on displays that have no screen of their own.
   defaultScreen: IdSchema.optional(),
   displays: z.array(DisplayDefSchema).max(100).refine(uniqueIds, "Display ids must be unique").default([]),
-  settings: ShowSettingsSchema.default({ liveEdit: false }),
+  signals: SignalListSchema.default([]),
+  settings: ShowSettingsSchema.default(DEFAULT_SETTINGS),
 });
 
 export type Effect = z.infer<typeof EffectSchema>;
@@ -59,3 +72,6 @@ export const resolveScreenId = (show: Show, displayId: string): string | undefin
 
 export const findState = (show: Show, stateId: string): StateDef | undefined =>
   show.states.find((state) => state.id === stateId);
+
+export const findSignal = (show: Pick<Show, "signals">, signalId: string): SignalDef | undefined =>
+  show.signals.find((signal) => signal.id === signalId);

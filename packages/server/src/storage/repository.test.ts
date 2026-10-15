@@ -55,9 +55,19 @@ describe("ensureSeeded", () => {
     const loaded = await loadActiveShow(dataDir, decorCatalog, log);
     expect(loaded?.show.id).toBe("demo");
     expect(loaded?.show.theme.id).toBe("lcars");
-    expect([...(loaded?.screens.keys() ?? [])]).toEqual(["bridge", "engineering", "schematic", "standby", "tactical"]);
+    expect([...(loaded?.screens.keys() ?? [])]).toEqual([
+      "bridge",
+      "engineering",
+      "schematic",
+      "standby",
+      "tactical",
+      "viewscreen",
+    ]);
     expect([...(loaded?.published.keys() ?? [])]).toEqual([...(loaded?.screens.keys() ?? [])]);
-    expect(await listAssets(dataDir, "demo")).toMatchObject([{ name: "schematic.svg", kind: "image" }]);
+    expect(await listAssets(dataDir, "demo")).toMatchObject([
+      { name: "schematic.svg", kind: "image" },
+      { name: "viewscreen.mp4", kind: "video" },
+    ]);
     expect(log.warn).not.toHaveBeenCalled();
   });
 
@@ -124,14 +134,25 @@ describe("runtime state", () => {
 
   it("starts empty when there is no runtime file", async () => {
     const loaded = await loadActiveShow(dataDir, decorCatalog, log);
-    expect(loaded?.runtime).toEqual({ schemaVersion: 1, seen: {} });
+    expect(loaded?.runtime).toEqual({ schemaVersion: 1, seen: {}, signals: {} });
   });
 
-  it("round-trips the saved state and seen displays", async () => {
-    const runtime = { schemaVersion: 1 as const, state: "red-alert", seen: { "bridge-1": "2026-10-14T12:00:00.000Z" } };
+  it("round-trips the saved state, seen displays and manual signal values", async () => {
+    const runtime = {
+      schemaVersion: 1 as const,
+      state: "red-alert",
+      seen: { "bridge-1": "2026-10-14T12:00:00.000Z" },
+      signals: { shields: 40 },
+    };
     await saveRuntime(dataDir, "s1", runtime);
 
     expect((await loadActiveShow(dataDir, decorCatalog, log))?.runtime).toEqual(runtime);
+  });
+
+  it("reads a runtime file from before signals existed", async () => {
+    await write("shows/s1/runtime.json", { schemaVersion: 1, state: "normal", seen: {} });
+
+    expect((await loadActiveShow(dataDir, decorCatalog, log))?.runtime.signals).toEqual({});
   });
 
   it("ignores an unreadable runtime file instead of failing the show", async () => {

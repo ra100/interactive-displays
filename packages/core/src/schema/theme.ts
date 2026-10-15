@@ -32,6 +32,21 @@ export const ThemeTokenOverridesSchema = z.object({
   radius: RadiusSchema.optional(),
 });
 
+// Sounds are synthesised in the browser from a few tones, so a theme ships no audio files and nothing is
+// licensed: a beep is a list of steps, each a frequency (optionally sliding to another) for some milliseconds.
+export const SoundStepSchema = z.object({
+  freq: z.number().min(20).max(8000),
+  to: z.number().min(20).max(8000).optional(),
+  ms: z.number().int().min(5).max(3000),
+  wave: z.enum(["sine", "square", "triangle", "sawtooth"]).default("sine"),
+  gain: z.number().min(0).max(1).default(0.2),
+});
+
+export const SoundSchema = z.object({
+  steps: z.array(SoundStepSchema).min(1).max(16),
+  repeat: z.number().int().min(1).max(8).default(1),
+});
+
 // The data half of a theme pack. Server, generator and MCP read this; renderers live in the app.
 export const ThemeManifestSchema = z.object({
   id: IdSchema,
@@ -44,9 +59,14 @@ export const ThemeManifestSchema = z.object({
   effects: z.partialRecord(EffectSchema, z.object({ tokens: ThemeTokenOverridesSchema })).default({}),
   // Archetypes this theme draws its own chrome for; others use the base frames.
   archetypes: z.array(z.enum(ARCHETYPE_IDS as [ArchetypeId, ...ArchetypeId[]])).default([]),
+  // "press" plays on every control; states and actions name others, such as "alert". Missing ones fall back
+  // to the base theme's.
+  sounds: z.record(IdSchema, SoundSchema).default({}),
 });
 
 export type ThemeTokens = z.infer<typeof ThemeTokensSchema>;
+export type Sound = z.infer<typeof SoundSchema>;
+export type SoundStep = z.infer<typeof SoundStepSchema>;
 export type ThemeTokenOverrides = z.infer<typeof ThemeTokenOverridesSchema>;
 
 export type ThemeManifest = z.infer<typeof ThemeManifestSchema> & {

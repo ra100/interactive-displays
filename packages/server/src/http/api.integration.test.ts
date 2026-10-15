@@ -1,4 +1,4 @@
-import type { LintIssue, Screen, ShowOverview, ValidationIssue } from "@interactive-displays/core";
+import { catalog, type LintIssue, type Screen, type ShowOverview, type ValidationIssue } from "@interactive-displays/core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createTestServer } from "../testing/testServer.ts";
 
@@ -33,7 +33,7 @@ describe("GET /api/catalog", () => {
     const { status, body } = await server.api<CatalogBody>("GET", "/api/catalog");
 
     expect(status).toBe(200);
-    expect(body.widgets.map((widget) => widget.kind)).toEqual(["title", "text", "button", "image"]);
+    expect(body.widgets.map((widget) => widget.kind)).toEqual([...catalog.keys()]);
     expect(body.widgets[2]?.props.properties).toHaveProperty("label");
     expect(Object.keys(body.archetypes)).toEqual(["sidebar", "header-main", "dashboard"]);
     expect(body.effects).toContain("blackout");
@@ -50,8 +50,15 @@ describe("GET /api/show", () => {
     const { body } = await server.api<ShowOverview>("GET", "/api/show");
 
     expect(body.state).toBe("normal");
-    expect(body.show.settings).toEqual({ liveEdit: false });
-    expect(body.screens.map((screen) => screen.id)).toEqual(["bridge", "engineering", "schematic", "standby", "tactical"]);
+    expect(body.show.settings).toEqual({ liveEdit: false, displayGlobalActions: true, sounds: false });
+    expect(body.screens.map((screen) => screen.id)).toEqual([
+      "bridge",
+      "engineering",
+      "schematic",
+      "standby",
+      "tactical",
+      "viewscreen",
+    ]);
     expect(body.screens[0]).toMatchObject({ name: "Bridge operations", revision: 0, published: 0, profile: { aspect: "16:9" } });
     const { displays } = body;
     expect(displays.find((display) => display.id === "d-new123")).toMatchObject({
@@ -70,7 +77,7 @@ describe("GET /api/show", () => {
 
   it("switches live edit on and off", async () => {
     const on = await server.api<{ settings: object }>("PUT", "/api/show/settings", { liveEdit: true });
-    expect(on.body.settings).toEqual({ liveEdit: true });
+    expect(on.body.settings).toMatchObject({ liveEdit: true });
     expect((await server.api("PUT", "/api/show/settings", { liveEdit: "yes" })).status).toBe(400);
     expect((await server.api("PUT", "/api/show/settings", { colour: "red" })).status).toBe(400);
   });
@@ -94,6 +101,7 @@ describe("screens", () => {
       "Ship schematic",
       "Standby",
       "Tactical",
+      "Viewscreen",
     ]);
   });
 
@@ -258,6 +266,53 @@ describe("state and displays", () => {
   });
 });
 
+describe("signals, settings and video", () => {
+  it("sets a shared manual signal by value or by delta", async () => {
+    expect(await server.api("PUT", "/api/signals/shields/value", { value: 42 })).toMatchObject({
+      status: 200,
+      body: { id: "shields", value: 40 },
+    });
+    expect(await server.api("PUT", "/api/signals/shields/value", { delta: -15 })).toMatchObject({
+      status: 200,
+      body: { value: 25 },
+    });
+    expect(await server.api("GET", "/api/signals")).toMatchObject({ status: 200, body: { values: { shields: 25 } } });
+  });
+
+  it("refuses bad signal changes", async () => {
+    expect((await server.api("PUT", "/api/signals/shields/value", { value: 1, delta: 1 })).status).toBe(400);
+    expect((await server.api("PUT", "/api/signals/shields/value", {})).status).toBe(400);
+    expect((await server.api("PUT", "/api/signals/Bad%20Id/value", { value: 1 })).status).toBe(400);
+    expect((await server.api("PUT", "/api/signals/eps.load/value", { value: 1 })).status).toBe(409);
+    expect((await server.api("PUT", "/api/signals/nope/value", { value: 1 })).status).toBe(404);
+  });
+
+  it("replaces the show's signal definitions", async () => {
+    const signals = [{ id: "reactor", label: "Reactor", source: { kind: "wave", min: 0, max: 10 } }];
+    const { status, body } = await server.api<{ signals: Array<{ id: string; scope: string }> }>("PUT", "/api/show/signals", { signals });
+
+    expect(status).toBe(200);
+    expect(body.signals).toMatchObject([{ id: "reactor", scope: "ambient" }]);
+    expect((await server.api<ShowOverview>("GET", "/api/show")).body.show.signals).toHaveLength(1);
+    expect(await server.api("PUT", "/api/show/signals", { signals: [{ id: "x" }] })).toMatchObject({ status: 422 });
+    expect((await server.api("PUT", "/api/show/signals", [])).status).toBe(400);
+  });
+
+  it("switches display controls and sounds", async () => {
+    const { body } = await server.api<{ settings: object }>("PUT", "/api/show/settings", { displayGlobalActions: false, sounds: true });
+    expect(body.settings).toEqual({ liveEdit: false, displayGlobalActions: false, sounds: true });
+  });
+
+  it("sends video commands only for videos the display shows", async () => {
+    expect(await server.api("POST", "/api/displays/viewscreen-1/video", { target: "feed", command: "toggle" })).toMatchObject({
+      status: 200,
+      body: { target: "feed", command: "toggle" },
+    });
+    expect((await server.api("POST", "/api/displays/test/video", { target: "feed", command: "play" })).status).toBe(404);
+    expect((await server.api("POST", "/api/displays/viewscreen-1/video", { target: "feed", command: "rewind" })).status).toBe(400);
+  });
+});
+
 describe("assets", () => {
   const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
@@ -268,7 +323,7 @@ describe("assets", () => {
     expect(uploaded).toMatchObject({ status: 201, body: { asset: "warp-core.png" } });
 
     const list = await server.api<{ assets: Array<{ name: string; size: number }> }>("GET", "/api/assets");
-    expect(list.body.assets.map((asset) => asset.name)).toEqual(["schematic.svg", "warp-core.png"]);
+    expect(list.body.assets.map((asset) => asset.name)).toEqual(["schematic.svg", "viewscreen.mp4", "warp-core.png"]);
 
     const file = await fetch(`${server.url()}/media/warp-core.png`);
     expect(file.status).toBe(200);

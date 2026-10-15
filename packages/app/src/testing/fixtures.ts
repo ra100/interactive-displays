@@ -32,6 +32,7 @@ export const sampleOverview = (overrides: Partial<ShowOverview> = {}): ShowOverv
     displays: [{ id: "eng-1", name: "Engineering 1", screen: "engineering" }],
   }),
   state: "normal",
+  signals: {},
   screens: [
     { id: "bridge", name: "Bridge", tags: [], profile: { aspect: "16:9", fit: "fluid" }, revision: 0, published: 0 },
     { id: "engineering", name: "Engineering", tags: [], profile: { aspect: "16:9", fit: "fluid" }, revision: 2, published: 1 },
@@ -44,10 +45,12 @@ export const sampleOverview = (overrides: Partial<ShowOverview> = {}): ShowOverv
       assigned: "engineering",
       showing: "engineering",
       preview: null,
+      navigated: null,
+      videos: [],
       connected: true,
       lastSeen: "2026-10-15T10:00:00.000Z",
     },
-    { id: "lobby", showing: "bridge", preview: null, connected: false, lastSeen: null },
+    { id: "lobby", showing: "bridge", preview: null, navigated: null, videos: [], connected: false, lastSeen: null },
   ],
   ...overrides,
 });

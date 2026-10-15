@@ -19,6 +19,12 @@ export type Field =
   | (FieldBase & { type: "enum"; options: string[]; default?: string })
   | (FieldBase & { type: "tone"; default?: Tone })
   | (FieldBase & { type: "asset"; accept: "image" | "video" | "any"; default?: string })
+  // A number or a short text, such as a readout's value: numeric input is kept as a number.
+  | (FieldBase & { type: "value"; default?: string | number })
+  // Lists edited one item per line; tables one row per line with cells split by "|".
+  | (FieldBase & { type: "list"; maxItems?: number; default?: string[] })
+  | (FieldBase & { type: "numbers"; maxItems?: number; min?: number; max?: number; default?: number[] })
+  | (FieldBase & { type: "table"; default?: string[][] })
   // Anything the form cannot express as one control; edited as JSON.
   | (FieldBase & { type: "json"; default?: unknown });
 
@@ -73,6 +79,40 @@ const describeOne = (key: string, schema: JsonSchema, required: boolean): Field 
       return { ...base, type: "tone", ...(typeof fallback === "string" ? { default: fallback as Tone } : {}) };
     }
     return { ...base, type: "enum", options: values, ...(typeof fallback === "string" ? { default: fallback } : {}) };
+  }
+
+  const variants = Array.isArray(schema["anyOf"]) ? schema["anyOf"].filter(isSchema) : [];
+  const variantTypes = new Set(variants.map((variant) => variant["type"]));
+  if (variants.length === 2 && variantTypes.has("string") && variantTypes.has("number")) {
+    return {
+      ...base,
+      type: "value",
+      ...(typeof fallback === "string" || typeof fallback === "number" ? { default: fallback } : {}),
+    };
+  }
+
+  if (schema["type"] === "array" && isSchema(schema["items"])) {
+    const items = schema["items"];
+    const maxItems = num(schema["maxItems"]);
+    const limit = maxItems !== undefined ? { maxItems } : {};
+    if (items["type"] === "string") {
+      return { ...base, type: "list", ...limit, ...(Array.isArray(fallback) ? { default: fallback as string[] } : {}) };
+    }
+    if (items["type"] === "number" || items["type"] === "integer") {
+      const min = num(items["minimum"]);
+      const max = num(items["maximum"]);
+      return {
+        ...base,
+        type: "numbers",
+        ...limit,
+        ...(min !== undefined ? { min } : {}),
+        ...(max !== undefined ? { max } : {}),
+        ...(Array.isArray(fallback) ? { default: fallback as number[] } : {}),
+      };
+    }
+    if (items["type"] === "array" && isSchema(items["items"]) && items["items"]["type"] === "string") {
+      return { ...base, type: "table", ...(Array.isArray(fallback) ? { default: fallback as string[][] } : {}) };
+    }
   }
 
   switch (schema["type"]) {

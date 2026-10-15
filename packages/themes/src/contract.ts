@@ -8,13 +8,17 @@ import type {
 } from "@interactive-displays/core";
 import type { ComponentType, ReactNode } from "react";
 
-// What every widget renderer receives. Props are already validated and have their defaults.
+// What every widget renderer receives. Props are already validated, have their defaults and carry their
+// live values (bindings are resolved before the renderer sees them).
 // `slot` is the frame slot the widget sits in (nav, toolbar, main…), so a theme can draw a button
 // as a sidebar block in nav and as a pill in a toolbar.
+// `onUse` is for controls: call it when the actor uses the control, with the control's value (the chosen
+// option, the slider position, 1 or 0 for a toggle). The runtime plays the press sound and runs the actions.
 export interface WidgetRendererProps<Props> {
   props: Props;
   nodeId: string;
   slot?: SlotName;
+  onUse?: (value?: number) => void;
 }
 
 export type WidgetRenderer<Kind extends WidgetKind> = ComponentType<WidgetRendererProps<WidgetPropsOf<Kind>>>;

@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 2,
+  "id": "viewscreen",
+  "name": "Viewscreen",
+  "section": "bridge",
+  "tags": [
+    "demo",
+    "lcars",
+    "video"
+  ],
+  "profile": {
+    "aspect": "16:9",
+    "fit": "fluid"
+  },
+  "revision": 0,
+  "published": 0,
+  "root": {
+    "id": "root",
+    "type": "container",
+    "layout": {
+      "kind": "frame",
+      "archetype": "header-main"
+    },
+    "children": [
+      {
+        "slot": "title",
+        "node": {
+          "id": "title",
+          "type": "widget",
+          "kind": "title",
+          "props": {
+            "text": "Long range sensors",
+            "code": "01-0101"
+          }
+        }
+      },
+      {
+        "slot": "toolbar",
+        "node": {
+          "id": "view-play",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Play",
+            "tone": "primary"
+          },
+          "actions": [
+            {
+              "do": "video",
+              "target": "feed",
+              "command": "play"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "toolbar",
+        "node": {
+          "id": "view-pause",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Hold",
+            "tone": "secondary"
+          },
+          "actions": [
+            {
+              "do": "video",
+              "target": "feed",
+              "command": "pause"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "toolbar",
+        "node": {
+          "id": "view-restart",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Replay",
+            "tone": "accent"
+          },
+          "actions": [
+            {
+              "do": "video",
+              "target": "feed",
+              "command": "restart"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "main",
+        "node": {
+          "id": "feed",
+          "type": "widget",
+          "kind": "video",
+          "props": {
+            "asset": "viewscreen.mp4",
+            "autoplay": true,
+            "loop": true,
+            "muted": true,
+            "fit": "cover"
+          }
+        }
+      },
+      {
+        "slot": "status",
+        "node": {
+          "id": "view-status",
+          "type": "widget",
+          "kind": "text",
+          "props": {
+            "text": "LONG RANGE SENSORS \u00b7 SWEEP IN PROGRESS",
+            "size": "small",
+            "tone": "secondary"
+          },
+          "when": [
+            {
+              "state": "red-alert",
+              "props": {
+                "text": "LONG RANGE SENSORS \u00b7 CONTACTS TRACKED",
+                "tone": "danger"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

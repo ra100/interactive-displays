@@ -113,9 +113,14 @@
                 "type": "widget",
                 "kind": "button",
                 "props": {
-                  "label": "Sections",
+                  "label": "Back",
                   "tone": "secondary"
-                }
+                },
+                "actions": [
+                  {
+                    "do": "back"
+                  }
+                ]
               }
             }
           ]
@@ -128,7 +133,7 @@
           "type": "widget",
           "kind": "text",
           "props": {
-            "text": "DORSAL VIEW · ALL SECTIONS REPORTING",
+            "text": "DORSAL VIEW \u00b7 ALL SECTIONS REPORTING",
             "size": "small"
           }
         }

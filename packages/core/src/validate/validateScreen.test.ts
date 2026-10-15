@@ -204,4 +204,31 @@ describe("validateScreen", () => {
       expect(bad.ok ? [] : bad.issues.map((issue) => issue.path)).toEqual(["root.children.0.node.when.0.props.tone"]);
     });
   });
+
+  describe("bindings and actions", () => {
+    const bound = (bind: unknown, actions?: unknown) => ({
+      node: { id: "g", type: "widget", kind: "gauge", props: { label: "CORE" }, bind, ...(actions ? { actions } : {}) },
+    });
+
+    it("accepts a binding on a bindable prop", () => {
+      expect(validateScreen(screen([bound({ value: { signal: "warp.output" } })]), catalog).ok).toBe(true);
+    });
+
+    it("rejects a binding on a prop that cannot follow a live value", () => {
+      const result = validateScreen(screen([bound({ label: { signal: "warp.output" } })]), catalog);
+      expect(result.ok ? [] : result.issues).toEqual([
+        { path: "root.children.0.node.bind.label", message: '"label" cannot follow a live value; gauge can bind value' },
+      ]);
+    });
+
+    it("rejects actions on a widget that is not a control", () => {
+      const result = validateScreen(screen([bound(undefined, [{ do: "back" }])]), catalog);
+      expect(result.ok ? [] : result.issues.map((issue) => issue.path)).toEqual(["root.children.0.node.actions"]);
+    });
+
+    it("accepts actions on controls", () => {
+      const go = { node: { id: "go", type: "widget", kind: "button", props: { label: "GO" }, actions: [{ do: "setState", state: "red-alert" }] } };
+      expect(validateScreen(screen([go]), catalog).ok).toBe(true);
+    });
+  });
 });

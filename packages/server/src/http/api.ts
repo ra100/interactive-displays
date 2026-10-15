@@ -6,6 +6,8 @@ import {
   EFFECTS,
   IdSchema,
   ShowSettingsSchema,
+  SignalIdSchema,
+  VideoCommandSchema,
 } from "@interactive-displays/core";
 import { themeManifests } from "@interactive-displays/themes/manifest";
 import type { FastifyInstance, FastifyReply } from "fastify";
@@ -27,6 +29,13 @@ const RevertBody = z.object({ baseRevision: z.number().int().min(0), revision: z
 const DuplicateBody = z.object({ id: IdSchema.optional(), name: z.string().min(1).max(120).optional() }).strict();
 const StateBody = z.object({ state: IdSchema });
 const SettingsBody = ShowSettingsSchema.partial().strict();
+const SignalsBody = z.object({ signals: z.unknown() }).strict();
+const SignalParams = z.object({ id: SignalIdSchema });
+const SignalValueBody = z
+  .object({ value: z.number().finite().optional(), delta: z.number().finite().optional() })
+  .strict()
+  .refine((body) => (body.value === undefined) !== (body.delta === undefined), "Send either value or delta");
+const VideoBody = z.object({ target: IdSchema, command: VideoCommandSchema }).strict();
 const PreviewBody = z.object({ screen: IdSchema }).strict();
 const DisplayBody = z
   .object({
@@ -116,8 +125,35 @@ export const registerApi = (
   app.put("/api/show/settings", async (request, reply) => {
     const body = SettingsBody.safeParse(request.body);
     if (!body.success) return badRequest(reply, body.error);
-    const patch = body.data.liveEdit === undefined ? {} : { liveEdit: body.data.liveEdit };
+    const { liveEdit, displayGlobalActions, sounds } = body.data;
+    const patch = {
+      ...(liveEdit === undefined ? {} : { liveEdit }),
+      ...(displayGlobalActions === undefined ? {} : { displayGlobalActions }),
+      ...(sounds === undefined ? {} : { sounds }),
+    };
     return send(reply, await service.updateSettings(patch), (settings) => ({ settings }));
+  });
+
+  // Replaces the show's signal definitions.
+  app.put("/api/show/signals", async (request, reply) => {
+    const body = SignalsBody.safeParse(request.body);
+    if (!body.success) return badRequest(reply, body.error);
+    return send(reply, await service.defineSignals(body.data.signals), (signals) => ({ signals }));
+  });
+
+  app.get("/api/signals", async (_request, reply) => {
+    if (!service.loaded()) return reply.code(503).send({ error: "The server has no active show; check its log" });
+    return { values: service.signalValues() };
+  });
+
+  // Sets a shared manual signal: { value } or { delta }.
+  app.put("/api/signals/:id/value", async (request, reply) => {
+    const params = SignalParams.safeParse(request.params);
+    if (!params.success) return badRequest(reply, params.error);
+    const body = SignalValueBody.safeParse(request.body);
+    if (!body.success) return badRequest(reply, body.error);
+    const change = body.data.value === undefined ? { delta: body.data.delta ?? 0 } : { value: body.data.value };
+    return send(reply, service.setSignal(params.data.id, change), (value) => ({ id: params.data.id, value }));
   });
 
   // Every draft, for the screen library.
@@ -241,6 +277,16 @@ export const registerApi = (
     const params = IdParams.safeParse(request.params);
     if (!params.success) return badRequest(reply, params.error);
     return send(reply, service.reload(params.data.id), (id) => ({ reloaded: id }));
+  });
+
+  // Plays, pauses or restarts a video widget on the screen the display shows.
+  app.post("/api/displays/:id/video", async (request, reply) => {
+    const params = IdParams.safeParse(request.params);
+    if (!params.success) return badRequest(reply, params.error);
+    const body = VideoBody.safeParse(request.body);
+    if (!body.success) return badRequest(reply, body.error);
+    const { target, command } = body.data;
+    return send(reply, service.video(params.data.id, target, command), () => ({ target, command }));
   });
 
   app.put("/api/displays/:id/preview", async (request, reply) => {

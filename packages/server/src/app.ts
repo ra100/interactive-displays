@@ -13,6 +13,8 @@ import { attachRealtime, countDisplays, type RealtimeServer } from "./realtime.t
 import { createShowService } from "./showService.ts";
 import { assetsDir, ensureSeeded, loadActiveShow } from "./storage/repository.ts";
 
+const SIGNAL_TICK_MS = 250;
+
 const hasFileExtension = (url: string): boolean => path.extname(url.split("?")[0] ?? "") !== "";
 
 // One process, one port: health check, REST API, Socket.io and the built app.
@@ -26,9 +28,14 @@ export const buildServer = async (config: Config): Promise<FastifyInstance> => {
   const io: RealtimeServer = new Server(app.server, { serveClient: false });
   attachRealtime(io, service, { editorToken: config.editorToken });
 
+  // Shared walk and wave signals move on the server, so every display shows the same value.
+  const signalClock = setInterval(() => service.tickSignals(), SIGNAL_TICK_MS);
+  signalClock.unref();
+
   // Long-lived sockets would otherwise keep the HTTP server from closing. Closing the transports
   // (rather than disconnecting sockets) tells displays to reconnect on their own once we are back.
   app.addHook("preClose", async () => {
+    clearInterval(signalClock);
     io.engine.close();
     await service.flush();
   });

@@ -184,7 +184,10 @@ describe("drafts and publishing", () => {
 
   it("publishes every edit straight away in live edit", async () => {
     const service = await open();
-    expect(await service.updateSettings({ liveEdit: true })).toEqual({ ok: true, value: { liveEdit: true } });
+    expect(await service.updateSettings({ liveEdit: true })).toEqual({
+      ok: true,
+      value: { liveEdit: true, displayGlobalActions: true, sounds: false },
+    });
     const events = record(service);
 
     await service.applyOps("bridge", 0, rename("LIVE"));
@@ -194,7 +197,7 @@ describe("drafts and publishing", () => {
       { type: "screen", screenId: "bridge" },
     ]);
     expect(titleOf(service.screenForDisplay("test").screen)).toBe("LIVE");
-    expect((await readShowFile("show.json")).settings).toEqual({ liveEdit: true });
+    expect((await readShowFile("show.json")).settings).toMatchObject({ liveEdit: true });
   });
 
   it("creates screens as unpublished drafts", async () => {
@@ -388,5 +391,189 @@ describe("without an active show", () => {
     expect(await service.assets()).toMatchObject({ ok: false, status: 503 });
     expect(service.setPreview("a", null)).toMatchObject({ ok: false, status: 503 });
     expect(service.screenForDisplay("a")).toEqual({ screen: null, preview: false });
+  });
+});
+
+describe("signals", () => {
+  it("reports the demo's shared values", async () => {
+    const values = (await open()).signalValues(0);
+    expect(values).toMatchObject({ shields: 0, hull: 100, "warp.factor": 6.2 });
+    expect(values["warp.output"]).toEqual(expect.any(Number));
+    expect(values).not.toHaveProperty("eps.load");
+  });
+
+  it("sets a manual signal within its range, broadcasts it and keeps it across a restart", async () => {
+    const service = await open();
+    const events = record(service);
+
+    expect(service.setSignal("shields", { value: 130 })).toEqual({ ok: true, value: 100 });
+    expect(service.setSignal("shields", { delta: -12 })).toEqual({ ok: true, value: 90 });
+    expect(events).toEqual([
+      { type: "signals", values: { shields: 100 } },
+      { type: "signals", values: { shields: 90 } },
+    ]);
+
+    await service.flush();
+    expect((await readShowFile("runtime.json")).signals).toEqual({ shields: 90 });
+    expect((await open()).signalValues(0)["shields"]).toBe(90);
+  });
+
+  it("refuses to set unknown signals and signals that are not shared manual ones", async () => {
+    const service = await open();
+    expect(service.setSignal("nope", { value: 1 })).toMatchObject({ ok: false, status: 404 });
+    expect(service.setSignal("eps.load", { value: 1 })).toMatchObject({ ok: false, status: 409 });
+    expect(service.setSignal("warp.output", { value: 1 })).toMatchObject({ ok: false, status: 409 });
+  });
+
+  it("ticks shared walk signals and broadcasts only changes", async () => {
+    const service = await open();
+    const events = record(service);
+
+    service.tickSignals(5000);
+    service.tickSignals(5000);
+
+    expect(events).toEqual([{ type: "signals", values: { "warp.output": expect.any(Number) } }]);
+  });
+
+  it("redefines the show's signals and drops values that no longer apply", async () => {
+    const service = await open();
+    service.setSignal("shields", { value: 50 });
+    const events = record(service);
+
+    const result = await service.defineSignals([
+      { id: "shields", label: "Shields", scope: "ambient", source: { kind: "wave", min: 0, max: 100 } },
+    ]);
+
+    expect(result).toMatchObject({ ok: true, value: [{ id: "shields", scope: "ambient" }] });
+    expect(events).toEqual([{ type: "show" }]);
+    expect(service.signalValues(0)).toEqual({});
+    expect((await readShowFile("show.json")).signals).toHaveLength(1);
+    expect((await readShowFile("runtime.json")).signals).toEqual({});
+  });
+
+  it("rejects invalid signal definitions", async () => {
+    const service = await open();
+    const duplicate = { id: "a", label: "A", source: { kind: "static", value: 1 } };
+    expect(await service.defineSignals([duplicate, duplicate])).toMatchObject({ ok: false, status: 422 });
+    expect(await service.defineSignals([{ id: "Bad Id", label: "x", source: { kind: "static", value: 1 } }])).toMatchObject({
+      ok: false,
+      status: 422,
+    });
+  });
+});
+
+describe("controls on displays", () => {
+  it("navigates a display to another screen and back", async () => {
+    const service = await open();
+    const events = record(service);
+
+    expect(await service.press("test", { nodeId: "nav-engineering" })).toEqual(["navigate"]);
+    expect(service.screenForDisplay("test").screen?.id).toBe("engineering");
+    expect(service.navigated("test")).toBe("engineering");
+    expect(service.displaysShowing("engineering").sort()).toEqual(["engineering-1", "test"]);
+
+    expect(await service.press("test", { nodeId: "tool-damage" })).toEqual(["navigate"]);
+    expect(service.screenForDisplay("test").screen?.id).toBe("schematic");
+
+    expect(await service.press("test", { nodeId: "sections" })).toEqual(["back"]);
+    expect(service.screenForDisplay("test").screen?.id).toBe("engineering");
+    expect(events.filter((event) => event.type === "display")).toHaveLength(3);
+  });
+
+  it("does nothing for a back with nowhere to go, or a press on another screen's control", async () => {
+    const service = await open();
+    expect(await service.press("engineering-1", { nodeId: "nav-engineering" })).toEqual([]);
+    expect(await service.press("engineering-1", { nodeId: "tool-damage" })).toEqual(["navigate"]);
+    expect(await service.press("engineering-1", { nodeId: "sections" })).toEqual(["back"]);
+    expect(await service.press("engineering-1", { nodeId: "sections" })).toEqual([]);
+  });
+
+  it("sends a display home when it is reassigned or its navigated screen is deleted", async () => {
+    const service = await open();
+    await service.press("test", { nodeId: "nav-engineering" });
+    await service.press("test", { nodeId: "tool-damage" });
+
+    expect(await service.deleteScreen("schematic")).toMatchObject({ ok: true });
+    expect(service.navigated("test")).toBe("engineering");
+
+    await service.updateDisplay("test", { screen: "tactical" });
+    expect(service.navigated("test")).toBeNull();
+    expect(service.screenForDisplay("test").screen?.id).toBe("tactical");
+  });
+
+  it("changes the show state and shared signals from a display", async () => {
+    const service = await open();
+
+    expect(await service.press("test", { nodeId: "act-alert" })).toEqual(["setState", "setSignal"]);
+    expect(service.state()).toBe("yellow-alert");
+    expect(service.signalValues(0)["shields"]).toBe(100);
+
+    // Hidden in yellow alert, so a stale press does nothing; stand down is shown instead.
+    expect(await service.press("test", { nodeId: "act-alert" })).toEqual([]);
+    expect(await service.press("test", { nodeId: "act-stand-down" })).toEqual(["setState", "setSignal"]);
+    expect(service.state()).toBe("normal");
+  });
+
+  it("applies relative signal changes from actions", async () => {
+    const service = await open();
+    expect(await service.press("engineering-1", { nodeId: "sys-eject" })).toEqual(["setState", "setSignal"]);
+    expect(service.state()).toBe("damaged");
+    expect(service.signalValues(0)["hull"]).toBe(64);
+  });
+
+  it("uses the control's own value when the action names none", async () => {
+    const service = await open();
+    await service.createScreen({
+      ...newScreen("helm"),
+      root: {
+        id: "root",
+        type: "container",
+        layout: { kind: "stack", direction: "column" },
+        children: [
+          {
+            node: {
+              id: "throttle",
+              type: "widget",
+              kind: "slider",
+              props: { label: "Warp", min: 0, max: 9.9, step: 0.1 },
+              bind: { value: { signal: "warp.factor" } },
+              actions: [{ do: "setSignal", signal: "warp.factor" }],
+            },
+          },
+        ],
+      },
+    });
+    await service.publish("helm");
+    await service.updateDisplay("test", { screen: "helm" });
+
+    expect(await service.press("test", { nodeId: "throttle", value: 8.47 })).toEqual(["setSignal"]);
+    expect(service.signalValues(0)["warp.factor"]).toBe(8.5);
+    expect(await service.press("test", { nodeId: "throttle" })).toEqual([]);
+  });
+
+  it("keeps show-wide changes away from displays when the show locks them", async () => {
+    const service = await open();
+    await service.updateSettings({ displayGlobalActions: false });
+
+    expect(await service.press("test", { nodeId: "act-alert" })).toEqual([]);
+    expect(service.state()).toBe("normal");
+    expect(await service.press("test", { nodeId: "nav-engineering" })).toEqual(["navigate"]);
+  });
+
+  it("does not navigate a display that previews a draft", async () => {
+    const service = await open();
+    service.setPreview("test", "bridge");
+
+    expect(await service.press("test", { nodeId: "nav-engineering" })).toEqual([]);
+    expect(service.screenForDisplay("test")).toMatchObject({ preview: true, screen: { id: "bridge" } });
+  });
+
+  it("plays and pauses a video on the screen a display shows", async () => {
+    const service = await open();
+    const events = record(service);
+
+    expect(service.video("viewscreen-1", "feed", "pause")).toEqual({ ok: true, value: "feed" });
+    expect(events).toEqual([{ type: "video", displayId: "viewscreen-1", target: "feed", command: "pause" }]);
+    expect(service.video("test", "feed", "play")).toMatchObject({ ok: false, status: 404 });
   });
 });

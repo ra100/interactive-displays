@@ -64,5 +64,29 @@ export const lcars = defineTheme({
     },
   },
   archetypes: ["sidebar", "header-main", "dashboard"],
+  // Made-up tones in the spirit of the show, synthesised in the browser.
+  sounds: {
+    press: {
+      steps: [
+        { freq: 1400, ms: 40, gain: 0.14 },
+        { freq: 1900, ms: 55, gain: 0.12 },
+      ],
+    },
+    hail: {
+      steps: [
+        { freq: 1300, ms: 90, gain: 0.14 },
+        { freq: 1650, ms: 90, gain: 0.14 },
+        { freq: 2000, ms: 140, gain: 0.12 },
+      ],
+    },
+    // The red-alert klaxon, under the shared "alert" name so a show sounds right in every theme.
+    alert: {
+      steps: [
+        { freq: 480, to: 920, ms: 650, wave: "sawtooth", gain: 0.08 },
+        { freq: 920, ms: 120, gain: 0 },
+      ],
+      repeat: 3,
+    },
+  },
   decor: [elbow, bar, cap, bracket],
 });
