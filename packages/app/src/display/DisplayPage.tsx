@@ -1,17 +1,28 @@
 import { IdSchema } from "@interactive-displays/core";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Navigate, useParams, useSearchParams } from "react-router-dom";
 import { ScreenView } from "../runtime/ScreenView.tsx";
 import { getOrCreateDisplayId, rememberDisplayId } from "./displayId.ts";
 import { IdentifyOverlay } from "./IdentifyOverlay.tsx";
 import { StatusMessage } from "./StatusMessage.tsx";
 import { useDisplayConnection } from "./useDisplayConnection.ts";
+import { useSounds } from "./useSounds.ts";
 import "./display.css";
 
+// One empty list, so memoised values do not change on every render before the first snapshot.
+const NONE: never[] = [];
+
 const ConnectedDisplay = ({ displayId }: { displayId: string }) => {
-  const { status, snapshot, error, identify } = useDisplayConnection(displayId);
+  const { status, snapshot, error, identify, signals, media, press } = useDisplayConnection(displayId);
   // ?theme=base&variant=nemesis previews the show in another look on this display only.
   const [params] = useSearchParams();
+  const themeId = params.get("theme") ?? snapshot?.show.theme.id ?? "base";
+  const playSound = useSounds(themeId, snapshot?.show.sounds ?? false, snapshot?.state, snapshot?.show.states ?? NONE);
+  const showSignals = snapshot?.show.signals;
+  const live = useMemo(
+    () => ({ signals: showSignals ?? NONE, store: signals, media, press, playSound }),
+    [showSignals, signals, media, press, playSound],
+  );
 
   useEffect(() => {
     rememberDisplayId(displayId);
@@ -33,10 +44,12 @@ const ConnectedDisplay = ({ displayId }: { displayId: string }) => {
       {snapshot.screen ? (
         <ScreenView
           screen={snapshot.screen}
-          themeId={params.get("theme") ?? snapshot.show.theme.id}
+          themeId={themeId}
           variant={params.get("variant") ?? snapshot.show.theme.variant}
           state={snapshot.state}
           effect={effect}
+          states={snapshot.show.states}
+          live={live}
         />
       ) : (
         // The id is big so the operator can read it from across the room and assign a screen to it.

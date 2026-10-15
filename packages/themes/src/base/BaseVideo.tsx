@@ -1,11 +1,12 @@
 import { assetUrl, type VideoCommand, type WidgetPropsOf } from "@interactive-displays/core";
 import { useRef } from "react";
 import type { WidgetRendererProps } from "../contract.ts";
-import { useMediaCommands } from "../runtime.ts";
+import { useMediaCommands, useStill } from "../runtime.ts";
 
 // Commands run one after another, so a quick play-pause-restart from the operator cannot race itself.
 export const BaseVideo = ({ props, nodeId }: WidgetRendererProps<WidgetPropsOf<"video">>) => {
   const video = useRef<HTMLVideoElement>(null);
+  const still = useStill();
   const queue = useRef<Promise<unknown>>(Promise.resolve());
 
   const run = async (command: VideoCommand) => {
@@ -25,7 +26,8 @@ export const BaseVideo = ({ props, nodeId }: WidgetRendererProps<WidgetPropsOf<"
       ref={video}
       className="base-video"
       src={assetUrl(props.asset)}
-      autoPlay={props.autoplay}
+      autoPlay={props.autoplay && !still}
+      preload={still ? "metadata" : "auto"}
       loop={props.loop}
       muted={props.muted}
       playsInline

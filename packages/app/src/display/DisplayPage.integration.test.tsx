@@ -1,5 +1,5 @@
-import { type DisplaySnapshot, PROTOCOL_VERSION, ScreenSchema } from "@interactive-displays/core";
-import { act, render, screen } from "@testing-library/react";
+import { type DisplaySnapshot, PROTOCOL_VERSION, ScreenSchema, SignalDefSchema } from "@interactive-displays/core";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "../App.tsx";
@@ -259,6 +259,122 @@ describe("display page", () => {
     localStorage.setItem("interactive-displays.displayId", "bridge-7");
     renderAt("/");
     expect(screen.getByText("bridge-7")).toBeInTheDocument();
+  });
+});
+
+describe("live values and controls", () => {
+  const liveScreen = ScreenSchema.parse({
+    schemaVersion: 2,
+    id: "tactical",
+    name: "Tactical",
+    root: {
+      id: "root",
+      type: "container",
+      layout: { kind: "stack", direction: "column" },
+      children: [
+        { node: { id: "shields", type: "widget", kind: "readout", props: { label: "SHIELDS" }, bind: { value: { signal: "shields" } } } },
+        {
+          node: {
+            id: "raise",
+            type: "widget",
+            kind: "button",
+            props: { label: "RAISE SHIELDS" },
+            actions: [{ do: "setSignal", signal: "shields", value: 100 }],
+          },
+        },
+        { node: { id: "replay", type: "widget", kind: "button", props: { label: "REPLAY" }, actions: [{ do: "video", target: "feed", command: "restart" }] } },
+        { node: { id: "feed", type: "widget", kind: "video", props: { asset: "sweep.mp4", autoplay: false } } },
+      ],
+    },
+  });
+  const liveSnapshot = (overrides: Partial<DisplaySnapshot> = {}) => {
+    const base = snapshot();
+    return snapshot({
+      show: {
+        ...base.show,
+        signals: [SignalDefSchema.parse({ id: "shields", label: "Shields", scope: "shared", source: { kind: "manual" } })],
+        states: [...base.show.states, { id: "yellow-alert", label: "Yellow alert", effect: "warning", sound: "warning" }],
+      },
+      signals: { shields: 40 },
+      screen: liveScreen,
+      ...overrides,
+    });
+  };
+  const shieldValue = () => document.querySelector(".base-readout__value")?.textContent;
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("follows shared values from the server", () => {
+    renderAt("/d/bridge-1");
+    serverSends("connect");
+    serverSends("snapshot", liveSnapshot());
+    expect(shieldValue()).toBe("40");
+
+    serverSends("signals", { values: { shields: 85 } });
+    expect(shieldValue()).toBe("85");
+  });
+
+  it("tells the server when a control with a show-wide action is used", () => {
+    renderAt("/d/bridge-1");
+    serverSends("connect");
+    serverSends("snapshot", liveSnapshot());
+    fireEvent.click(screen.getByRole("button", { name: "RAISE SHIELDS" }));
+
+    expect(fake.emitted.at(-1)).toEqual({ event: "press", payload: { nodeId: "raise" } });
+  });
+
+  it("runs video commands from its own buttons and from the operator", async () => {
+    const play = vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
+    renderAt("/d/bridge-1");
+    serverSends("connect");
+    serverSends("snapshot", liveSnapshot());
+
+    fireEvent.click(screen.getByRole("button", { name: "REPLAY" }));
+    serverSends("video", { target: "feed", command: "play" });
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(play).toHaveBeenCalledTimes(2);
+    // Video buttons work on the display alone.
+    expect(fake.emitted.map((each) => each.event)).not.toContain("press");
+  });
+
+  it("sounds a state's alarm when the show enters it, only with sounds on", () => {
+    const oscillators = vi.fn(() => ({
+      type: "sine",
+      frequency: { setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn() },
+      connect: (node: unknown) => node,
+      start: vi.fn(),
+      stop: vi.fn(),
+    }));
+    const audioContext = vi.fn(function FakeAudioContext() {
+      return {
+        currentTime: 0,
+        state: "running",
+        destination: {},
+        resume: () => Promise.resolve(),
+        createOscillator: oscillators,
+        createGain: () => ({ gain: { setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn() }, connect: (node: unknown) => node }),
+      };
+    });
+    vi.stubGlobal("AudioContext", audioContext);
+
+    renderAt("/d/bridge-1");
+    serverSends("connect");
+    serverSends("snapshot", liveSnapshot());
+    serverSends("state", { state: "yellow-alert" });
+    expect(audioContext).not.toHaveBeenCalled();
+
+    const base = liveSnapshot();
+    serverSends("snapshot", liveSnapshot({ show: { ...base.show, sounds: true } }));
+    serverSends("state", { state: "normal" });
+    serverSends("state", { state: "yellow-alert" });
+    expect(audioContext).toHaveBeenCalledTimes(1);
+    expect(oscillators).toHaveBeenCalled();
   });
 });
 

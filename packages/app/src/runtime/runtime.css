@@ -43,6 +43,14 @@
   --touch: calc(8.3 * var(--u));
 }
 
+/* A still screen (thumbnails, screenshots) shows one frame of every animation. */
+.screen[data-still] *,
+.screen[data-still] *::before,
+.screen[data-still] *::after {
+  animation-play-state: paused !important;
+  transition: none !important;
+}
+
 .screen[data-fit="contain"] {
   width: min(100cqw, calc(100cqh * var(--aspect-ratio)));
   height: min(100cqh, calc(100cqw / var(--aspect-ratio)));
