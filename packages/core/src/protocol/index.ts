@@ -61,7 +61,8 @@ export interface DisplaySnapshot {
   state: string;
   // Current values of the server-owned shared signals.
   signals: SignalValues;
-  display: { id: string; name?: string };
+  // scale is how big this display draws everything (its own scale, or the show's).
+  display: { id: string; name?: string; scale: number };
   screen: Screen | null;
   // True while the display shows a draft sent from the editor instead of the published screen.
   preview: boolean;
@@ -85,6 +86,8 @@ export interface DisplayStatus {
   name?: string;
   // The screen assigned to this display, if any; otherwise it shows the show's default screen.
   assigned?: string;
+  // The display's own scale, when it does not use the show's.
+  scale?: number;
   showing: string | null;
   // The screen whose draft the display is previewing, if any.
   preview: string | null;

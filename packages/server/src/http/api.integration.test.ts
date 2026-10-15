@@ -319,6 +319,17 @@ describe("signals, settings and video", () => {
     expect((await server.api("PUT", "/api/show/theme", { theme: "crt" })).status).toBe(400);
   });
 
+  it("sends each display the scale it draws at", async () => {
+    const { client } = await server.display("test");
+    let snapshot = nextEvent(client, "snapshot");
+    expect(await server.api("PUT", "/api/show/scale", { scale: 0.5 })).toMatchObject({ status: 200, body: { scale: 0.5 } });
+    expect(await snapshot).toMatchObject({ display: { id: "test", scale: 0.5 } });
+    snapshot = nextEvent(client, "snapshot");
+    expect((await server.api("PUT", "/api/displays/test", { scale: 0.8 })).status).toBe(200);
+    expect(await snapshot).toMatchObject({ display: { id: "test", scale: 0.8 } });
+    expect((await server.api("PUT", "/api/show/scale", { scale: 3 })).status).toBe(400);
+  });
+
   it("changes only the settings a request names", async () => {
     await server.api("PUT", "/api/show/settings", { displayGlobalActions: false });
     await server.api("PUT", "/api/show/settings", { liveEdit: true });

@@ -9,6 +9,7 @@ import {
   ShowSettingsSchema,
   SignalIdSchema,
   VideoCommandSchema,
+  UiScaleSchema,
 } from "@interactive-displays/core";
 import type { FastifyInstance, FastifyReply } from "fastify";
 import { z } from "zod";
@@ -44,6 +45,7 @@ const SettingsBody = z
   .partial()
   .strict();
 const ThemeBody = z.object({ id: IdSchema, variant: IdSchema.optional() }).strict();
+const ScaleBody = z.object({ scale: UiScaleSchema }).strict();
 const SignalsBody = z.object({ signals: z.unknown() }).strict();
 const SignalParams = z.object({ id: SignalIdSchema });
 const SignalValueBody = z
@@ -56,6 +58,7 @@ const DisplayBody = z
   .object({
     name: z.string().min(1).max(60).nullable().optional(),
     screen: IdSchema.nullable().optional(),
+    scale: UiScaleSchema.nullable().optional(),
   })
   .strict();
 
@@ -203,6 +206,13 @@ export const registerApi = (
     return send(reply, await service.setTheme(body.data), (theme) => ({ theme }));
   });
 
+  // How big displays draw their screens (0.25–2); a display's own scale wins.
+  app.put("/api/show/scale", async (request, reply) => {
+    const body = ScaleBody.safeParse(request.body);
+    if (!body.success) return badRequest(reply, body.error);
+    return send(reply, await service.setScale(body.data.scale), (scale) => ({ scale }));
+  });
+
   // Replaces the show's signal definitions.
   app.put("/api/show/signals", async (request, reply) => {
     const body = SignalsBody.safeParse(request.body);
@@ -326,6 +336,7 @@ export const registerApi = (
     const patch = {
       ...(body.data.name !== undefined ? { name: body.data.name } : {}),
       ...(body.data.screen !== undefined ? { screen: body.data.screen } : {}),
+      ...(body.data.scale !== undefined ? { scale: body.data.scale } : {}),
     };
     return send(reply, await service.updateDisplay(params.data.id, patch), (display) => ({ display }));
   });

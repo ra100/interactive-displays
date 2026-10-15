@@ -142,7 +142,7 @@ describe("screen library", () => {
         body: expect.objectContaining({
           id: "tactical",
           section: "tactical",
-          generator: { recipe: "trek/tactical", seed: 1235, density: "normal" },
+          generator: { recipe: "trek/tactical", seed: 1235, density: "dense" },
         }),
       }),
     ]);

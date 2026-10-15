@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { findState, resolveScreenId, ShowSchema } from "./show.ts";
+import { DEFAULT_UI_SCALE, displayScale, findState, resolveScreenId, ShowSchema } from "./show.ts";
 
 const show = ShowSchema.parse({
   schemaVersion: 1,
@@ -36,6 +36,21 @@ describe("ShowSchema", () => {
     expect(parsed.signals[0]).toEqual({ ...signal, scope: "ambient", source: { kind: "walk", min: 90, max: 99, volatility: 0.3 } });
     const twice = ShowSchema.safeParse({ schemaVersion: 1, id: "s", name: "S", theme: { id: "base" }, signals: [signal, signal] });
     expect(twice.success).toBe(false);
+  });
+
+  it("draws smaller than 1:1 by default, and a display can keep a size of its own", () => {
+    const parsed = ShowSchema.parse({
+      schemaVersion: 1,
+      id: "s",
+      name: "S",
+      theme: { id: "base" },
+      displays: [{ id: "corridor", scale: 1 }, { id: "bridge" }],
+    });
+    expect(parsed.scale).toBe(DEFAULT_UI_SCALE);
+    expect(displayScale(parsed, "corridor")).toBe(1);
+    expect(displayScale(parsed, "bridge")).toBe(DEFAULT_UI_SCALE);
+    expect(displayScale(parsed, "unknown")).toBe(DEFAULT_UI_SCALE);
+    expect(ShowSchema.safeParse({ ...parsed, scale: 3 }).success).toBe(false);
   });
 
   it("rejects an unsupported schema version", () => {

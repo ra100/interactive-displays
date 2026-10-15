@@ -17,10 +17,19 @@ export const StateDefSchema = z.object({
   sound: IdSchema.optional(),
 });
 
+// How big everything on a display is drawn: 1 sizes parts to the display, smaller values fit more on a large
+// screen (an 85" 4K panel seen from a few metres needs far smaller type than a tablet).
+export const UiScaleSchema = z.number().min(0.25).max(2);
+
+// Shows start smaller than 1:1 because sets use large 4K panels.
+export const DEFAULT_UI_SCALE = 0.7;
+
 export const DisplayDefSchema = z.object({
   id: IdSchema,
   name: z.string().min(1).max(60).optional(),
   screen: IdSchema.optional(),
+  // Overrides the show's scale for this one display, e.g. a smaller panel in a corridor.
+  scale: UiScaleSchema.optional(),
 });
 
 export const ShowSettingsSchema = z.object({
@@ -56,6 +65,7 @@ export const ShowSchema = z.object({
   id: IdSchema,
   name: z.string().min(1).max(120),
   theme: z.object({ id: IdSchema, variant: IdSchema.optional() }),
+  scale: UiScaleSchema.default(DEFAULT_UI_SCALE),
   // Show-wide modes; the first one is the state a fresh show starts in.
   states: z
     .array(StateDefSchema)
@@ -85,3 +95,7 @@ export const findState = (show: Show, stateId: string): StateDef | undefined =>
 
 export const findSignal = (show: Pick<Show, "signals">, signalId: string): SignalDef | undefined =>
   show.signals.find((signal) => signal.id === signalId);
+
+// The scale a display draws at: its own, or the show's.
+export const displayScale = (show: Show, displayId: string): number =>
+  show.displays.find((display) => display.id === displayId)?.scale ?? show.scale;

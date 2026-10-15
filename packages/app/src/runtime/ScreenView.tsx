@@ -43,6 +43,8 @@ interface Props {
   live?: Partial<Live> | undefined;
   // Time stands still and animations pause: for thumbnails and screenshots.
   still?: boolean;
+  // How big parts are drawn (the show's or the display's scale); 1 sizes them to the display.
+  scale?: number | undefined;
 }
 
 // Thumbnails freeze at one moment, the same on every render.
@@ -74,6 +76,7 @@ export const ScreenView = ({
   states,
   live: given,
   still = false,
+  scale = 1,
 }: Props) => {
   const theme = getThemeManifest(themeId);
   // Video commands from this screen's own buttons, when the caller has no bus of its own.
@@ -92,6 +95,7 @@ export const ScreenView = ({
   const style = {
     ...themeCssVariables(resolveTokens(theme, variant, effect)),
     "--aspect-ratio": String(aspectRatio(screen.profile.aspect)),
+    "--ui-scale": String(scale),
   } as CSSProperties;
   const root = nodeInState(screen.root, state);
   const Root = embedded ? "div" : "main";

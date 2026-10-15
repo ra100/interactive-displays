@@ -278,12 +278,12 @@
 }
 
 .lcars-title--header .lcars-title__text {
-  font-size: min(92cqh, 8cqw);
+  font-size: min(92cqh, 8cqw, calc(9 * var(--u)));
 }
 
 .lcars-title--header .lcars-title__code {
   padding-bottom: 0.3em;
-  font-size: min(32cqh, 3cqw);
+  font-size: min(32cqh, 3cqw, calc(3.2 * var(--u)));
 }
 
 .lcars-title--section {

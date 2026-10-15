@@ -11,7 +11,7 @@ import {
   type SlotName,
 } from "@interactive-displays/core";
 import { resolveDecor, resolveFrameRenderer } from "@interactive-displays/themes/react";
-import type { CSSProperties, ReactNode } from "react";
+import { type CSSProperties, createContext, type ReactNode, useContext } from "react";
 import { SlotProvider, useShowState, useThemeId } from "./context.ts";
 import { DecorView } from "./DecorView.tsx";
 import { WidgetErrorBoundary } from "./WidgetErrorBoundary.tsx";
@@ -131,9 +131,22 @@ const ContainerView = ({ node }: { node: ContainerNode }) => {
   }
 };
 
-// Renders a node that has already been resolved for the current show state.
-export const NodeView = ({ node }: { node: Node }) => {
-  if (node.hidden) return null;
+// How much the nodes above have scaled the screen unit, so a scaled node inside a scaled node multiplies.
+const NodeScaleContext = createContext(1);
+
+// Draws a node's parts larger or smaller by giving everything inside it its own screen unit.
+const NodeScale = ({ scale, children }: { scale: number; children: ReactNode }) => {
+  const total = useContext(NodeScaleContext) * scale;
+  return (
+    <NodeScaleContext.Provider value={total}>
+      <div className="node-scale" style={{ "--u": `calc(var(--u-screen) * ${total})` } as CSSProperties}>
+        {children}
+      </div>
+    </NodeScaleContext.Provider>
+  );
+};
+
+const NodeBody = ({ node }: { node: Node }) => {
   if (node.type === "container") return <ContainerView node={node} />;
 
   return (
@@ -142,5 +155,16 @@ export const NodeView = ({ node }: { node: Node }) => {
         {node.type === "widget" ? <WidgetView node={node} /> : <DecorView node={node} />}
       </WidgetErrorBoundary>
     </div>
+  );
+};
+
+// Renders a node that has already been resolved for the current show state.
+export const NodeView = ({ node }: { node: Node }) => {
+  if (node.hidden) return null;
+  if (node.scale === undefined || node.scale === 1) return <NodeBody node={node} />;
+  return (
+    <NodeScale scale={node.scale}>
+      <NodeBody node={node} />
+    </NodeScale>
   );
 };
