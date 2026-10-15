@@ -10,7 +10,7 @@ import {
   SLOT_DIRECTION,
   type SlotName,
 } from "@interactive-displays/core";
-import { resolveDecorRenderer, resolveFrameRenderer } from "@interactive-displays/themes/react";
+import { resolveDecor, resolveFrameRenderer } from "@interactive-displays/themes/react";
 import type { CSSProperties, ReactNode } from "react";
 import { SlotProvider, useShowState, useThemeId } from "./context.ts";
 import { DecorView } from "./DecorView.tsx";
@@ -18,15 +18,15 @@ import { WidgetErrorBoundary } from "./WidgetErrorBoundary.tsx";
 import { WidgetFallback } from "./WidgetFallback.tsx";
 import { WidgetView } from "./WidgetView.tsx";
 
-// Children as they look in the current show state, without the hidden ones and without decor that
-// belongs to another theme, so neither leaves an empty gap in the layout.
+// Children as they look in the current show state, without the hidden ones and without decor the theme
+// cannot draw (another theme's piece with no stand-in), so neither leaves an empty gap in the layout.
 const useVisibleChildren = (node: ContainerNode): ChildEntry[] => {
   const state = useShowState();
   const themeId = useThemeId();
   return node.children.flatMap((child) => {
     const resolved = nodeInState(child.node, state);
     if (resolved.hidden) return [];
-    if (resolved.type === "decor" && !resolveDecorRenderer(themeId, resolved.kind)) return [];
+    if (resolved.type === "decor" && !resolveDecor(themeId, resolved.kind, resolved.props)) return [];
     return [{ ...child, node: resolved }];
   });
 };

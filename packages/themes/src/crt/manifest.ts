@@ -103,4 +103,10 @@ export const crt = defineTheme({
     },
   },
   decor: [rule, brackets, radar, log],
+  // LCARS ornament re-skinned: bars and elbows become rules, brackets become corner brackets; end caps go.
+  decorStandIns: {
+    "lcars.bar": { kind: "crt.rule", props: { style: "double" } },
+    "lcars.elbow": { kind: "crt.rule", props: { style: "single" } },
+    "lcars.bracket": { kind: "crt.brackets" },
+  },
 });
