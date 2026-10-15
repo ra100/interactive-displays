@@ -38,6 +38,7 @@ import { AddPanel } from "./AddPanel.tsx";
 import type { DragSource } from "./dragSource.ts";
 import { clampRect, duplicateOps, insertOps, moveOps, removeOps, type Selection, shiftOps, type Target } from "./editing.ts";
 import { type EditorContextValue, EditorProvider } from "./EditorContext.ts";
+import { FillDialog } from "./FillDialog.tsx";
 import { HistoryPanel } from "./HistoryPanel.tsx";
 import { Inspector } from "./Inspector.tsx";
 import { LintList } from "./LintList.tsx";
@@ -78,7 +79,7 @@ type RightTab = "inspect" | "screen" | "history";
 
 const RIGHT_TABS: Record<RightTab, string> = { inspect: "Selection", screen: "Screen", history: "History" };
 
-const Editor = ({ overview, connection, screenId }: Tools & { screenId: string }) => {
+const Editor = ({ overview, connection, session, screenId }: Tools & { screenId: string }) => {
   const toast = useToast();
   const notify = toast.show;
   const editor = useScreenEditor(screenId, connection.socket, (message) => notify(message, "danger"));
@@ -95,7 +96,7 @@ const Editor = ({ overview, connection, screenId }: Tools & { screenId: string }
   const [tab, setTab] = useState<RightTab>("inspect");
   const [viewing, setViewing] = useState<Screen | undefined>(undefined);
   const [assets, setAssets] = useState<AssetInfo[]>([]);
-  const [dialog, setDialog] = useState<"send" | "publish" | "live" | undefined>(undefined);
+  const [dialog, setDialog] = useState<"send" | "publish" | "live" | "fill" | undefined>(undefined);
   const [dragging, setDragging] = useState<DragSource | undefined>(undefined);
 
   const refreshAssets = useCallback(() => {
@@ -301,6 +302,11 @@ const Editor = ({ overview, connection, screenId }: Tools & { screenId: string }
               Regenerate
             </button>
           ) : null}
+          {session.ai ? (
+            <button type="button" className="tool-button tool-button--small" onClick={() => setDialog("fill")} title="Describe a change and review what the AI proposes">
+              Fill with AI
+            </button>
+          ) : null}
           <span className="editor__spacer" />
           <label className="switch" title="Rehearsal mode: every edit to any screen goes on air at once">
             <input
@@ -440,6 +446,20 @@ const Editor = ({ overview, connection, screenId }: Tools & { screenId: string }
         </div>
 
         {dialog === "send" ? <SendDialog overview={overview} screenId={screenId} onDone={notify} onClose={() => setDialog(undefined)} /> : null}
+        {dialog === "fill" ? (
+          <FillDialog
+            screenId={screenId}
+            theme={show.theme}
+            states={show.states}
+            settled={editor.settled}
+            onApply={(ops) => {
+              const done = apply(ops);
+              if (done) notify("Applied the AI's change; Undo takes it back");
+              return done;
+            }}
+            onClose={() => setDialog(undefined)}
+          />
+        ) : null}
         {dialog === "publish" ? (
           <ConfirmDialog title={`Publish ${screen.name}?`} confirm="Publish" onConfirm={() => void publish()} onClose={() => setDialog(undefined)}>
             <p>It goes on air at once on {onAir.map((display) => display.name ?? display.id).join(", ")}.</p>

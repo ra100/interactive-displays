@@ -947,3 +947,31 @@
 .action-add .tool-field {
   flex: 1;
 }
+
+/* Fill with AI */
+.fill {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fill__brief {
+  min-height: 96px;
+  resize: vertical;
+  font: inherit;
+}
+
+.fill__suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.fill .thumbnail {
+  max-height: 50vh;
+}
+
+.fill__summary {
+  margin: 0;
+  line-height: 1.5;
+}

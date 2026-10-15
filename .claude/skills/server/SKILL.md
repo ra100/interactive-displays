@@ -46,7 +46,7 @@ Reads are open. With `EDITOR_TOKEN` set, every other method under `/api/` needs 
 
 | Route | Does |
 |---|---|
-| `GET /api/session` | `{ tokenRequired, tokenValid, publicUrl }` for the tools |
+| `GET /api/session` | `{ tokenRequired, tokenValid, publicUrl, ai }` for the tools (`ai` is `{ model }` or null) |
 | `GET /api/catalog` | widgets (JSON Schema props), archetypes, effects, themes with variants and decor |
 | `GET /api/show` | overview: show, current state, shared signal values, screen summaries (revision, published), displays (assigned, showing, preview, navigated, videos, connected, lastSeen) |
 | `PUT /api/show/settings` | `{ liveEdit?, displayGlobalActions?, sounds?, aiPublish?, aiLiveControl? }` |
@@ -54,6 +54,7 @@ Reads are open. With `EDITOR_TOKEN` set, every other method under `/api/` needs 
 | `PUT /api/content/:pack/recipes` | a recipe; added or replaced by id if the pack stays valid (422 with issues) |
 | `PUT /api/content/:pack/blocks` | a block, the same way |
 | `POST /api/generate` | `{ section, id?, name?, seed?, density?, aspect?, archetype?, suite? }` → `{ screens, lint }` (201) |
+| `POST /api/screens/:id/fill` | `{ baseRevision, brief }` → `{ ops, screen, lint, summary }`: a proposal from the model working on a copy (`assistant.ts`); nothing is saved |
 | `POST /api/screens/:id/regenerate` | `{ baseRevision, seed?, nodes? }`: regenerate what is not locked, or reroll the panels in `nodes` |
 | `PUT /api/show/signals` | `{ signals }`: replaces the show's signal definitions (422 with issue paths) |
 | `GET /api/signals` | `{ values }`: current values of the server-owned signals |
@@ -110,6 +111,8 @@ Errors come back as tool results with `isError` and `{ error, status, issues?, r
 | `LOG_LEVEL` | `info` |
 | `EDITOR_TOKEN` | unset: no protection; ≥ 8 characters |
 | `PUBLIC_URL` | unset: QR codes use the browser's address |
+| `ANTHROPIC_API_KEY` | unset: no Fill with AI (`/api/screens/:id/fill` answers 503, `/api/session` has `ai: null`) |
+| `AI_MODEL` | `claude-opus-5-5` |
 
 ## Data directory
 

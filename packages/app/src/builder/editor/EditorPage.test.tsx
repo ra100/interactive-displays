@@ -34,14 +34,22 @@ const bridge = (): Screen =>
 let draft: Screen;
 let conflicts = 0;
 let calls: Call[];
+let ai: { model: string } | null;
 
 beforeEach(() => {
   fakeServer.reset();
   localStorage.clear();
   draft = bridge();
   conflicts = 0;
+  ai = null;
   calls = fakeFetch(({ method, path, body }) => {
-    if (path === "/api/session") return { body: { tokenRequired: false, tokenValid: true, publicUrl: null } };
+    if (path === "/api/session") return { body: { tokenRequired: false, tokenValid: true, publicUrl: null, ai } };
+    if (method === "POST" && path === "/api/screens/bridge/fill") {
+      const ops: Op[] = [{ op: "update", id: "note", props: { text: "TORPEDO TUBES LOADED" } }];
+      const proposed = applyOps(draft, ops, { catalog, decor: decorCatalog });
+      if (!proposed.ok) throw new Error("bad fixture");
+      return { body: { ops, screen: proposed.screen, lint: [], summary: "Turned the note into a torpedo status line." } };
+    }
     if (path === "/api/assets") return { body: { assets: [] } };
     if (method === "GET" && path === "/api/screens/bridge") return { body: { screen: draft, lint: [], onAir: [] } };
     if (method === "POST" && path === "/api/screens/bridge/ops") {
@@ -445,5 +453,41 @@ describe("generating", () => {
   it("offers Regenerate only for screens of a known section", async () => {
     await open();
     expect(screen.queryByRole("button", { name: "Regenerate" })).not.toBeInTheDocument();
+  });
+
+  it("offers Fill with AI only when the server has a model", async () => {
+    await open();
+    expect(screen.queryByRole("button", { name: "Fill with AI" })).not.toBeInTheDocument();
+  });
+
+  it("asks the server for a proposal and applies it only when accepted", async () => {
+    ai = { model: "claude-opus-5-5" };
+    await open();
+    await userEvent.click(await screen.findByRole("button", { name: "Fill with AI" }));
+    const dialog = within(screen.getByRole("dialog", { name: "Fill with AI" }));
+    await userEvent.click(dialog.getByRole("button", { name: "Fill the placeholders" }));
+    await userEvent.click(dialog.getByRole("button", { name: "Ask" }));
+
+    expect(await dialog.findByText("Turned the note into a torpedo status line.")).toBeInTheDocument();
+    expect(calls.find((call) => call.path === "/api/screens/bridge/fill")?.body).toEqual({ baseRevision: 0, brief: "Fill the placeholders" });
+    expect(opsSent()).toEqual([]);
+
+    await userEvent.click(dialog.getByRole("button", { name: "Apply" }));
+    await waitFor(() => expect(opsSent()).toEqual([{ baseRevision: 0, ops: [{ op: "update", id: "note", props: { text: "TORPEDO TUBES LOADED" } }] }]));
+    expect(screen.queryByRole("dialog", { name: "Fill with AI" })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Undo" }));
+    await waitFor(() => expect(JSON.stringify(draft.root)).toContain("All quiet."));
+  });
+
+  it("discards a proposal without saving anything", async () => {
+    ai = { model: "claude-opus-5-5" };
+    await open();
+    await userEvent.click(await screen.findByRole("button", { name: "Fill with AI" }));
+    const dialog = within(screen.getByRole("dialog", { name: "Fill with AI" }));
+    await userEvent.type(dialog.getByLabelText("What should change?"), "Torpedoes");
+    await userEvent.click(dialog.getByRole("button", { name: "Ask" }));
+    await userEvent.click(await dialog.findByRole("button", { name: "Discard" }));
+    expect(opsSent()).toEqual([]);
   });
 });
