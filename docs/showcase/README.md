@@ -3,6 +3,74 @@
 What each phase of the v2 rebuild looks like. Screenshots are captured by `tests/e2e/showcase.spec.ts`
 against the real server and built app (`pnpm build && SHOWCASE=phase-N pnpm test:e2e showcase`).
 
+## Phase 4: one-click generation
+
+Pick a ship section and get a plausible, on-style screen in one click. The generator works from a content pack
+(the starship pack has nine sections) and a seed, so the same choices always give the same screen and a new
+seed gives a new one.
+
+**Generate.** The library's Generate dialog shows three takes on a section, each on another layout, previewed in
+any show state. Density, aspect and seed are there, with a dice roll for fresh takes. "Also make a screen for each
+system" creates a linked suite.
+
+| Three takes | Red alert preview and a suite |
+|---|---|
+| ![Generate dialog](phase-4/generate-dialog.png) | ![Generate dialog in red alert with a suite](phase-4/generate-dialog-red-alert-suite.png) |
+
+**Generated sections on a display.** Each one is take 1 of its section, published and shown on a 1280 × 720
+display. Buttons are at least 60 px in both directions; gauges, readouts and traces move on their own, and readings
+that follow a show signal (core output, shields, hull, warp factor) use it.
+
+| Engineering | Tactical |
+|---|---|
+| ![Generated engineering](phase-4/display-engineering-2.png) | ![Generated tactical](phase-4/display-tactical-2.png) |
+| **Science** | **Medical** |
+| ![Generated science](phase-4/display-science.png) | ![Generated medical](phase-4/display-medical.png) |
+| **Helm** | **Operations** |
+| ![Generated helm](phase-4/display-helm.png) | ![Generated operations](phase-4/display-operations.png) |
+
+**Red alert without extra work.** Readings run to their alert ranges, emphasised ones turn danger, status lights
+flash, a banner appears and the status line changes.
+
+| Engineering | Medical |
+|---|---|
+| ![Generated engineering in red alert](phase-4/display-engineering-red-alert.png) | ![Generated medical in red alert](phase-4/display-medical-red-alert.png) |
+
+**Density, shape and theme.** Sparse and dense screens, a portrait display (stacked layout first) and a generated
+screen in the base theme.
+
+| Sparse security | Dense communications |
+|---|---|
+| ![Sparse security](phase-4/display-security-sparse.png) | ![Dense communications](phase-4/display-communications-dense.png) |
+| **Environmental, 9:16** | **Communications in the base theme** |
+| <img src="phase-4/display-environmental-9x16.png" alt="Environmental on a portrait display" width="300" /> | ![Communications in the base theme](phase-4/display-communications-base-theme.png) |
+
+**Editor.** Regenerate gives everything that is not locked new content in one undoable step (here the title is
+locked). Reroll swaps one panel for a fresh one in its place. A placeholder holds a sentence such as "containment
+status"; Regenerate fills it with a matching panel.
+
+| Regenerated around a locked title | Reroll one panel |
+|---|---|
+| ![Editor after Regenerate](phase-4/editor-regenerated.png) | ![Reroll in the inspector](phase-4/editor-reroll.png) |
+
+![Placeholder in the editor](phase-4/editor-placeholder.png)
+
+### Under the hood
+
+- Content packs are data: per section a recipe (systems, readings with resting and alert ranges, buttons, nav
+  labels, titles, status lines), plus shared blocks and vocabulary. Blocks are a small language of parts
+  (heading, metric, lights, actions, log…) filled from one system.
+- The generator is pure and seeded: layout from the recipe's weights, the theme's layouts and the display's shape;
+  panels from blocks by fit, size and tags; tones from the theme's palettes; alert reactions from the show's
+  states; every screen validated before it is returned.
+- Regenerate and Reroll are ordinary ops, so they share undo, locks and revisions with every other edit.
+- Code: [`core/src/generator/`](../../packages/core/src/generator/),
+  [`core/src/schema/content.ts`](../../packages/core/src/schema/content.ts),
+  [`packages/content/`](../../packages/content/src/trek/),
+  [`builder/generation.ts`](../../packages/app/src/builder/generation.ts); property tests in
+  [`packs.test.ts`](../../packages/content/src/packs.test.ts); e2e in
+  [`tests/e2e/generate.spec.ts`](../../tests/e2e/generate.spec.ts).
+
 ## Phase 3: living screens
 
 The demo show now moves and answers a touch. Numbers wander, gauges follow the values the story depends on,
