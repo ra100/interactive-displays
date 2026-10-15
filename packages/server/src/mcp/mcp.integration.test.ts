@@ -78,6 +78,7 @@ describe("MCP endpoint", () => {
         "assign_screen",
         "set_state",
         "set_signal",
+        "video_command",
       ]),
     );
     const applyOps = (await client.listTools()).tools.find((tool) => tool.name === "apply_ops");
@@ -170,6 +171,12 @@ describe("MCP endpoint", () => {
     expect((await server.api<{ state: string }>("GET", "/health")).body.state).toBe("red-alert");
     expect((await call(client, "set_signal", { signal: "shields", value: 40 })).data).toEqual({ signal: "shields", value: 40 });
     expect((await call(client, "set_signal", { signal: "shields" })).isError).toBe(true);
+    expect((await call(client, "video_command", { display: "viewscreen-1", target: "feed", command: "toggle" })).data).toEqual({
+      display: "viewscreen-1",
+      target: "feed",
+      command: "toggle",
+    });
+    expect((await call(client, "video_command", { display: "corridor-1", target: "feed", command: "play" })).isError).toBe(true);
     expect((await call(client, "assign_screen", { display: "corridor-1", screen: "tactical" })).data).toMatchObject({
       display: { id: "corridor-1", screen: "tactical" },
     });
