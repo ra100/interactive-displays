@@ -19,24 +19,34 @@ export const ShowStateInfoContext = createContext<ShowStateInfo>(NORMAL);
 export const useShowStateInfo = (): ShowStateInfo => useContext(ShowStateInfoContext);
 
 // Time for clocks and traces. One timer per interval drives every widget that asks for it, so a screen full
-// of clocks redraws once a second, together. Thumbnails use a frozen ticker and never redraw.
+// of clocks redraws once a second, together. Ticks land on whole multiples of the interval by the wall clock,
+// so displays whose clocks agree (set by the network) redraw together and, with useNow, work out the same
+// values for things that wander. Thumbnails use a frozen ticker and never redraw.
 export interface Ticker {
   now: () => number;
   subscribe: (intervalMs: number, listener: () => void) => () => void;
 }
 
 export const createTicker = (clock: () => number = Date.now): Ticker => {
-  const groups = new Map<number, { listeners: Set<() => void>; timer: ReturnType<typeof setInterval> }>();
+  const groups = new Map<number, { listeners: Set<() => void>; timer: ReturnType<typeof setTimeout> | undefined }>();
   return {
     now: clock,
     subscribe: (intervalMs, listener) => {
       let group = groups.get(intervalMs);
       if (!group) {
-        const listeners = new Set<() => void>();
-        const timer = setInterval(() => {
-          for (const each of listeners) each();
-        }, intervalMs);
-        group = { listeners, timer };
+        const created: { listeners: Set<() => void>; timer: ReturnType<typeof setTimeout> | undefined } = {
+          listeners: new Set(),
+          timer: undefined,
+        };
+        const schedule = () => {
+          const into = ((clock() % intervalMs) + intervalMs) % intervalMs;
+          created.timer = setTimeout(() => {
+            for (const each of created.listeners) each();
+            schedule();
+          }, intervalMs - into);
+        };
+        schedule();
+        group = created;
         groups.set(intervalMs, group);
       }
       group.listeners.add(listener);
@@ -45,7 +55,7 @@ export const createTicker = (clock: () => number = Date.now): Ticker => {
         if (!current) return;
         current.listeners.delete(listener);
         if (current.listeners.size === 0) {
-          clearInterval(current.timer);
+          clearTimeout(current.timer);
           groups.delete(intervalMs);
         }
       };
@@ -57,14 +67,18 @@ export const frozenTicker = (at: number): Ticker => ({ now: () => at, subscribe:
 
 export const TickerContext = createContext<Ticker>(createTicker());
 
-// The current time, refreshed every `intervalMs` (never when null).
+// The current time, refreshed every `intervalMs` (never when null) and rounded down to a whole interval, so two
+// displays drawing the same moment draw the same thing.
+const timeIn = (ticker: Ticker, intervalMs: number | null): number =>
+  intervalMs === null ? ticker.now() : Math.floor(ticker.now() / intervalMs) * intervalMs;
+
 export const useNow = (intervalMs: number | null): number => {
   const ticker = useContext(TickerContext);
-  const [now, setNow] = useState(() => ticker.now());
+  const [now, setNow] = useState(() => timeIn(ticker, intervalMs));
   useEffect(() => {
-    setNow(ticker.now());
+    setNow(timeIn(ticker, intervalMs));
     if (intervalMs === null) return undefined;
-    return ticker.subscribe(intervalMs, () => setNow(ticker.now()));
+    return ticker.subscribe(intervalMs, () => setNow(timeIn(ticker, intervalMs)));
   }, [ticker, intervalMs]);
   return now;
 };
