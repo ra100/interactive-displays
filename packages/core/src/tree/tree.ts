@@ -55,3 +55,28 @@ export const widgetIds = (root: Node, kind: string): string[] => {
   });
   return ids;
 };
+
+// The locked parts of a tree, outermost first; whatever sits inside a locked node comes along with it.
+export const lockedParts = (root: Node): Node[] => {
+  const parts: Node[] = [];
+  const visit = (node: Node) => {
+    if (node.locked) {
+      parts.push(node);
+      return;
+    }
+    if (node.type === "container") for (const child of node.children) visit(child.node);
+  };
+  visit(root);
+  return parts;
+};
+
+// Deep equality for JSON-like documents, ignoring key order and keys whose value is undefined.
+export const sameValue = (a: unknown, b: unknown): boolean => {
+  if (a === b) return true;
+  if (typeof a !== "object" || typeof b !== "object" || a === null || b === null) return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((item, index) => sameValue(item, b[index]));
+  const left = Object.entries(a).filter(([, value]) => value !== undefined);
+  const right = new Map(Object.entries(b).filter(([, value]) => value !== undefined));
+  return left.length === right.size && left.every(([key, value]) => right.has(key) && sameValue(value, right.get(key)));
+};

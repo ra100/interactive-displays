@@ -8,6 +8,21 @@ export const ProfileSchema = z.object({
   fit: z.enum(["fluid", "contain"]).default("fluid"),
 });
 
+export const DENSITIES = ["sparse", "normal", "dense"] as const;
+
+// How much a generated screen holds: fewer, larger parts or more, smaller ones.
+export const DensitySchema = z.enum(DENSITIES);
+
+// How a generated screen was made, so it can be rerolled or regenerated around its locked parts. A suite is an
+// overview screen plus one screen per system, all sharing the overview's id as `suite`.
+export const GeneratorInfoSchema = z.object({
+  recipe: z.string().regex(/^[a-z0-9-]+\/[a-z0-9-]+$/, 'Recipe must be "<pack>/<section>"'),
+  seed: z.number().int().min(0).max(0xffffffff),
+  density: DensitySchema.default("normal"),
+  suite: IdSchema.optional(),
+  system: IdSchema.optional(),
+});
+
 // Bumped when the meaning of a saved screen changes; migrate/ upgrades older documents on read.
 export const SCREEN_SCHEMA_VERSION = 2;
 
@@ -23,9 +38,12 @@ export const ScreenSchema = z.object({
   revision: z.number().int().min(0).default(0),
   // The revision displays show. Absent until the screen is first published.
   published: z.number().int().min(0).optional(),
+  generator: GeneratorInfoSchema.optional(),
   root: NodeSchema,
 });
 
 export type Profile = z.infer<typeof ProfileSchema>;
+export type Density = z.infer<typeof DensitySchema>;
+export type GeneratorInfo = z.infer<typeof GeneratorInfoSchema>;
 export type Screen = z.infer<typeof ScreenSchema>;
 export type ScreenInput = z.input<typeof ScreenSchema>;

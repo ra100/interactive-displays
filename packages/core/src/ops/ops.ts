@@ -10,7 +10,7 @@ import {
   SlotSchema,
   WhenSchema,
 } from "../schema/node.ts";
-import { ProfileSchema } from "../schema/screen.ts";
+import { GeneratorInfoSchema, ProfileSchema } from "../schema/screen.ts";
 import { BindingsSchema } from "../schema/signal.ts";
 
 // Every change to a screen is an operation. Editor, generator, operator API and AI all speak this language,
@@ -59,6 +59,7 @@ export const OpSchema = z.discriminatedUnion("op", [
     section: IdSchema.nullable().optional(),
     tags: z.array(z.string().min(1).max(40)).max(50).optional(),
     profile: ProfileSchema.optional(),
+    generator: GeneratorInfoSchema.nullable().optional(),
   }),
 ]);
 

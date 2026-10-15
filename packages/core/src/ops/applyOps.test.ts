@@ -182,6 +182,57 @@ describe("applyOps", () => {
       });
       expect(result.ok).toBe(true);
     });
+
+    describe("inside an unlocked parent", () => {
+      const lockedChild = () => apply(base(), ops({ op: "set", id: "a", locked: true })).screen;
+      const rebuilt = (keep: unknown) => ({
+        id: "root",
+        type: "container",
+        layout: { kind: "grid", columns: ["1fr", "1fr"], rows: ["1fr"] },
+        children: [{ node: { id: "fresh", type: "widget", kind: "text", props: { text: "new" } } }, { node: keep }],
+      });
+
+      it("let the generator rebuild around a locked part that comes back as it was", () => {
+        const screen = lockedChild();
+        const part = findNode(screen.root, "a")?.node;
+        const result = applyOps(screen, ops({ op: "replace", id: "root", node: rebuilt(part) }), { catalog, respectLocks: true });
+        expect(result.ok).toBe(true);
+      });
+
+      it("refuse to replace or remove a parent when a locked part would be lost or changed", () => {
+        const screen = lockedChild();
+        const changed = { id: "a", type: "widget", kind: "button", locked: true, props: { label: "CHANGED" } };
+        for (const list of [
+          ops({ op: "replace", id: "root", node: rebuilt({ id: "b2", type: "widget", kind: "text", props: { text: "x" } }) }),
+          ops({ op: "replace", id: "root", node: rebuilt(changed) }),
+          ops({ op: "remove", id: "row" }),
+        ]) {
+          const result = applyOps(screen, list, { catalog, respectLocks: true });
+          expect(result.ok ? [] : result.issues.map((issue) => issue.message)).toEqual(['Node "a" is locked']);
+        }
+      });
+
+      it("still let people replace or remove the parent", () => {
+        expect(applyOps(lockedChild(), ops({ op: "remove", id: "row" }), { catalog }).ok).toBe(true);
+      });
+    });
+  });
+
+  describe("generator details", () => {
+    const info = { recipe: "trek/engineering", seed: 42, density: "dense" };
+
+    it("records how a screen was generated and undoes it", () => {
+      const forward = apply(base(), ops({ op: "meta", generator: info }));
+      expect(forward.screen.generator).toEqual(info);
+      const back = apply(forward.screen, forward.inverse);
+      expect(back.screen).not.toHaveProperty("generator");
+      const cleared = apply(forward.screen, ops({ op: "meta", generator: null }));
+      expect(cleared.screen).not.toHaveProperty("generator");
+    });
+
+    it("refuses a recipe that is not <pack>/<section>", () => {
+      expect(OpSchema.safeParse({ op: "meta", generator: { ...info, recipe: "engineering" } }).success).toBe(false);
+    });
   });
 
   describe("live values and actions", () => {
