@@ -12,7 +12,8 @@ export const Section = ({ title, children }: { title: string; children: ReactNod
   );
 };
 
-// A small numeric input that saves on Enter or blur; for placement and layout numbers.
+// A small numeric input that saves on Enter or blur; for placement and layout numbers. When `onCommit`
+// returns false the change was refused, and the box shows the saved value again.
 export const NumberBox = ({
   label,
   value,
@@ -28,15 +29,16 @@ export const NumberBox = ({
   min?: number;
   max?: number;
   step?: number;
-  onCommit: (value: number | undefined) => void;
+  onCommit: (value: number | undefined) => boolean | void;
 }) => {
   const id = useId();
-  const [draft, setDraft] = useState(value === undefined ? "" : String(value));
-  useEffect(() => setDraft(value === undefined ? "" : String(value)), [value]);
+  const shown = value === undefined ? "" : String(value);
+  const [draft, setDraft] = useState(shown);
+  useEffect(() => setDraft(shown), [shown]);
   const commit = () => {
     const next = draft.trim() === "" ? undefined : Number(draft);
-    if (next !== undefined && Number.isNaN(next)) return;
-    if (next !== value) onCommit(next);
+    if (next !== undefined && Number.isNaN(next)) return setDraft(shown);
+    if (next !== value && onCommit(next) === false) setDraft(shown);
   };
   return (
     <div className="number-box">

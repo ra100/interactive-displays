@@ -196,4 +196,42 @@ describe("signals", () => {
     await userEvent.click(dialog().getByRole("button", { name: "Remove New signal" }));
     expect(dialog().getByRole("button", { name: "Save signals" })).toBeEnabled();
   });
+
+  it("keeps a value the operator sets shared, and its start inside its range", async () => {
+    await open();
+    await userEvent.click(screen.getByRole("button", { name: "Signals" }));
+    await userEvent.click(dialog().getByRole("button", { name: "Add signal" }));
+    expect(dialog().getByRole("radio", { name: /Its own value/ })).toBeDisabled();
+
+    await userEvent.clear(dialog().getByLabelText("Lowest"));
+    await userEvent.type(dialog().getByLabelText("Lowest"), "20{Enter}");
+    expect(dialog().getByLabelText("Starts at")).toHaveValue(20);
+
+    await userEvent.clear(dialog().getByLabelText("Starts at"));
+    await userEvent.type(dialog().getByLabelText("Starts at"), "500{Enter}");
+    expect(dialog().getByText(/Starts at must be between Lowest and Highest/)).toBeInTheDocument();
+    expect(dialog().getByRole("button", { name: "Save signals" })).toBeDisabled();
+  });
+
+  it("reads a fixed value when the field is left: decimals are numbers, codes stay text", async () => {
+    await open();
+    await userEvent.click(screen.getByRole("button", { name: "Signals" }));
+    await userEvent.click(dialog().getByRole("button", { name: "Add signal" }));
+    await userEvent.selectOptions(dialog().getByLabelText("Value"), "Fixed");
+    await userEvent.clear(dialog().getByLabelText("Fixed value"));
+    await userEvent.type(dialog().getByLabelText("Fixed value"), "6.2");
+    expect(dialog().getByLabelText("Fixed value")).toHaveValue("6.2");
+    await userEvent.click(dialog().getByRole("button", { name: "Save signals" }));
+    expect(writes().at(-1)?.body).toMatchObject({ signals: [{ source: { kind: "static", value: 6.2 } }] });
+  });
+
+  it("keeps focus where someone is typing when the show changes", async () => {
+    await open();
+    await userEvent.click(screen.getByRole("button", { name: "Signals" }));
+    await userEvent.click(dialog().getByRole("button", { name: "Add signal" }));
+    await userEvent.click(dialog().getByLabelText("Name"));
+    fakeServer.send("overview", sampleOverview());
+    fakeServer.send("state", { state: "red-alert" });
+    await waitFor(() => expect(dialog().getByLabelText("Name")).toHaveFocus());
+  });
 });
