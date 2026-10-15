@@ -7,6 +7,7 @@ import { ToolGate, type Tools } from "../tools/ToolGate.tsx";
 import { type ScreenRef, useScreenDocs } from "../tools/useScreenDocs.ts";
 import { publicOrigin } from "../tools/useSession.ts";
 import { useToast } from "../tools/useToast.tsx";
+import { CuePanel } from "./CuePanel.tsx";
 import { DisplayCard } from "./DisplayCard.tsx";
 import { LookPicker } from "./LookPicker.tsx";
 import { ShowSwitches } from "./ShowSwitches.tsx";
@@ -73,6 +74,20 @@ const OperatorConsole = ({ overview, connection, session }: Tools) => {
 
       <div className="operator__layout">
         <div className="operator__controls">
+          <section className="operator__section" aria-labelledby="cues-title">
+            <h2 id="cues-title" className="tool-label">
+              Cues
+            </h2>
+            <CuePanel
+              overview={overview}
+              store={connection.signals}
+              onGo={() => void run(api("POST", "/api/cues/go"))}
+              onRun={(cue) => void run(api("POST", `/api/cues/${cue}/run`))}
+              onReset={() => void run(api("POST", "/api/cues/reset"))}
+              onSave={(cues) => void run(api("PUT", "/api/show/cues", { cues }))}
+            />
+          </section>
+
           <section className="operator__section" aria-labelledby="states-title">
             <h2 id="states-title" className="tool-label">
               Show state

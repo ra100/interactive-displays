@@ -78,6 +78,8 @@ describe("MCP endpoint", () => {
         "assign_screen",
         "set_state",
         "set_theme",
+        "set_cues",
+        "run_cue",
         "set_scale",
         "set_signal",
         "video_command",
@@ -163,6 +165,7 @@ describe("MCP endpoint", () => {
     expect(refused.isError).toBe(true);
     expect(refused.text).toContain("AI may publish");
     expect((await call(client, "set_state", { state: "red-alert" })).isError).toBe(true);
+    expect((await call(client, "run_cue", {})).isError).toBe(true);
 
     await settings({ aiPublish: true });
     expect((await call(client, "publish_screen", { id: "bridge" })).data).toMatchObject({ id: "bridge" });
@@ -175,6 +178,9 @@ describe("MCP endpoint", () => {
     expect((await server.api<{ state: string }>("GET", "/health")).body.state).toBe("red-alert");
     expect((await call(client, "set_signal", { signal: "shields", value: 40 })).data).toEqual({ signal: "shields", value: 40 });
     expect((await call(client, "set_signal", { signal: "shields" })).isError).toBe(true);
+    expect((await call(client, "run_cue", {})).data).toMatchObject({ cue: "top" });
+    expect((await call(client, "run_cue", { cue: "breach" })).data).toMatchObject({ cue: "breach" });
+    expect((await call(client, "set_cues", { cues: [{ id: "go", label: "Go", state: "normal" }] })).data).toEqual({ cues: ["go"] });
     expect((await call(client, "video_command", { display: "viewscreen-1", target: "feed", command: "toggle" })).data).toEqual({
       display: "viewscreen-1",
       target: "feed",

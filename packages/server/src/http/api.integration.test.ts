@@ -1,6 +1,6 @@
 import { catalog, type LintIssue, type Screen, type ShowOverview, type ValidationIssue } from "@interactive-displays/core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { createTestServer, nextEvent } from "../testing/testServer.ts";
+import { createTestServer, eventMatching, nextEvent } from "../testing/testServer.ts";
 
 interface CatalogBody {
   widgets: Array<{ kind: string; props: { properties: object } }>;
@@ -328,6 +328,25 @@ describe("signals, settings and video", () => {
     expect((await server.api("PUT", "/api/displays/test", { scale: 0.8 })).status).toBe(200);
     expect(await snapshot).toMatchObject({ display: { id: "test", scale: 0.8 } });
     expect((await server.api("PUT", "/api/show/scale", { scale: 3 })).status).toBe(400);
+  });
+
+  it("runs cues with GO and tells the console which ran", async () => {
+    const operator = await server.tool("operator");
+    let overview = eventMatching(operator.client, "overview", (update) => update.cue === "top");
+    expect(await server.api("POST", "/api/cues/go")).toMatchObject({ status: 200, body: { cue: "top", skipped: [] } });
+    expect(await overview).toMatchObject({ cue: "top" });
+    expect(await server.api("POST", "/api/cues/breach/run")).toMatchObject({ status: 200, body: { cue: "breach" } });
+    expect((await server.api<{ state: string }>("GET", "/health")).body.state).toBe("damaged");
+    expect((await server.api("POST", "/api/cues/go")).body).toMatchObject({ cue: "all-clear" });
+    expect((await server.api("POST", "/api/cues/go")).status).toBe(409);
+    overview = eventMatching(operator.client, "overview", (update) => update.cue === null);
+    expect((await server.api("POST", "/api/cues/reset")).status).toBe(200);
+    expect(await overview).toMatchObject({ cue: null });
+    expect((await server.api("PUT", "/api/show/cues", { cues: [{ id: "x", label: "X", state: "panic" }] })).status).toBe(422);
+    expect(await server.api("PUT", "/api/show/cues", { cues: [{ id: "x", label: "X", state: "normal" }] })).toMatchObject({
+      status: 200,
+      body: { cues: [{ id: "x", label: "X", state: "normal" }] },
+    });
   });
 
   it("changes only the settings a request names", async () => {

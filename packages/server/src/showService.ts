@@ -27,6 +27,9 @@ import {
   type RevisionInfo,
   type VideoCommand,
   UiScaleSchema,
+  type Cue,
+  CueListSchema,
+  nextCue,
 } from "@interactive-displays/core";
 import { themeManifests } from "@interactive-displays/themes/manifest";
 import type { FastifyBaseLogger } from "fastify";
@@ -62,6 +65,8 @@ export type ShowEvent =
   | { type: "reload"; displayId: string }
   // Show-wide definitions every display renders with changed: settings, theme or signal definitions.
   | { type: "show" }
+  // A cue ran, or the running order went back to the top.
+  | { type: "cue"; cueId: string | null }
   // Shared signal values changed; only the changed ones.
   | { type: "signals"; values: SignalValues }
   | { type: "video"; displayId: string; target: string; command: VideoCommand };
@@ -137,9 +142,11 @@ export const createShowService = ({
   // displayId -> screens a control on it navigated to, oldest first. In memory too: a restart sends displays home.
   const navigation = new Map<string, string[]>();
   const signals = createSignals(loaded?.runtime.signals ?? {});
+  let lastCue: string | null = loaded?.runtime.cue ?? null;
 
   const persistRuntime = async (current: LoadedShow) => {
-    current.runtime = { ...current.runtime, state, signals: signals.saved(current.show) };
+    const { cue: _cue, ...rest } = current.runtime;
+    current.runtime = { ...rest, state, signals: signals.saved(current.show), ...(lastCue ? { cue: lastCue } : {}) };
     await saveRuntime(dataDir, current.show.id, current.runtime);
   };
 
@@ -230,6 +237,49 @@ export const createShowService = ({
       persistRuntimeSoon(loaded);
     }
     return { ok: true, value: next ?? signals.current(signal) };
+  };
+
+  const runCue = async (cueId: string): Promise<CommandResult<{ cue: string; skipped: string[] }>> => {
+    if (!loaded) return NO_SHOW;
+    const current = loaded;
+    const cue = current.show.cues.find((each) => each.id === cueId);
+    if (!cue) return { ok: false, status: 404, message: `The show has no cue "${cueId}"` };
+    const skipped: string[] = [];
+
+    const screens = Object.entries(cue.screens ?? {});
+    if (screens.length > 0) {
+      let displays = current.show.displays;
+      for (const [displayId, screenId] of screens) {
+        if (screenId && !current.screens.has(screenId)) {
+          skipped.push(`screen "${screenId}" for ${displayId}`);
+          continue;
+        }
+        const existing = displays.find((display) => display.id === displayId);
+        const { screen: _screen, ...rest } = existing ?? { id: displayId };
+        const next: DisplayDef = screenId ? { ...rest, screen: screenId } : rest;
+        displays = existing ? displays.map((display) => (display.id === displayId ? next : display)) : [...displays, next];
+        clearNavigation(displayId);
+      }
+      current.show = { ...current.show, displays };
+      await saveShow(dataDir, current.show);
+      for (const [displayId] of screens) emit({ type: "display", displayId });
+    }
+    for (const [signalId, value] of Object.entries(cue.signals ?? {})) {
+      if (!setSignal(signalId, { value }).ok) skipped.push(`signal "${signalId}"`);
+    }
+    if (cue.state && !(await setState(cue.state)).ok) skipped.push(`state "${cue.state}"`);
+    for (const { display, target, command } of cue.videos ?? []) {
+      if (!videoIds(screenFor(current, display).screen).includes(target)) {
+        skipped.push(`video "${target}" on ${display}`);
+        continue;
+      }
+      emit({ type: "video", displayId: display, target, command });
+    }
+
+    lastCue = cue.id;
+    await persistRuntime(current);
+    emit({ type: "cue", cueId: cue.id });
+    return { ok: true, value: { cue: cue.id, skipped } };
   };
 
   const publishDraft = async (current: LoadedShow, draft: Screen): Promise<Screen> => {
@@ -460,6 +510,68 @@ export const createShowService = ({
         await saveShow(dataDir, loaded.show);
         emit({ type: "show" });
         return { ok: true, value: parsed.data };
+      }),
+
+    // Replaces the running order. Every cue must name states, signals, displays' screens that exist.
+    defineCues: (input: unknown): Promise<CommandResult<Cue[]>> =>
+      serialize(async () => {
+        if (!loaded) return NO_SHOW;
+        const parsed = CueListSchema.safeParse(input);
+        if (!parsed.success) {
+          return {
+            ok: false,
+            status: 422,
+            message: "Cues are not valid",
+            issues: parsed.error.issues.map((issue) => ({ path: issue.path.join("."), message: issue.message })),
+          };
+        }
+        const show = loaded.show;
+        const issues = parsed.data.flatMap((cue, index): ValidationIssue[] => [
+          ...(cue.state && !findState(show, cue.state) ? [{ path: `${index}.state`, message: `The show has no state "${cue.state}"` }] : []),
+          ...Object.keys(cue.signals ?? {}).flatMap((id) => {
+            const signal = findSignal(show, id);
+            return signal && isSettable(signal) ? [] : [{ path: `${index}.signals.${id}`, message: `"${id}" is not a shared manual signal` }];
+          }),
+          ...Object.entries(cue.screens ?? {}).flatMap(([display, screen]) =>
+            screen && !loaded?.screens.has(screen) ? [{ path: `${index}.screens.${display}`, message: `Screen "${screen}" does not exist` }] : [],
+          ),
+        ]);
+        if (issues.length > 0) return { ok: false, status: 422, message: "Cues name things the show does not have", issues };
+
+        loaded.show = { ...show, cues: parsed.data };
+        await saveShow(dataDir, loaded.show);
+        if (lastCue && !parsed.data.some((cue) => cue.id === lastCue)) {
+          lastCue = null;
+          await persistRuntime(loaded);
+        }
+        emit({ type: "show" });
+        return { ok: true, value: parsed.data };
+      }),
+
+    // The last cue run, or null before the first.
+    lastCue: (): string | null => lastCue,
+
+    // Runs one cue: screens first, so displays are on the right screen when the state and values change, then
+    // signals, the state and videos. A video the display does not show is skipped and reported, not fatal.
+    runCue: (cueId: string): Promise<CommandResult<{ cue: string; skipped: string[] }>> => serialize(() => runCue(cueId)),
+
+    // Runs the cue after the last one run.
+    go: (): Promise<CommandResult<{ cue: string; skipped: string[] }>> =>
+      serialize(async () => {
+        if (!loaded) return NO_SHOW;
+        const cue = nextCue(loaded.show, lastCue);
+        if (!cue) return { ok: false, status: 409, message: loaded.show.cues.length ? "That was the last cue" : "The show has no cues" };
+        return runCue(cue.id);
+      }),
+
+    // Back to the top of the running order; nothing on the displays changes.
+    resetCues: (): Promise<CommandResult<null>> =>
+      serialize(async () => {
+        if (!loaded) return NO_SHOW;
+        lastCue = null;
+        await persistRuntime(loaded);
+        emit({ type: "cue", cueId: null });
+        return { ok: true, value: null };
       }),
 
     // Replaces the show's signal definitions. Values of signals that are gone, or no longer manual, are dropped.

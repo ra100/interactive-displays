@@ -222,6 +222,67 @@ describe("drafts and publishing", () => {
     expect(service.loaded()?.show.displays.find((display) => display.id === "test")?.scale).toBeUndefined();
   });
 
+  describe("cues", () => {
+    it("runs the running order one GO at a time and remembers where it is", async () => {
+      const service = await open();
+      const events = record(service);
+      expect(service.lastCue()).toBeNull();
+
+      expect(await service.go()).toEqual({ ok: true, value: { cue: "top", skipped: [] } });
+      expect(await service.go()).toMatchObject({ ok: true, value: { cue: "contact" } });
+      expect(service.state()).toBe("yellow-alert");
+      expect(await service.go()).toMatchObject({ ok: true, value: { cue: "first-hit" } });
+      expect(service.signalValues()).toMatchObject({ shields: 40, hull: 82 });
+      expect(events.filter((event) => event.type === "cue")).toEqual([
+        { type: "cue", cueId: "top" },
+        { type: "cue", cueId: "contact" },
+        { type: "cue", cueId: "first-hit" },
+      ]);
+      expect((await readShowFile("runtime.json")).cue).toBe("first-hit");
+    });
+
+    it("moves displays to a cue's screens and back to the default with null", async () => {
+      const service = await open();
+      await service.defineCues([
+        {
+          id: "move",
+          label: "Move",
+          screens: { "corridor-1": "schematic", test: "tactical" },
+          videos: [{ display: "test", target: "feed", command: "play" }],
+        },
+        { id: "home", label: "Home", screens: { test: null } },
+      ]);
+      expect(await service.runCue("move")).toEqual({ ok: true, value: { cue: "move", skipped: ['video "feed" on test'] } });
+      expect(service.screenForDisplay("corridor-1").screen?.id).toBe("schematic");
+      expect(service.screenForDisplay("test").screen?.id).toBe("tactical");
+      await service.runCue("home");
+      expect(service.screenForDisplay("test").screen?.id).toBe("bridge");
+      expect((await readShowFile("show.json")).displays.find((display: { id: string }) => display.id === "test")).toEqual({
+        id: "test",
+        name: "Test display",
+      });
+    });
+
+    it("says when the last cue has run, and goes back to the top", async () => {
+      const service = await open();
+      for (let index = 0; index < 5; index += 1) await service.go();
+      expect(await service.go()).toMatchObject({ ok: false, status: 409, message: "That was the last cue" });
+      expect(await service.resetCues()).toEqual({ ok: true, value: null });
+      expect(await service.go()).toMatchObject({ ok: true, value: { cue: "top" } });
+      expect(await service.runCue("nope")).toMatchObject({ ok: false, status: 404 });
+    });
+
+    it("refuses cues that name things the show does not have", async () => {
+      const service = await open();
+      const result = await service.defineCues([
+        { id: "bad", label: "Bad", state: "panic", signals: { "eps.load": 3, shields: 10 }, screens: { test: "nowhere" } },
+      ]);
+      expect(result).toMatchObject({ ok: false, status: 422 });
+      expect(!result.ok && result.issues?.map((issue) => issue.path)).toEqual(["0.state", "0.signals.eps.load", "0.screens.test"]);
+      expect(await service.defineCues([{ id: "empty", label: "Does nothing" }])).toMatchObject({ ok: false, status: 422 });
+    });
+  });
+
   it("refuses an unknown theme or variant", async () => {
     const service = await open();
     expect(await service.setTheme({ id: "holodeck" })).toMatchObject({ ok: false, status: 422, message: expect.stringContaining("try base, lcars, hud, crt") });
