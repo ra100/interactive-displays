@@ -46,6 +46,26 @@ describe("bindingValue", () => {
     expect(bindingValue({ ambient }, "gauge-1", "value", environment())).toBe(sampleAmbient(ambient, seedOf("gauge-1/value"), 500));
   });
 
+  it("moves an inline ambient source to its range for the show state", () => {
+    const binding = {
+      ambient: { kind: "walk", min: 90, max: 99, volatility: 0.2 },
+      byState: { "red-alert": { min: 40, max: 60, volatility: 0.9 } },
+    } as const;
+    for (const now of [0, 1_000, 7_000, 60_000]) {
+      const calm = bindingValue(binding, "g", "value", environment({ now }));
+      const alert = bindingValue(binding, "g", "value", environment({ now, state: "red-alert" }));
+      expect(calm).toBeGreaterThanOrEqual(90);
+      expect(alert).toBeLessThanOrEqual(60);
+    }
+  });
+
+  it("ignores a per-state range that would turn an inline source upside down", () => {
+    const binding = { ambient: { kind: "wave", min: 0, max: 10, periodMs: 1000 }, byState: { odd: { min: 20 } } } as const;
+    expect(bindingValue(binding, "g", "value", environment({ state: "odd" }))).toBe(
+      bindingValue(binding, "g", "value", environment()),
+    );
+  });
+
   it("answers nothing for a signal the show does not have", () => {
     expect(bindingValue({ signal: "nope" }, "g", "value", environment())).toBeUndefined();
   });

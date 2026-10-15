@@ -62,7 +62,7 @@ export const SourceSchema = z.discriminatedUnion("kind", [
 export const AmbientSourceSchema = z.discriminatedUnion("kind", [WalkSourceSchema, WaveSourceSchema]);
 
 // Per-state changes to a source, e.g. red alert: { min: 40, max: 120 }. Merged over the source as is.
-const SourceOverrideSchema = z.object({
+export const SourceOverrideSchema = z.object({
   min: z.number().optional(),
   max: z.number().optional(),
   volatility: z.number().min(0).max(1).optional(),
@@ -81,10 +81,17 @@ export const SignalDefSchema = z.object({
   byState: z.record(z.string(), SourceOverrideSchema).optional(),
 });
 
+// A value that moves by itself, written on the node: no show signal needed. byState changes it per show state,
+// so a generated gauge can swing harder in red alert.
+export const AmbientBindingSchema = z.strictObject({
+  ambient: AmbientSourceSchema,
+  byState: z.record(z.string(), z.strictObject(SourceOverrideSchema.omit({ value: true }).shape)).optional(),
+});
+
 // A prop that follows a live value: a show signal by id, or an inline ambient source seeded by the node id.
 export const BindingSchema = z.union([
   z.strictObject({ signal: SignalIdSchema }),
-  z.strictObject({ ambient: AmbientSourceSchema }),
+  AmbientBindingSchema,
 ]);
 
 export const BindingsSchema = z.record(z.string().min(1).max(64), BindingSchema);
@@ -96,5 +103,6 @@ export type AmbientSource = z.infer<typeof AmbientSourceSchema>;
 export type SourceOverride = z.infer<typeof SourceOverrideSchema>;
 export type SignalDef = z.infer<typeof SignalDefSchema>;
 export type SignalDefInput = z.input<typeof SignalDefSchema>;
+export type AmbientBinding = z.infer<typeof AmbientBindingSchema>;
 export type Binding = z.infer<typeof BindingSchema>;
 export type Bindings = z.infer<typeof BindingsSchema>;

@@ -1,5 +1,6 @@
 import {
   type Action,
+  type AmbientSource,
   type Binding,
   type Bindings,
   catalog,
@@ -41,6 +42,8 @@ const BindingRow = ({ node, prop, wanders }: { node: WidgetNode; prop: string; w
   const mode = modeOf(binding);
   const missing = binding && "signal" in binding && !signals.some((signal) => signal.id === binding.signal);
   const ambient = binding && "ambient" in binding ? binding.ambient : undefined;
+  const byState = binding && "ambient" in binding ? binding.byState : undefined;
+  const changesIn = overview.show.states.filter((state) => byState && Object.hasOwn(byState, state.id));
 
   const set = (next: Binding | undefined) => {
     const bind: Bindings = { ...node.bind };
@@ -49,11 +52,14 @@ const BindingRow = ({ node, prop, wanders }: { node: WidgetNode; prop: string; w
     apply([{ op: "set", id: node.id, bind: Object.keys(bind).length > 0 ? bind : null }]);
   };
 
+  // Edits keep the per-state ranges a generated value came with.
+  const setAmbient = (next: AmbientSource) => set(byState ? { ambient: next, byState } : { ambient: next });
+
   const choose = (next: string) => {
     if (next === "") return set(undefined);
     if (next.startsWith(SIGNAL)) return set({ signal: next.slice(SIGNAL.length) });
     const { min, max } = binding && "ambient" in binding ? binding.ambient : rangeOf(node);
-    set({ ambient: next === "wave" ? { kind: "wave", min, max, periodMs: 4000 } : { kind: "walk", min, max, volatility: 0.3 } });
+    setAmbient(next === "wave" ? { kind: "wave", min, max, periodMs: 4000 } : { kind: "walk", min, max, volatility: 0.3 });
   };
 
   const setRange = (key: "min" | "max") => (value: number | undefined): boolean => {
@@ -63,7 +69,7 @@ const BindingRow = ({ node, prop, wanders }: { node: WidgetNode; prop: string; w
       notify("The lowest value must be below the highest", "danger");
       return false;
     }
-    set({ ambient: next });
+    setAmbient(next);
     return true;
   };
 
@@ -103,7 +109,7 @@ const BindingRow = ({ node, prop, wanders }: { node: WidgetNode; prop: string; w
               min={0}
               max={1}
               step={0.1}
-              onCommit={(volatility) => volatility !== undefined && set({ ambient: { ...ambient, volatility } })}
+              onCommit={(volatility) => volatility !== undefined && setAmbient({ ...ambient, volatility })}
             />
           ) : (
             <NumberBox
@@ -112,10 +118,13 @@ const BindingRow = ({ node, prop, wanders }: { node: WidgetNode; prop: string; w
               min={0.2}
               max={3600}
               step={0.5}
-              onCommit={(seconds) => seconds !== undefined && set({ ambient: { ...ambient, periodMs: Math.round(seconds * 1000) } })}
+              onCommit={(seconds) => seconds !== undefined && setAmbient({ ...ambient, periodMs: Math.round(seconds * 1000) })}
             />
           )}
         </div>
+      ) : null}
+      {changesIn.length > 0 ? (
+        <p className="tool-field__hint">Moves differently in {changesIn.map((state) => state.label).join(", ")}.</p>
       ) : null}
     </div>
   );

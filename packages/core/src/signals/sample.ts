@@ -1,4 +1,4 @@
-import type { AmbientSource, SignalDef, SignalValue, Source, SourceOverride } from "../schema/signal.ts";
+import type { AmbientBinding, AmbientSource, SignalDef, SignalValue, Source, SourceOverride } from "../schema/signal.ts";
 
 // Signal values are pure functions of a seed and the time, so every display (and the server) can compute an
 // ambient value on its own, a display keeps animating when the server is away, and tests are deterministic.
@@ -108,6 +108,12 @@ export const sourceInState = (signal: Pick<SignalDef, "source" | "byState">, sta
     default:
       return source;
   }
+};
+
+// An inline ambient binding's source in a show state.
+export const ambientInState = (binding: AmbientBinding, state: string): AmbientSource => {
+  const source = sourceInState({ source: binding.ambient, byState: binding.byState }, state);
+  return source.kind === "walk" || source.kind === "wave" ? source : binding.ambient;
 };
 
 // Shared signals whose value the server works out as time passes; manual ones change only when told.
