@@ -212,7 +212,7 @@ describe("drafts and publishing", () => {
 
   it("refuses an unknown theme or variant", async () => {
     const service = await open();
-    expect(await service.setTheme({ id: "holodeck" })).toMatchObject({ ok: false, status: 422, message: expect.stringContaining("try base, lcars, crt") });
+    expect(await service.setTheme({ id: "holodeck" })).toMatchObject({ ok: false, status: 422, message: expect.stringContaining("try base, lcars, hud, crt") });
     expect(await service.setTheme({ id: "crt", variant: "nemesis" })).toMatchObject({ ok: false, status: 422, message: expect.stringContaining("try amber, ice") });
   });
 

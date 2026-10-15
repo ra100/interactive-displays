@@ -1,12 +1,14 @@
 import type { AnyDecorDefinition, DecorCatalog, Sound, ThemeManifest } from "@interactive-displays/core";
 import { base } from "./base/manifest.ts";
 import { crt } from "./crt/manifest.ts";
+import { hud } from "./hud/manifest.ts";
 import { lcars } from "./lcars/manifest.ts";
 
 // Pure data entry point: safe to import from the server, generator and MCP.
 export const themeManifests: ReadonlyMap<string, ThemeManifest> = new Map([
   [base.id, base],
   [lcars.id, lcars],
+  [hud.id, hud],
   [crt.id, crt],
 ]);
 

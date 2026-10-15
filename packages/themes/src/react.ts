@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import { baseRenderers } from "./base/renderers.ts";
 import { crtRenderers } from "./crt/renderers.ts";
+import { hudRenderers } from "./hud/renderers.ts";
 import type { AnyDecorRenderer, FrameRenderer, ThemeRenderers, WidgetRendererProps } from "./contract.ts";
 import { lcarsRenderers } from "./lcars/renderers.ts";
 import { decorFor } from "./manifest.ts";
@@ -18,6 +19,7 @@ export type {
 const themeRenderers: ReadonlyMap<string, ThemeRenderers> = new Map([
   [baseRenderers.id, baseRenderers],
   [lcarsRenderers.id, lcarsRenderers],
+  [hudRenderers.id, hudRenderers],
   [crtRenderers.id, crtRenderers],
 ]);
 
