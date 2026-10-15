@@ -129,6 +129,11 @@ describe("frames", () => {
     expect(container.querySelector('[data-node-id="bar"] .lcars-bar')).toHaveTextContent("47-0219");
   });
 
+  it("draws another theme's decor with the theme's stand-in", () => {
+    const { container } = render(<ScreenView screen={sidebar} themeId="crt" />);
+    expect(container.querySelector('[data-node-id="bar"] .crt-rule')).toHaveAttribute("data-style", "double");
+  });
+
   it("contains an unknown archetype", () => {
     render(
       <ScreenView
