@@ -181,11 +181,12 @@ describe("publishing and revisions", () => {
     await rename(0, "One");
     await rename(1, "Two");
 
-    const list = await server.api<{ revisions: Array<{ revision: number; savedAt: string }> }>(
+    const list = await server.api<{ revisions: Array<{ revision: number; savedAt: string | null }> }>(
       "GET",
       "/api/screens/bridge/revisions",
     );
-    expect(list.body.revisions.map((entry) => entry.revision)).toEqual([1, 0]);
+    expect(list.body.revisions.map((entry) => entry.revision)).toEqual([2, 1, 0]);
+    expect(list.body.revisions[0]?.savedAt).toEqual(expect.any(String));
 
     const old = await server.api<{ screen: Screen }>("GET", "/api/screens/bridge/revisions/0");
     expect(old.body.screen.revision).toBe(0);

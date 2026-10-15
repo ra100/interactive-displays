@@ -1,12 +1,14 @@
 import { cp, mkdir, readdir, rename, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import {
+  type AssetInfo,
   AssetNameSchema,
   assetContentType,
   assetKind,
   catalog,
   type DecorCatalog,
   IdSchema,
+  type RevisionInfo,
   type Screen,
   type Show,
   ShowSchema,
@@ -52,19 +54,6 @@ export interface LoadedShow {
   // Published copies, which displays show.
   published: Map<string, Screen>;
   runtime: Runtime;
-}
-
-export interface RevisionInfo {
-  revision: number;
-  savedAt: string;
-}
-
-export interface AssetInfo {
-  name: string;
-  kind: "image" | "video";
-  type: string;
-  size: number;
-  modified: string;
 }
 
 const showDir = (dataDir: string, showId: string) => path.join(dataDir, "shows", showId);
@@ -230,19 +219,26 @@ export const trashScreen = async (dataDir: string, showId: string, screenId: str
 };
 
 // Newest first.
-export const listRevisions = async (dataDir: string, showId: string, screenId: string): Promise<RevisionInfo[]> => {
+// The current revision and the archived ones, newest first. A revision was saved when the one before it was
+// archived, so that file's time is its time; the oldest one's time is unknown.
+export const listRevisions = async (
+  dataDir: string,
+  showId: string,
+  screenId: string,
+  current: number,
+): Promise<RevisionInfo[]> => {
   const dir = historyDir(dataDir, showId, screenId);
-  if (!(await exists(dir))) return [];
-  const revisions = (await readdir(dir))
-    .filter((name) => /^\d+\.json$/.test(name))
-    .map((name) => Number.parseInt(name, 10))
-    .sort((a, b) => b - a);
-  return Promise.all(
-    revisions.map(async (revision) => ({
-      revision,
-      savedAt: (await stat(path.join(dir, `${revision}.json`))).mtime.toISOString(),
-    })),
+  const archived = (await exists(dir))
+    ? (await readdir(dir)).filter((name) => /^\d+\.json$/.test(name)).map((name) => Number.parseInt(name, 10))
+    : [];
+  const archivedAt = new Map(
+    await Promise.all(
+      archived.map(async (revision) => [revision, (await stat(path.join(dir, `${revision}.json`))).mtime.toISOString()] as const),
+    ),
   );
+  return [...new Set([current, ...archived])]
+    .sort((a, b) => b - a)
+    .map((revision) => ({ revision, savedAt: archivedAt.get(revision - 1) ?? null }));
 };
 
 // Sorted by name. Files with names the server would not accept are ignored.

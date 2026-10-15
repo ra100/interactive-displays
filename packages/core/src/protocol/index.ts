@@ -71,6 +71,21 @@ export interface ShowOverview {
   displays: DisplayStatus[];
 }
 
+// One saved revision of a screen draft, newest first in lists. `savedAt` is null when it is not known.
+export interface RevisionInfo {
+  revision: number;
+  savedAt: string | null;
+}
+
+// A file in the show's assets folder.
+export interface AssetInfo {
+  name: string;
+  kind: "image" | "video";
+  type: string;
+  size: number;
+  modified: string;
+}
+
 // The current draft of a watched screen; `screen` is null once the screen is deleted.
 export interface ScreenUpdate {
   screenId: string;

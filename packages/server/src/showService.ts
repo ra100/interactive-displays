@@ -15,16 +15,16 @@ import {
   uniqueId,
   validateScreen,
   type ValidationIssue,
+  type AssetInfo,
+  type RevisionInfo,
 } from "@interactive-displays/core";
 import type { FastifyBaseLogger } from "fastify";
 import {
-  type AssetInfo,
   deleteAsset,
   listAssets,
   listRevisions,
   type LoadedShow,
   readRevision,
-  type RevisionInfo,
   saveAsset,
   savePublished,
   saveRuntime,
@@ -298,8 +298,9 @@ export const createShowService = ({
 
     revisions: async (screenId: string): Promise<CommandResult<RevisionInfo[]>> => {
       if (!loaded) return NO_SHOW;
-      if (!loaded.screens.has(screenId)) return noScreen(screenId);
-      return { ok: true, value: await listRevisions(dataDir, loaded.show.id, screenId) };
+      const draft = loaded.screens.get(screenId);
+      if (!draft) return noScreen(screenId);
+      return { ok: true, value: await listRevisions(dataDir, loaded.show.id, screenId, draft.revision) };
     },
 
     revision: async (screenId: string, revision: number): Promise<CommandResult<Screen>> => {

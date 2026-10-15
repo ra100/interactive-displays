@@ -150,7 +150,11 @@ describe("saveScreen", () => {
     await saveScreen(dataDir, "s1", revision(0));
     await saveScreen(dataDir, "s1", revision(1), revision(0));
 
-    expect(await listRevisions(dataDir, "s1", "a")).toEqual([{ revision: 0, savedAt: expect.any(String) }]);
+    // Revision 1 was saved when revision 0 was archived; when revision 0 was saved is not known.
+    expect(await listRevisions(dataDir, "s1", "a", 1)).toEqual([
+      { revision: 1, savedAt: expect.any(String) },
+      { revision: 0, savedAt: null },
+    ]);
     const current = JSON.parse(await readFile(path.join(dataDir, "shows/s1/screens/a.json"), "utf8"));
     expect(current.revision).toBe(1);
   });
@@ -160,14 +164,14 @@ describe("saveScreen", () => {
       await saveScreen(dataDir, "s1", revision(n), revision(n - 1));
     }
 
-    const revisions = (await listRevisions(dataDir, "s1", "a")).map((entry) => entry.revision);
-    expect(revisions).toHaveLength(HISTORY_LIMIT);
-    expect(revisions[0]).toBe(HISTORY_LIMIT + 2);
+    const revisions = (await listRevisions(dataDir, "s1", "a", HISTORY_LIMIT + 3)).map((entry) => entry.revision);
+    expect(revisions).toHaveLength(HISTORY_LIMIT + 1);
+    expect(revisions[0]).toBe(HISTORY_LIMIT + 3);
     expect(revisions.at(-1)).toBe(3);
   });
 
-  it("lists no revisions for a screen that was never edited", async () => {
-    expect(await listRevisions(dataDir, "s1", "nothing")).toEqual([]);
+  it("lists only the current revision of a screen that was never edited", async () => {
+    expect(await listRevisions(dataDir, "s1", "nothing", 0)).toEqual([{ revision: 0, savedAt: null }]);
   });
 });
 

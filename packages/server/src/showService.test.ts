@@ -75,7 +75,7 @@ describe("screens", () => {
     const result = await service.applyOps("bridge", 0, addText("note"));
     expect(result).toMatchObject({ ok: true, value: { revision: 1 } });
     expect(events).toEqual([{ type: "screen", screenId: "bridge" }]);
-    expect((await listRevisions(dataDir, "demo", "bridge")).map((entry) => entry.revision)).toEqual([0]);
+    expect((await listRevisions(dataDir, "demo", "bridge", 1)).map((entry) => entry.revision)).toEqual([1, 0]);
     expect((await readShowFile("screens/bridge.json")).revision).toBe(1);
   });
 
@@ -223,7 +223,10 @@ describe("revisions", () => {
     await service.applyOps("bridge", 0, rename("ONE"));
     await service.applyOps("bridge", 1, rename("TWO"));
 
-    expect(await service.revisions("bridge")).toMatchObject({ ok: true, value: [{ revision: 1 }, { revision: 0 }] });
+    expect(await service.revisions("bridge")).toMatchObject({
+      ok: true,
+      value: [{ revision: 2 }, { revision: 1 }, { revision: 0 }],
+    });
     expect(await service.revision("bridge", 1)).toMatchObject({ ok: true, value: { revision: 1 } });
     expect(await service.revision("bridge", 2)).toMatchObject({ ok: true, value: { revision: 2 } });
     expect(await service.revision("bridge", 9)).toMatchObject({ ok: false, status: 404 });
