@@ -29,7 +29,7 @@ Phase 2 deviation moved the operator's video transport and signal sliders to thi
    and adds `hail`. States name a sound (`yellow-alert` plays `warning`, `red-alert` plays `alert`). Sounds are
    **off by default** (`settings.sounds`), because film sets record sound separately.
 6. **Signals are edited in a dialog in the screen library** (name, id, unit, shared or ambient, source and its
-   numbers). Per-state ranges (`byState`) are kept but edited in `show.json` for now.
+   numbers). Per-state ranges (`byState`) are kept but edited in `show.json` (with the server stopped) for now.
 7. **The inspector gains field types** for props that are not one plain value: a number-or-text value, lists (one
    per line), numbers (comma separated) and tables (one row per line, cells split by `|`), all derived from the
    schema like the others.

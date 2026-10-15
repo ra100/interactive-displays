@@ -92,7 +92,8 @@ Reads are open. With `EDITOR_TOKEN` set, every other method under `/api/` needs 
 
 ```
 settings.json                                    { "schemaVersion": 1, "activeShow": "demo" }
-shows/<showId>/show.json                         Show: theme (+variant), states, defaultScreen, displays[]
+shows/<showId>/show.json                         Show: theme (+variant), states, signals, settings, defaultScreen,
+                                                 displays[]; read at start, rewritten whole on every change
 shows/<showId>/runtime.json                      current state, shared manual signal values, last-seen displays
 shows/<showId>/screens/<screenId>.json           draft Screen; file name must equal its id
 shows/<showId>/screens/.history/<id>/<rev>.json  replaced revisions, last 50 kept

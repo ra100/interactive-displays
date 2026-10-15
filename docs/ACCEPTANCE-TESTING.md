@@ -28,7 +28,7 @@ once (browsers only play sound after a touch), or start the kiosk browser with
 | # | Step | Expected |
 |---|---|---|
 | 1 | Watch `/d/engineering-1` for half a minute | Core output creeps between about 88 and 99%, the output trace draws a line, the EPS taps change in their decimals, grid load wanders, numbers scroll in the cascade, plasma bars pulse and relay lamps blink, each at its own pace. Nothing jumps or moves in step |
-| 2 | Assign Main engineering to `/d/test` in the operator console and put it next to `/d/engineering-1` | Both show the same core output and the same EPS readings at the same moment; assign Show default again afterwards |
+| 2 | Assign Main engineering to `/d/test` in the operator console and put it next to `/d/engineering-1` | Both show the same core output and the same EPS readings at the same moment (as long as both computers set their clocks from the network); assign Show default again afterwards |
 | 3 | Set Red alert | Engineering turns red; a flashing RED ALERT banner appears above the core; core output climbs above 100% and the gauge turns to danger past 102; the text says "Core output at 104%" |
 | 4 | Set Damaged | Brown palette; HULL BREACH banner; core output sinks to 35–75% and turns danger below 60; relays go red and busy |
 | 5 | Set Normal | Everything settles back |
@@ -94,7 +94,8 @@ once (browsers only play sound after a touch), or start the kiosk browser with
 
 ### Known limitations (Phase 3)
 
-- Per-state signal ranges (`byState`) are edited in `show.json`; the signals dialog keeps them as they are.
+- Per-state signal ranges (`byState`) are edited in `show.json` with the server stopped (the server reads the file
+  only at start and rewrites it on every change made in the tools); the signals dialog keeps them as they are.
 - No countdown clock, video seek, cue lists or local toggles yet (see
   `docs/deviations/2026-10-15-phase-3-living-screens.md`).
 - Where a display's buttons took it is forgotten when the server restarts.
@@ -247,11 +248,11 @@ States in the demo show: `normal`, `yellow-alert`, `red-alert`, `damaged`, `blac
 
 | # | Step | Expected |
 |---|---|---|
-| 1 | Open `/d/test` on a TV or monitor | LCARS bridge: a tan elbow sweeping from the top left, five coloured nav blocks with small numbers (Helm, Tactical, Engineering, Science, Comms), "BRIDGE OPERATIONS" top right, ship status readouts, three pill buttons, status line at the bottom |
+| 1 | Open `/d/test` on a TV or monitor | LCARS bridge: a tan elbow sweeping from the top left, five coloured nav blocks with small numbers (Helm, Tactical, Engineering, Science, Comms), "BRIDGE OPERATIONS" top right, ship status readouts, four pill buttons, status line at the bottom |
 | 2 | Open `/d/engineering-1`, `/d/tactical-1` and `/d/corridor-1` on three more displays | Main engineering (toolbar of pills), Tactical (capped header and footer, shield readouts on the right), and the "LCARS ACCESS 4774 / PLEASE STAND BY" standby panel |
 | 3 | Compare with the pictures in `design/` | The sweep, bars, condensed type and colours read as LCARS; nothing looks like a web page |
 | 4 | Set `red-alert` | Every open display turns red within a blink, all at once; frames pulse; the bridge status reads "RED ALERT · ALL HANDS TO BATTLE STATIONS" and the third button says "Stand down" |
-| 5 | Set `yellow-alert`, then `damaged` | Yellow: amber tones, shields read "Raised". Damaged: dim brown palette, parts of the screen flicker and the image jitters now and then; the hull integrity reading turns red |
+| 5 | Set `yellow-alert`, then `damaged` | Yellow: amber tones across the screen. Damaged: dim brown palette, parts of the screen flicker and the image jitters now and then; the hull integrity reading turns red |
 | 6 | Set `blackout`, then `normal` | Every display goes black; `normal` brings the screens back instantly |
 | 7 | Set `red-alert`, then open a new display at `/d/late-joiner` | It starts in red alert |
 | 8 | Restart the server (`docker compose restart`) while in a state other than normal | Displays reconnect in the same state |
