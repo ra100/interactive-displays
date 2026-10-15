@@ -15,3 +15,30 @@ export const assignDisplay = async (request: APIRequestContext, displayId: strin
   const response = await request.put(`/api/displays/${displayId}`, { data: { screen } });
   expect(response.ok()).toBe(true);
 };
+
+// A fresh screen for a test to change, so the seeded ones other specs rely on stay as they are.
+export const createScreen = async (request: APIRequestContext, id: string, name: string) => {
+  const response = await request.post("/api/screens", {
+    data: {
+      schemaVersion: 2,
+      id,
+      name,
+      root: {
+        id: "root",
+        type: "container",
+        layout: { kind: "stack", direction: "column" },
+        children: [
+          { node: { id: "title", type: "widget", kind: "title", props: { text: name.toUpperCase() } } },
+          { node: { id: "note", type: "widget", kind: "text", props: { text: "Nothing to report." } } },
+        ],
+      },
+    },
+  });
+  expect(response.status()).toBe(201);
+  const published = await request.post(`/api/screens/${id}/publish`, { data: {} });
+  expect(published.ok()).toBe(true);
+};
+
+export const deleteScreen = async (request: APIRequestContext, id: string) => {
+  await request.delete(`/api/screens/${id}`);
+};
