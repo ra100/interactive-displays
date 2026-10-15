@@ -1,0 +1,202 @@
+{
+  "id": "sensors",
+  "label": "Sensors",
+  "description": "Long-range scan, contacts and the passive array.",
+  "code": "SNS",
+  "archetypes": {
+    "dashboard": 3,
+    "sidebar": 2,
+    "header-main": 1
+  },
+  "titles": [
+    "SENSORS",
+    "SCAN",
+    "CONTACTS",
+    "SURVEILLANCE"
+  ],
+  "nav": [
+    "LIDAR",
+    "PASSIVE",
+    "CONTACTS",
+    "TELESCOPE",
+    "LOG"
+  ],
+  "status": [
+    "3 CONTACTS TRACKED",
+    "PASSIVE SCAN ONLY",
+    "LIDAR STANDBY"
+  ],
+  "systems": [
+    {
+      "id": "lidar",
+      "label": "LIDAR",
+      "metrics": [
+        {
+          "id": "range",
+          "label": "SCAN RANGE",
+          "range": [
+            40,
+            60
+          ],
+          "unit": "Mm"
+        },
+        {
+          "id": "return",
+          "label": "RETURN STRENGTH",
+          "range": [
+            -70,
+            -50
+          ],
+          "unit": "dB",
+          "motion": "wave"
+        },
+        {
+          "id": "sweep",
+          "label": "SWEEP",
+          "range": [
+            10,
+            14
+          ],
+          "unit": "°/s",
+          "precision": 1
+        }
+      ],
+      "actions": [
+        {
+          "label": "ACTIVE PING",
+          "actions": [
+            {
+              "do": "setState",
+              "state": "yellow-alert"
+            }
+          ]
+        },
+        {
+          "label": "PASSIVE ONLY"
+        }
+      ],
+      "short": "LIDAR",
+      "notes": [
+        "Painting sector 4 with lidar"
+      ]
+    },
+    {
+      "id": "contacts",
+      "label": "CONTACTS",
+      "metrics": [
+        {
+          "id": "count",
+          "label": "CONTACTS",
+          "range": [
+            2,
+            4
+          ],
+          "unit": "",
+          "prefer": [
+            "readout"
+          ],
+          "precision": 0
+        },
+        {
+          "id": "nearest",
+          "label": "NEAREST",
+          "range": [
+            3000,
+            5000
+          ],
+          "unit": "km"
+        },
+        {
+          "id": "threat",
+          "label": "THREAT LEVEL",
+          "range": [
+            5,
+            15
+          ],
+          "unit": "%",
+          "alertRange": [
+            70,
+            100
+          ],
+          "prefer": [
+            "gauge"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "label": "TAG CONTACT"
+        },
+        {
+          "label": "HAIL CONTACT"
+        }
+      ]
+    },
+    {
+      "id": "array",
+      "label": "PASSIVE ARRAY",
+      "metrics": [
+        {
+          "id": "noise",
+          "label": "BACKGROUND NOISE",
+          "range": [
+            10,
+            20
+          ],
+          "unit": "%",
+          "motion": "wave"
+        },
+        {
+          "id": "gain",
+          "label": "ARRAY GAIN",
+          "range": [
+            70,
+            85
+          ],
+          "unit": "%",
+          "prefer": [
+            "gauge"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "label": "RECALIBRATE"
+        },
+        {
+          "label": "FOCUS ARRAY"
+        }
+      ],
+      "notes": [
+        "Thermal bloom filtered"
+      ]
+    }
+  ],
+  "blocks": {
+    "prefer": [
+      "trend-panel",
+      "telemetry",
+      "status-board"
+    ],
+    "avoid": []
+  },
+  "alert": {
+    "banner": true,
+    "emphasise": [
+      "threat",
+      "count"
+    ],
+    "status": [
+      "HOSTILE CONTACT",
+      "MISSILE LAUNCH DETECTED",
+      "LIDAR LOCK DETECTED"
+    ]
+  },
+  "tags": [
+    "sensors",
+    "scan",
+    "contacts",
+    "radar",
+    "lidar"
+  ]
+}

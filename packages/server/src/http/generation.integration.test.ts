@@ -21,6 +21,7 @@ describe("generation over REST", () => {
     expect(status).toBe(200);
     expect(body.packs.map((pack) => [pack.id, pack.theme])).toEqual([
       ["trek", "lcars"],
+      ["corvette", "hud"],
       ["freighter", "crt"],
     ]);
     expect(body.packs[0]?.recipes.length).toBeGreaterThanOrEqual(9);
