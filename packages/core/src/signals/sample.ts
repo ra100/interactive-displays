@@ -124,9 +124,13 @@ export const isServerOwned = (signal: Pick<SignalDef, "scope" | "source">): bool
 
 type ManualSource = Extract<Source, { kind: "manual" }>;
 
+// The nearest value on the step grid from min, or the range's top when that is nearer: a range that the step
+// does not divide evenly (0 to 100 in steps of 30) can still reach and keep its maximum.
 const snapToStep = (source: ManualSource, raw: number): number => {
-  const snapped = source.min + Math.round((raw - source.min) / source.step) * source.step;
-  return Math.min(source.max, Math.max(source.min, Number(snapped.toFixed(6))));
+  const clamped = Math.min(source.max, Math.max(source.min, raw));
+  const below = Math.min(source.max, source.min + Math.round((clamped - source.min) / source.step) * source.step);
+  const snapped = Math.abs(source.max - clamped) < Math.abs(below - clamped) ? source.max : below;
+  return Number(snapped.toFixed(6));
 };
 
 // A manual signal's value before anyone sets it: its initial value, kept in its range and on its step.
@@ -143,8 +147,13 @@ export const nextManualValue = (
   if (source.kind !== "manual") return undefined;
   if (change.value !== undefined) return snapToStep(source, change.value);
   const delta = change.delta ?? 0;
-  const steps = delta === 0 ? 0 : Math.sign(delta) * Math.max(1, Math.round(Math.abs(delta) / source.step));
-  return snapToStep(source, snapToStep(source, current) + steps * source.step);
+  if (delta === 0) return snapToStep(source, current);
+  const steps = Math.max(1, Math.round(Math.abs(delta) / source.step));
+  // Count whole steps along the grid from min; the range's top counts as one more stop above the last one.
+  const position = (snapToStep(source, current) - source.min) / source.step;
+  const index = delta > 0 ? Math.floor(position + 1e-9) + steps : Math.ceil(position - 1e-9) - steps;
+  const next = Math.min(source.max, Math.max(source.min, source.min + index * source.step));
+  return Number(next.toFixed(6));
 };
 
 // Rounded for the wire and for change detection: two decimals are plenty for anything on a screen.

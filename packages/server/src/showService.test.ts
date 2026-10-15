@@ -528,6 +528,14 @@ describe("controls on displays", () => {
     expect(log.warn).toHaveBeenCalledWith(expect.objectContaining({ err: expect.anything() }), "Could not save runtime state");
   });
 
+  it("moves only shared values while a control is still being used", async () => {
+    const service = await open();
+    expect(await service.press("test", { nodeId: "act-alert", moving: true })).toEqual(["setSignal"]);
+    expect(service.state()).toBe("normal");
+    expect(await service.press("test", { nodeId: "nav-engineering", moving: true })).toEqual([]);
+    expect(service.navigated("test")).toBeNull();
+  });
+
   it("applies relative signal changes from actions", async () => {
     const service = await open();
     expect(await service.press("engineering-1", { nodeId: "sys-eject" })).toEqual(["setState", "setSignal"]);

@@ -92,8 +92,8 @@ describe("runControl", () => {
     expect(playSound).not.toHaveBeenCalled();
     expect(live.sent).toEqual([]);
     expect(press.mock.calls).toEqual([
-      ["go", 40],
-      ["go", 60],
+      ["go", 40, true],
+      ["go", 60, true],
     ]);
 
     runControl(live, slider, 70);
