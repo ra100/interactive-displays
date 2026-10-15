@@ -85,7 +85,8 @@ export const Preview = ({
   effect: Effect;
   readOnly?: boolean;
 }) => {
-  const { selection, select, apply, preview } = useEditor();
+  const { selection, select, apply, preview, overview, signals } = useEditor();
+  const live = useMemo(() => ({ signals: overview.show.signals, store: signals }), [overview.show.signals, signals]);
   const stage = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<{ id: string; rect: NormRect } | undefined>(undefined);
 
@@ -157,6 +158,8 @@ export const Preview = ({
           variant={preview.variant}
           state={preview.state}
           effect={effect}
+          states={overview.show.states}
+          live={live}
           embedded
         />
         {box ? (

@@ -23,6 +23,7 @@ beforeEach(() => {
     if (method === "POST" && path === "/api/screens") return { status: 201, body: { screen: {}, lint: [] } };
     if (method === "POST" && path.endsWith("/duplicate")) return { status: 201, body: { screen: { id: "bridge-copy", name: "Bridge copy" } } };
     if (method === "DELETE") return { body: { deleted: path.split("/")[3] } };
+    if (method === "PUT" && path === "/api/show/signals") return { body: { signals: [] } };
     return undefined;
   });
 });
@@ -132,5 +133,67 @@ describe("screen library", () => {
     await userEvent.type(dialog.getByLabelText("Id"), "bridge");
     expect(dialog.getByText("A screen with this id exists")).toBeInTheDocument();
     expect(dialog.getByRole("button", { name: "Create and edit" })).toBeDisabled();
+  });
+});
+
+describe("signals", () => {
+  const dialog = () => within(screen.getByRole("dialog", { name: "Signals" }));
+
+  it("adds a signal that wanders and saves the show's signals", async () => {
+    await open();
+    await userEvent.click(screen.getByRole("button", { name: "Signals" }));
+    expect(dialog().getByText(/No signals yet/)).toBeInTheDocument();
+
+    await userEvent.click(dialog().getByRole("button", { name: "Add signal" }));
+    await userEvent.clear(dialog().getByLabelText("Name"));
+    await userEvent.type(dialog().getByLabelText("Name"), "Core output");
+    await userEvent.clear(dialog().getByLabelText("Id"));
+    await userEvent.type(dialog().getByLabelText("Id"), "warp.output");
+    await userEvent.type(dialog().getByLabelText("Unit"), "%");
+    await userEvent.selectOptions(dialog().getByLabelText("Value"), "Wanders");
+    await userEvent.click(dialog().getByRole("radio", { name: /Its own value/ }));
+    await userEvent.clear(dialog().getByLabelText("Lowest"));
+    await userEvent.type(dialog().getByLabelText("Lowest"), "88{Enter}");
+    await userEvent.click(dialog().getByRole("button", { name: "Save signals" }));
+
+    expect(writes()).toEqual([
+      expect.objectContaining({
+        method: "PUT",
+        path: "/api/show/signals",
+        body: {
+          signals: [
+            {
+              id: "warp.output",
+              label: "Core output",
+              unit: "%",
+              scope: "ambient",
+              source: { kind: "walk", min: 88, max: 100, volatility: 0.3 },
+            },
+          ],
+        },
+      }),
+    ]);
+    expect(await screen.findByText("Saved signals")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("will not save signals that do not make sense", async () => {
+    await open();
+    await userEvent.click(screen.getByRole("button", { name: "Signals" }));
+    await userEvent.click(dialog().getByRole("button", { name: "Add signal" }));
+    await userEvent.clear(dialog().getByLabelText("Highest"));
+    await userEvent.type(dialog().getByLabelText("Highest"), "-5{Enter}");
+    expect(dialog().getByText(/min must be below max/)).toBeInTheDocument();
+    expect(dialog().getByRole("button", { name: "Save signals" })).toBeDisabled();
+
+    await userEvent.clear(dialog().getByLabelText("Highest"));
+    await userEvent.type(dialog().getByLabelText("Highest"), "50{Enter}");
+    await userEvent.click(dialog().getByRole("button", { name: "Add signal" }));
+    await userEvent.clear(dialog().getByLabelText("Id"));
+    await userEvent.type(dialog().getByLabelText("Id"), "signal");
+    expect(dialog().getByText(/Signal ids must be unique/)).toBeInTheDocument();
+
+    await userEvent.click(dialog().getByRole("button", { name: "Remove New signal" }));
+    expect(dialog().getByRole("button", { name: "Save signals" })).toBeEnabled();
   });
 });

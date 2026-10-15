@@ -172,3 +172,89 @@
   color: var(--tool-muted);
   font-size: 12px;
 }
+
+/* Signals dialog: the list on the left, the selected signal on the right. */
+.signals {
+  display: grid;
+  gap: 16px;
+}
+
+.signals__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.signals__list ul {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 320px;
+  margin: 0;
+  overflow-y: auto;
+  padding: 0;
+  list-style: none;
+}
+
+.signals__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.signals__item[aria-selected="true"] {
+  border-color: var(--tool-accent);
+  background: var(--tool-raised);
+}
+
+.signals__name {
+  font-weight: 700;
+}
+
+.signals__meta {
+  color: var(--tool-muted);
+  font-size: 12px;
+}
+
+.signals__edit,
+.signal-form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.signals__edit > .tool-button {
+  align-self: flex-start;
+}
+
+.signal-form__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.signal-form__scope {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.signal-form__choice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (min-width: 700px) {
+  .signals {
+    grid-template-columns: 220px 1fr;
+  }
+}

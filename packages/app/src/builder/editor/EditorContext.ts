@@ -1,5 +1,6 @@
 import type { AssetInfo, Op, Screen, ShowOverview } from "@interactive-displays/core";
 import { createContext, useContext } from "react";
+import type { SignalStore } from "../../runtime/live.ts";
 import type { Selection } from "./editing.ts";
 
 // What every editor panel shares: the screen as it is now, the selection, how to change both, and how the
@@ -14,6 +15,8 @@ export interface EditorContextValue {
   preview: { state: string; themeId: string; variant: string | undefined };
   assets: AssetInfo[];
   refreshAssets: () => void;
+  // Shared signal values from the server, so the preview moves like the displays do.
+  signals: SignalStore;
   notify: (message: string, tone?: "info" | "danger") => void;
 }
 

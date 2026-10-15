@@ -1,4 +1,5 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { ShowSchema } from "@interactive-displays/core";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -35,7 +36,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-const open = async () => {
+const open = async (overview = sampleOverview()) => {
   render(
     <MemoryRouter>
       <OperatorPage />
@@ -43,7 +44,7 @@ const open = async () => {
   );
   await waitFor(() => expect(fakeServer.emitted.length).toBe(0));
   fakeServer.send("connect");
-  fakeServer.send("overview", sampleOverview());
+  fakeServer.send("overview", overview);
   return screen.findByRole("heading", { name: "Demo Show" });
 };
 
@@ -160,6 +161,87 @@ describe("operator console", () => {
     await open();
     await userEvent.click(screen.getByRole("button", { name: /Red alert/ }));
     expect(await screen.findByRole("alert")).toHaveTextContent("The show has no state");
+  });
+});
+
+describe("live values and display controls", () => {
+  const base = sampleOverview();
+  const liveOverview = sampleOverview({
+    show: ShowSchema.parse({
+      ...base.show,
+      signals: [
+        { id: "shields", label: "Shields", unit: "%", scope: "shared", source: { kind: "manual", initial: 0, step: 5 } },
+        { id: "warp.output", label: "Warp output", scope: "shared", source: { kind: "walk", min: 88, max: 99 } },
+        { id: "eps", label: "EPS", source: { kind: "walk", min: 0, max: 1 } },
+      ],
+    }),
+    signals: { shields: 40, "warp.output": 92.46 },
+    displays: base.displays.map((display) =>
+      display.id === "eng-1" ? { ...display, showing: "bridge", navigated: "bridge", videos: ["feed"] } : display,
+    ),
+  });
+
+  it("sets shared values with a slider or a step, and follows them as they change", async () => {
+    await open(liveOverview);
+    const slider = screen.getByRole("slider", { name: "Shields" });
+    expect(slider).toHaveValue("40");
+    expect(screen.getByText("40 %")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Raise Shields" }));
+    fireEvent.change(slider, { target: { value: "70" } });
+    expect(screen.getByText("70 %")).toBeInTheDocument();
+    expect(writes().map((call) => [call.method, call.path, call.body])).toEqual([
+      ["PUT", "/api/signals/shields/value", { delta: 5 }],
+      ["PUT", "/api/signals/shields/value", { value: 70 }],
+    ]);
+
+    fakeServer.send("signals", { values: { shields: 70, "warp.output": 95.1 } });
+    expect(screen.getByText("95.1")).toBeInTheDocument();
+    fakeServer.send("signals", { values: { shields: 10 } });
+    expect(slider).toHaveValue("10");
+    // Ambient values are each display's own business.
+    expect(screen.queryByText("EPS")).not.toBeInTheDocument();
+  });
+
+  it("explains where shared values come from when the show has none", async () => {
+    await open();
+    expect(screen.getByText(/no shared values/)).toBeInTheDocument();
+  });
+
+  it("switches display buttons and sounds for the whole show", async () => {
+    await open();
+    const sounds = screen.getByRole("switch", { name: /Sounds on displays/ });
+    expect(sounds).not.toBeChecked();
+    expect(screen.getByRole("switch", { name: /Display buttons run the show/ })).toBeChecked();
+
+    await userEvent.click(sounds);
+    await userEvent.click(screen.getByRole("switch", { name: /Display buttons run the show/ }));
+    expect(writes().map((call) => [call.path, call.body])).toEqual([
+      ["/api/show/settings", { sounds: true }],
+      ["/api/show/settings", { displayGlobalActions: false }],
+    ]);
+  });
+
+  it("plays, pauses and restarts the videos on a display", async () => {
+    await open(liveOverview);
+    const video = within(screen.getByRole("listitem", { name: "Engineering 1" })).getByRole("group", { name: "Video feed" });
+    for (const name of ["Play", "Pause", "Restart"]) await userEvent.click(within(video).getByRole("button", { name }));
+
+    expect(writes().map((call) => call.body)).toEqual([
+      { target: "feed", command: "play" },
+      { target: "feed", command: "pause" },
+      { target: "feed", command: "restart" },
+    ]);
+    expect(writes()[0]?.path).toBe("/api/displays/eng-1/video");
+  });
+
+  it("says when a display's own buttons moved it, and sends it back", async () => {
+    await open(liveOverview);
+    const card = screen.getByRole("listitem", { name: "Engineering 1" });
+    expect(within(card).getByText("On Bridge")).toBeInTheDocument();
+
+    await userEvent.click(within(card).getByRole("button", { name: "Send back" }));
+    expect(writes()).toEqual([expect.objectContaining({ method: "PUT", path: "/api/displays/eng-1", body: { screen: "engineering" } })]);
   });
 });
 

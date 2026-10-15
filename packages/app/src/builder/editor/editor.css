@@ -903,3 +903,37 @@
     border-top: 1px solid var(--tool-border);
   }
 }
+
+/* Live values and actions */
+.binding {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.action-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.action-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--tool-border);
+  border-radius: 8px;
+  background: var(--tool-raised);
+}
+
+.action-item__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+}

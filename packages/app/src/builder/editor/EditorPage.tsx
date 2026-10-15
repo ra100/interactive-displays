@@ -128,10 +128,11 @@ const Editor = ({ overview, connection, screenId }: Tools & { screenId: string }
             preview: { state: previewState, themeId, variant },
             assets,
             refreshAssets,
+            signals: connection.signals,
             notify,
           }
         : undefined,
-    [overview, screen, current, select, apply, previewState, themeId, variant, assets, refreshAssets, notify],
+    [overview, screen, current, select, apply, previewState, themeId, variant, assets, refreshAssets, connection.signals, notify],
   );
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));

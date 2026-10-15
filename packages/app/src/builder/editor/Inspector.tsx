@@ -19,7 +19,7 @@ import {
   type When,
 } from "@interactive-displays/core";
 import { decorCatalog, getThemeManifest } from "@interactive-displays/themes/manifest";
-import { type ReactNode, useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import {
   clampRect,
   duplicateOps,
@@ -34,6 +34,8 @@ import {
 } from "./editing.ts";
 import { useEditor } from "./EditorContext.ts";
 import { FieldInput } from "./FieldInput.tsx";
+import { NumberBox, Section } from "./inspectorParts.tsx";
+import { ActionsEditor, LiveValues } from "./LiveSection.tsx";
 
 const fieldsCache = new Map<string, Field[]>();
 
@@ -45,61 +47,6 @@ const fieldsFor = (node: Node): Field[] => {
   const fields = definition ? describeFields(definition.props) : [];
   fieldsCache.set(node.kind, fields);
   return fields;
-};
-
-const Section = ({ title, children }: { title: string; children: ReactNode }) => (
-  <section className="inspector__section">
-    <h3 className="tool-label">{title}</h3>
-    {children}
-  </section>
-);
-
-// A small numeric input that saves on Enter or blur; for placement and layout numbers.
-const NumberBox = ({
-  label,
-  value,
-  min,
-  max,
-  step = 1,
-  placeholder,
-  onCommit,
-}: {
-  label: string;
-  value: number | undefined;
-  placeholder?: string;
-  min?: number;
-  max?: number;
-  step?: number;
-  onCommit: (value: number | undefined) => void;
-}) => {
-  const id = useId();
-  const [draft, setDraft] = useState(value === undefined ? "" : String(value));
-  useEffect(() => setDraft(value === undefined ? "" : String(value)), [value]);
-  const commit = () => {
-    const next = draft.trim() === "" ? undefined : Number(draft);
-    if (next !== undefined && Number.isNaN(next)) return;
-    if (next !== value) onCommit(next);
-  };
-  return (
-    <div className="number-box">
-      <label htmlFor={id}>{label}</label>
-      <input
-        id={id}
-        className="tool-input"
-        type="number"
-        step={step}
-        {...(placeholder ? { placeholder } : {})}
-        {...(min !== undefined ? { min } : {})}
-        {...(max !== undefined ? { max } : {})}
-        value={draft}
-        onChange={(event) => setDraft(event.target.value)}
-        onBlur={commit}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") commit();
-        }}
-      />
-    </div>
-  );
 };
 
 const Placement = ({ location }: { location: NodeLocation }) => {
@@ -415,6 +362,14 @@ const NodeInspector = ({ location }: { location: NodeLocation }) => {
             );
           })}
         </Section>
+      ) : null}
+
+      {/* Live values and actions are the same in every state. */}
+      {node.type === "widget" && !overrideState ? (
+        <>
+          <LiveValues node={node} />
+          <ActionsEditor node={node} />
+        </>
       ) : null}
 
       {node.type === "container" ? <LayoutEditor container={node} /> : null}

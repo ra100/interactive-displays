@@ -1,5 +1,6 @@
-import type { DisplayStatus, Screen, ShowOverview } from "@interactive-displays/core";
+import type { DisplayStatus, Screen, ShowOverview, VideoCommand } from "@interactive-displays/core";
 import { type FormEvent, useState } from "react";
+import type { Live } from "../runtime/live.ts";
 import { QrCode } from "../tools/QrCode.tsx";
 import { ScreenThumbnail } from "../tools/ScreenThumbnail.tsx";
 import { timeAgo } from "../tools/timeAgo.ts";
@@ -11,13 +12,21 @@ export interface DisplayActions {
   reload: () => void;
   endPreview: () => void;
   forget: () => void;
+  video: (target: string, command: VideoCommand) => void;
 }
+
+const TRANSPORT: Array<{ command: VideoCommand; label: string }> = [
+  { command: "play", label: "Play" },
+  { command: "pause", label: "Pause" },
+  { command: "restart", label: "Restart" },
+];
 
 export const DisplayCard = ({
   display,
   overview,
   screen,
   url,
+  live,
   actions,
 }: {
   display: DisplayStatus;
@@ -25,6 +34,7 @@ export const DisplayCard = ({
   // What the display shows right now (its published screen, or the draft it previews).
   screen: Screen | undefined;
   url: string;
+  live: Pick<Live, "signals" | "store">;
   actions: DisplayActions;
 }) => {
   const [qr, setQr] = useState(false);
@@ -46,7 +56,14 @@ export const DisplayCard = ({
       <div className="display-card__top">
         <div className="display-card__preview">
           {screen ? (
-            <ScreenThumbnail screen={screen} theme={overview.show.theme} state={overview.state} effect={effect} />
+            <ScreenThumbnail
+              screen={screen}
+              theme={overview.show.theme}
+              state={overview.state}
+              effect={effect}
+              states={overview.show.states}
+              live={live}
+            />
           ) : (
             <div className="display-card__empty">{display.showing ? "Not published" : "No screen"}</div>
           )}
@@ -62,6 +79,11 @@ export const DisplayCard = ({
           {display.preview ? (
             <span className="tool-chip" data-tone="warning">
               Draft preview
+            </span>
+          ) : null}
+          {display.navigated && !display.preview ? (
+            <span className="tool-chip" data-tone="info">
+              On {screenName(display.navigated)}
             </span>
           ) : null}
           {display.connected ? null : (
@@ -116,6 +138,38 @@ export const DisplayCard = ({
             </button>
           </p>
         ) : null}
+
+        {display.navigated && !display.preview ? (
+          <p className="display-card__note">
+            A button on the display moved it to {screenName(display.navigated)}.{" "}
+            <button
+              className="tool-button tool-button--small"
+              type="button"
+              onClick={() => actions.assign(display.assigned ?? null)}
+            >
+              Send back
+            </button>
+          </p>
+        ) : null}
+
+        {display.videos.map((target) => (
+          <div key={target} className="display-card__video" role="group" aria-label={`Video ${target}`}>
+            <span className="tool-label">Video · {target}</span>
+            <div className="display-card__transport">
+              {TRANSPORT.map(({ command, label }) => (
+                <button
+                  key={command}
+                  className="tool-button"
+                  type="button"
+                  disabled={!display.connected}
+                  onClick={() => actions.video(target, command)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
 
         <div className="display-card__actions">
           <button className="tool-button" type="button" onClick={actions.identify} disabled={!display.connected}>

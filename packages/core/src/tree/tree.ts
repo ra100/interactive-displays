@@ -46,3 +46,12 @@ export const collectIds = (root: Node): Set<string> => {
 };
 
 export const countNodes = (root: Node): number => collectIds(root).size;
+
+// Ids of the widgets of one kind, in tree order: the video widgets a control or the operator can play.
+export const widgetIds = (root: Node, kind: string): string[] => {
+  const ids: string[] = [];
+  walkNodes(root, (node) => {
+    if (node.type === "widget" && node.kind === kind) ids.push(node.id);
+  });
+  return ids;
+};

@@ -1,4 +1,4 @@
-import { applyOps, catalog, type Op, type Screen, ScreenSchema } from "@interactive-displays/core";
+import { applyOps, catalog, type Op, type Screen, ScreenSchema, ShowSchema } from "@interactive-displays/core";
 import { decorCatalog } from "@interactive-displays/themes/manifest";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
@@ -74,7 +74,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-const open = async () => {
+const open = async (overview = sampleOverview()) => {
   render(
     <MemoryRouter initialEntries={["/builder/bridge"]}>
       <Routes>
@@ -84,7 +84,7 @@ const open = async () => {
   );
   await waitFor(() => expect(fakeServer.emitted.length).toBe(0));
   fakeServer.send("connect");
-  fakeServer.send("overview", sampleOverview());
+  fakeServer.send("overview", overview);
   await screen.findByRole("heading", { name: "Bridge", level: 1 });
 };
 
@@ -253,5 +253,110 @@ describe("screen editor", () => {
     await userEvent.click(screen.getByRole("button", { name: "Send to display" }));
     await userEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Preview on Engineering 1" }));
     expect(calls.find((call) => call.path === "/api/displays/eng-1/preview")).toMatchObject({ method: "PUT", body: { screen: "bridge" } });
+  });
+});
+
+describe("live values and actions", () => {
+  const liveBridge = (): Screen => {
+    const screen = bridge();
+    const root = screen.root;
+    if (root.type !== "container") throw new Error("no root");
+    return {
+      ...screen,
+      root: {
+        ...root,
+        children: [
+          ...root.children,
+          { slot: "main", node: { id: "shields", type: "widget", kind: "gauge", props: { label: "SHIELDS", value: 50 } } },
+          { slot: "main", node: { id: "modes", type: "widget", kind: "button-group", props: { items: ["A", "B"] } } },
+        ],
+      },
+    };
+  };
+  const base = sampleOverview();
+  const withSignals = sampleOverview({
+    show: ShowSchema.parse({
+      ...base.show,
+      signals: [{ id: "shields", label: "Shields", scope: "shared", source: { kind: "manual", initial: 30 } }],
+    }),
+    signals: { shields: 80 },
+  });
+  const section = (name: string) => within(inspector().getByRole("region", { name }));
+  const lastOps = () => opsSent().at(-1)?.ops;
+
+  it("binds a gauge to a show signal or to a value that wanders by itself", async () => {
+    draft = liveBridge();
+    await open(withSignals);
+    // The preview follows the shared value, like the displays.
+    await selectInOutline(/Gauge · SHIELDS/);
+    const live = section("Live value");
+
+    await userEvent.selectOptions(live.getByRole("combobox", { name: "Value" }), "Shields (shared)");
+    await waitFor(() => expect(lastOps()).toEqual([{ op: "set", id: "shields", bind: { value: { signal: "shields" } } }]));
+    await waitFor(() => expect(within(preview()).getByText("80")).toBeInTheDocument());
+
+    await userEvent.selectOptions(live.getByRole("combobox", { name: "Value" }), "Wanders");
+    await waitFor(() =>
+      expect(lastOps()).toEqual([
+        { op: "set", id: "shields", bind: { value: { ambient: { kind: "walk", min: 0, max: 100, volatility: 0.3 } } } },
+      ]),
+    );
+
+    await userEvent.selectOptions(live.getByRole("combobox", { name: "Value" }), "Its own value");
+    await waitFor(() => expect(lastOps()).toEqual([{ op: "set", id: "shields", bind: null }]));
+  });
+
+  it("gives a control actions, and removes them", async () => {
+    draft = liveBridge();
+    await open(withSignals);
+    await selectInOutline(/Button · HELM/);
+    const actions = () => section("When used");
+
+    await userEvent.selectOptions(actions().getByRole("combobox", { name: "Add" }), "Go to screen");
+    await waitFor(() => expect(lastOps()).toEqual([{ op: "set", id: "helm", actions: [{ do: "navigate", screen: "engineering" }] }]));
+
+    await userEvent.selectOptions(actions().getByRole("combobox", { name: "Add" }), "Set a shared value");
+    await waitFor(() =>
+      expect(lastOps()).toEqual([
+        {
+          op: "set",
+          id: "helm",
+          actions: [
+            { do: "navigate", screen: "engineering" },
+            { do: "setSignal", signal: "shields", value: 0 },
+          ],
+        },
+      ]),
+    );
+
+    await userEvent.selectOptions(actions().getByRole("combobox", { name: "Screen" }), "Draft only");
+    await waitFor(() => expect(lastOps()?.[0]).toMatchObject({ actions: [{ do: "navigate", screen: "draft" }, { do: "setSignal" }] }));
+
+    await userEvent.click(actions().getByRole("button", { name: "Remove Go to screen" }));
+    await userEvent.click(actions().getByRole("button", { name: "Remove Set a shared value" }));
+    await waitFor(() => expect(lastOps()).toEqual([{ op: "set", id: "helm", actions: null }]));
+  });
+
+  it("only offers actions the show can do", async () => {
+    draft = liveBridge();
+    await open();
+    await selectInOutline(/Button · HELM/);
+    const add = section("When used").getByRole("combobox", { name: "Add" });
+    expect(within(add).getByRole("option", { name: "Set a shared value" })).toBeDisabled();
+    expect(within(add).getByRole("option", { name: "Control a video" })).toBeDisabled();
+    expect(within(add).getByRole("option", { name: "Play a sound" })).toBeEnabled();
+  });
+
+  it("edits a list one item per line", async () => {
+    draft = liveBridge();
+    await open();
+    await selectInOutline(/Button group/);
+    const items = inspector().getByLabelText("Items");
+    expect(items).toHaveValue("A\nB");
+
+    await userEvent.clear(items);
+    await userEvent.type(items, "IMPULSE{Enter}WARP");
+    await userEvent.tab();
+    await waitFor(() => expect(lastOps()).toEqual([{ op: "update", id: "modes", props: { items: ["IMPULSE", "WARP"] } }]));
   });
 });

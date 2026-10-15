@@ -1,5 +1,5 @@
 import type { ScreenSummary, ShowOverview } from "@interactive-displays/core";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../../tools/api.ts";
 import { ConfirmDialog } from "../../tools/Dialog.tsx";
@@ -9,6 +9,7 @@ import { useScreenDocs } from "../../tools/useScreenDocs.ts";
 import { useToast } from "../../tools/useToast.tsx";
 import { publishStatus } from "../publishStatus.ts";
 import { NewScreenDialog } from "./NewScreenDialog.tsx";
+import { SignalsDialog } from "./SignalsDialog.tsx";
 import { buildScreen, type NewScreen } from "./templates.ts";
 import "./library.css";
 
@@ -26,15 +27,17 @@ const deleteBlocker = (screen: ScreenSummary, overview: ShowOverview): string | 
   return undefined;
 };
 
-const Library = ({ overview }: Tools) => {
+const Library = ({ overview, connection }: Tools) => {
   const navigate = useNavigate();
   const toast = useToast();
   const [query, setQuery] = useState("");
   const [creating, setCreating] = useState(false);
+  const [editingSignals, setEditingSignals] = useState(false);
   const [deleting, setDeleting] = useState<ScreenSummary | undefined>(undefined);
   const docFor = useScreenDocs(overview.screens.map((screen) => ({ id: screen.id, revision: screen.revision, source: "draft" })));
   const shown = overview.screens.filter((screen) => matches(screen, query));
   const sections = [...new Set(overview.screens.flatMap((screen) => screen.section ?? []))].sort();
+  const live = useMemo(() => ({ signals: overview.show.signals, store: connection.signals }), [overview.show.signals, connection.signals]);
 
   const create = async (input: NewScreen) => {
     const result = await api("POST", "/api/screens", buildScreen(input));
@@ -65,6 +68,9 @@ const Library = ({ overview }: Tools) => {
         <Link className="tool-button tool-button--quiet" to="/operator">
           Operator
         </Link>
+        <button type="button" className="tool-button" onClick={() => setEditingSignals(true)}>
+          Signals
+        </button>
         <button type="button" className="tool-button tool-button--primary" onClick={() => setCreating(true)}>
           New screen
         </button>
@@ -94,7 +100,7 @@ const Library = ({ overview }: Tools) => {
             <li key={screen.id} className="screen-card">
               <Link className="screen-card__open" to={`/builder/${screen.id}`} aria-label={`Edit ${screen.name}`}>
                 {doc ? (
-                  <ScreenThumbnail screen={doc} theme={overview.show.theme} />
+                  <ScreenThumbnail screen={doc} theme={overview.show.theme} states={overview.show.states} live={live} />
                 ) : (
                   <div className="screen-card__placeholder" style={{ aspectRatio: screen.profile.aspect.replace(":", " / ") }} />
                 )}
@@ -151,6 +157,17 @@ const Library = ({ overview }: Tools) => {
           sections={sections}
           onCreate={create}
           onClose={() => setCreating(false)}
+        />
+      ) : null}
+      {editingSignals ? (
+        <SignalsDialog
+          signals={overview.show.signals}
+          onSave={async (signals) => {
+            const result = await api("PUT", "/api/show/signals", { signals });
+            if (result.ok) toast.show("Saved signals");
+            return result;
+          }}
+          onClose={() => setEditingSignals(false)}
         />
       ) : null}
       {deleting ? (

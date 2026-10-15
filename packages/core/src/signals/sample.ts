@@ -114,9 +114,13 @@ export const sourceInState = (signal: Pick<SignalDef, "source" | "byState">, sta
 export const isTicking = (signal: Pick<SignalDef, "scope" | "source">): boolean =>
   signal.scope === "shared" && (signal.source.kind === "walk" || signal.source.kind === "wave");
 
+// Shared signals whose value the operator or a display control sets.
+export const isSettable = (signal: Pick<SignalDef, "scope" | "source">): boolean =>
+  signal.scope === "shared" && signal.source.kind === "manual";
+
 // Signals whose live value comes from the server rather than from the display's own clock.
 export const isServerOwned = (signal: Pick<SignalDef, "scope" | "source">): boolean =>
-  signal.scope === "shared" && (signal.source.kind === "manual" || isTicking(signal));
+  isSettable(signal) || isTicking(signal);
 
 // Applies a setSignal to a manual signal: clamped to its range and snapped to its step.
 export const nextManualValue = (

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { type Node, NodeSchema } from "../schema/node.ts";
-import { collectIds, findNode, walkNodes } from "./tree.ts";
+import { collectIds, findNode, walkNodes, widgetIds } from "./tree.ts";
 
 const root: Node = NodeSchema.parse({
   id: "root",
@@ -43,5 +43,10 @@ describe("tree helpers", () => {
 
   it("collects all ids", () => {
     expect([...collectIds(root)]).toEqual(["root", "a", "row", "b"]);
+  });
+
+  it("lists the widgets of one kind", () => {
+    expect(widgetIds(root, "button")).toEqual(["b"]);
+    expect(widgetIds(root, "video")).toEqual([]);
   });
 });
