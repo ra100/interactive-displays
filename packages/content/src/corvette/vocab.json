@@ -1,0 +1,81 @@
+{
+  "codeFormats": [
+    "@@-####",
+    "##.###",
+    "@###-@",
+    "#-@@-##",
+    "###:##"
+  ],
+  "statuses": [
+    "NOMINAL",
+    "GREEN",
+    "READY",
+    "ONLINE",
+    "TRACKING",
+    "LOCKED",
+    "STANDBY",
+    "ARMED",
+    "CLEAR",
+    "SYNCED"
+  ],
+  "alertStatuses": [
+    "CRITICAL",
+    "RED",
+    "FAULT",
+    "OFFLINE",
+    "BREACH",
+    "HOSTILE"
+  ],
+  "phrases": [
+    "{system} {word} solution updated",
+    "Re-tasking {word} array to {system}",
+    "{system}: {word} within tolerance",
+    "Handshake with {word} relay complete",
+    "{word} buffer purged",
+    "{system} {word} vector refreshed",
+    "Tight-beam {word} queued",
+    "{word} telemetry pushed to ops",
+    "{system} running on backup {word}",
+    "Cycling {word} coolant loop",
+    "{word} lock re-acquired",
+    "Expect {word} drift on {system}"
+  ],
+  "words": [
+    "lidar",
+    "thrust",
+    "PDC",
+    "vector",
+    "telemetry",
+    "coolant",
+    "reactor",
+    "bottle",
+    "drive",
+    "grid",
+    "gyro",
+    "array",
+    "signature",
+    "tight-beam",
+    "ECM",
+    "radiator",
+    "hull",
+    "plate",
+    "mech",
+    "juice",
+    "delta-v",
+    "torpedo",
+    "railgun",
+    "ballistic",
+    "thermal",
+    "comms",
+    "sensor",
+    "reaction mass",
+    "maneuvering",
+    "armor"
+  ],
+  "logColumns": [
+    "TIME",
+    "SYS",
+    "VALUE",
+    "STATUS"
+  ]
+}

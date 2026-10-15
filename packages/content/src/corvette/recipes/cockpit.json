@@ -1,0 +1,244 @@
+{
+  "id": "cockpit",
+  "label": "Cockpit",
+  "description": "Pilot's flight display: attitude, thrust and the approach vector.",
+  "code": "PLT",
+  "archetypes": {
+    "dashboard": 3,
+    "header-main": 2,
+    "sidebar": 1
+  },
+  "titles": [
+    "COCKPIT",
+    "FLIGHT",
+    "PILOT DISPLAY",
+    "HELM"
+  ],
+  "nav": [
+    "ATTITUDE",
+    "THRUST",
+    "VECTOR",
+    "DOCKING",
+    "AUTOPILOT",
+    "FUEL"
+  ],
+  "status": [
+    "BURN COMPLETE · COASTING",
+    "AUTOPILOT HOLDING VECTOR",
+    "DOCKING CORRIDOR CLEAR"
+  ],
+  "systems": [
+    {
+      "id": "attitude",
+      "label": "ATTITUDE",
+      "metrics": [
+        {
+          "id": "pitch",
+          "label": "PITCH",
+          "range": [
+            -4,
+            4
+          ],
+          "unit": "°",
+          "prefer": [
+            "readout"
+          ],
+          "motion": "wave",
+          "precision": 1
+        },
+        {
+          "id": "yaw",
+          "label": "YAW",
+          "range": [
+            -3,
+            3
+          ],
+          "unit": "°",
+          "prefer": [
+            "readout"
+          ],
+          "motion": "wave",
+          "precision": 1
+        },
+        {
+          "id": "roll",
+          "label": "ROLL",
+          "range": [
+            -2,
+            2
+          ],
+          "unit": "°",
+          "motion": "wave",
+          "precision": 1
+        }
+      ],
+      "actions": [
+        {
+          "label": "LEVEL OFF"
+        },
+        {
+          "label": "FLIP AND BURN"
+        }
+      ],
+      "notes": [
+        "Gyros aligned to ecliptic"
+      ]
+    },
+    {
+      "id": "thrust",
+      "label": "MAIN DRIVE",
+      "metrics": [
+        {
+          "id": "burn",
+          "label": "THRUST",
+          "range": [
+            0.3,
+            1.2
+          ],
+          "unit": "g",
+          "alertRange": [
+            6,
+            9
+          ],
+          "prefer": [
+            "gauge"
+          ],
+          "precision": 1
+        },
+        {
+          "id": "fuel",
+          "label": "REACTION MASS",
+          "range": [
+            55,
+            70
+          ],
+          "unit": "%",
+          "alertRange": [
+            4,
+            15
+          ],
+          "prefer": [
+            "gauge"
+          ]
+        },
+        {
+          "id": "delta",
+          "label": "DELTA-V",
+          "range": [
+            18,
+            24
+          ],
+          "unit": "km/s",
+          "precision": 1
+        }
+      ],
+      "actions": [
+        {
+          "label": "HARD BURN",
+          "danger": true,
+          "actions": [
+            {
+              "do": "setState",
+              "state": "yellow-alert"
+            }
+          ]
+        },
+        {
+          "label": "CUT DRIVE"
+        }
+      ],
+      "short": "DRIVE",
+      "notes": [
+        "Crash couches pressurised"
+      ]
+    },
+    {
+      "id": "vector",
+      "label": "APPROACH VECTOR",
+      "metrics": [
+        {
+          "id": "range",
+          "label": "RANGE",
+          "range": [
+            800,
+            1200
+          ],
+          "unit": "km"
+        },
+        {
+          "id": "closing",
+          "label": "CLOSING",
+          "range": [
+            40,
+            60
+          ],
+          "unit": "m/s",
+          "alertRange": [
+            400,
+            700
+          ]
+        },
+        {
+          "id": "align",
+          "label": "ALIGNMENT",
+          "range": [
+            92,
+            99
+          ],
+          "unit": "%",
+          "alertRange": [
+            30,
+            60
+          ],
+          "prefer": [
+            "gauge"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "label": "MATCH VELOCITY"
+        },
+        {
+          "label": "ABORT APPROACH",
+          "danger": true,
+          "actions": [
+            {
+              "do": "setState",
+              "state": "red-alert"
+            }
+          ]
+        }
+      ],
+      "short": "VECTOR"
+    }
+  ],
+  "blocks": {
+    "prefer": [
+      "telemetry",
+      "hero-gauge",
+      "readout-column"
+    ],
+    "avoid": []
+  },
+  "alert": {
+    "banner": true,
+    "emphasise": [
+      "closing",
+      "fuel",
+      "burn"
+    ],
+    "status": [
+      "COLLISION ALARM",
+      "HIGH-G MANOEUVRE",
+      "DRIVE FAULT · COASTING"
+    ]
+  },
+  "tags": [
+    "pilot",
+    "flight",
+    "helm",
+    "navigation",
+    "drive"
+  ]
+}

@@ -1,0 +1,233 @@
+{
+  "id": "drive",
+  "label": "Drive room",
+  "description": "Fusion drive, reactor and the power grid aft.",
+  "code": "ENG",
+  "archetypes": {
+    "sidebar": 2,
+    "dashboard": 2,
+    "header-main": 1
+  },
+  "titles": [
+    "DRIVE ROOM",
+    "REACTOR",
+    "ENGINEERING",
+    "POWER"
+  ],
+  "nav": [
+    "REACTOR",
+    "DRIVE",
+    "GRID",
+    "COOLANT",
+    "MAINTENANCE"
+  ],
+  "status": [
+    "REACTOR NOMINAL",
+    "DRIVE ON STANDBY",
+    "GRID BALANCED"
+  ],
+  "systems": [
+    {
+      "id": "reactor",
+      "label": "FUSION REACTOR",
+      "metrics": [
+        {
+          "id": "output",
+          "label": "OUTPUT",
+          "range": [
+            60,
+            72
+          ],
+          "unit": "%",
+          "alertRange": [
+            95,
+            100
+          ],
+          "prefer": [
+            "gauge"
+          ]
+        },
+        {
+          "id": "bottle",
+          "label": "BOTTLE STABILITY",
+          "range": [
+            96,
+            99
+          ],
+          "unit": "%",
+          "alertRange": [
+            40,
+            70
+          ],
+          "prefer": [
+            "gauge"
+          ]
+        },
+        {
+          "id": "temp",
+          "label": "CORE TEMP",
+          "range": [
+            140,
+            160
+          ],
+          "unit": "MK",
+          "motion": "wave"
+        }
+      ],
+      "actions": [
+        {
+          "label": "SCRAM",
+          "danger": true,
+          "actions": [
+            {
+              "do": "setState",
+              "state": "red-alert"
+            }
+          ]
+        },
+        {
+          "label": "STABILISE",
+          "actions": [
+            {
+              "do": "setState",
+              "state": "normal"
+            }
+          ]
+        }
+      ],
+      "short": "REACTOR",
+      "notes": [
+        "Magnetic bottle holding"
+      ]
+    },
+    {
+      "id": "grid",
+      "label": "POWER GRID",
+      "metrics": [
+        {
+          "id": "load",
+          "label": "GRID LOAD",
+          "range": [
+            40,
+            60
+          ],
+          "unit": "%",
+          "alertRange": [
+            90,
+            100
+          ],
+          "prefer": [
+            "gauge"
+          ]
+        },
+        {
+          "id": "draw",
+          "label": "DRAW",
+          "range": [
+            30,
+            40
+          ],
+          "unit": "MW"
+        },
+        {
+          "id": "battery",
+          "label": "BATTERY",
+          "range": [
+            85,
+            98
+          ],
+          "unit": "%",
+          "alertRange": [
+            5,
+            20
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "label": "SHED LOAD",
+          "actions": [
+            {
+              "do": "setState",
+              "state": "yellow-alert"
+            }
+          ]
+        },
+        {
+          "label": "BALANCE GRID"
+        }
+      ]
+    },
+    {
+      "id": "coolant",
+      "label": "COOLANT",
+      "metrics": [
+        {
+          "id": "temp",
+          "label": "COOLANT TEMP",
+          "range": [
+            290,
+            320
+          ],
+          "unit": "K",
+          "alertRange": [
+            360,
+            420
+          ],
+          "motion": "wave",
+          "signal": "coolant.temp"
+        },
+        {
+          "id": "flow",
+          "label": "FLOW",
+          "range": [
+            40,
+            55
+          ],
+          "unit": "L/s"
+        }
+      ],
+      "actions": [
+        {
+          "label": "VENT HEAT",
+          "danger": true
+        },
+        {
+          "label": "CYCLE PUMPS"
+        }
+      ],
+      "notes": [
+        "Radiators deployed"
+      ]
+    }
+  ],
+  "blocks": {
+    "prefer": [
+      "hero-gauge",
+      "gauge-bank",
+      "control-panel"
+    ],
+    "avoid": []
+  },
+  "alert": {
+    "banner": true,
+    "emphasise": [
+      "output",
+      "bottle",
+      "load",
+      "temp"
+    ],
+    "status": [
+      "BOTTLE FAILURE IMMINENT",
+      "REACTOR SCRAM",
+      "GRID OVERLOAD"
+    ]
+  },
+  "tags": [
+    "reactor",
+    "drive",
+    "power",
+    "engine",
+    "fusion"
+  ]
+}

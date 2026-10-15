@@ -1,0 +1,203 @@
+{
+  "id": "damage-control",
+  "label": "Damage control",
+  "description": "Hull, compartments and repair crews.",
+  "code": "DMG",
+  "archetypes": {
+    "dashboard": 2,
+    "sidebar": 2,
+    "header-main": 2
+  },
+  "titles": [
+    "DAMAGE CONTROL",
+    "HULL STATUS",
+    "COMPARTMENTS",
+    "REPAIR"
+  ],
+  "nav": [
+    "HULL",
+    "COMPARTMENTS",
+    "CREWS",
+    "FIRE",
+    "ATMOSPHERE"
+  ],
+  "status": [
+    "NO BREACHES",
+    "REPAIR CREWS STANDING BY",
+    "ALL COMPARTMENTS PRESSURISED"
+  ],
+  "systems": [
+    {
+      "id": "hull",
+      "label": "HULL",
+      "metrics": [
+        {
+          "id": "integrity",
+          "label": "HULL INTEGRITY",
+          "range": [
+            96,
+            100
+          ],
+          "unit": "%",
+          "alertRange": [
+            40,
+            70
+          ],
+          "prefer": [
+            "gauge"
+          ],
+          "signal": "hull"
+        },
+        {
+          "id": "breaches",
+          "label": "BREACHES",
+          "range": [
+            0,
+            0.4
+          ],
+          "unit": "",
+          "alertRange": [
+            3,
+            6
+          ],
+          "prefer": [
+            "readout"
+          ],
+          "precision": 0
+        }
+      ],
+      "actions": [
+        {
+          "label": "SEAL BREACH",
+          "danger": true
+        },
+        {
+          "label": "SCAN HULL"
+        }
+      ],
+      "notes": [
+        "Armour plating nominal"
+      ]
+    },
+    {
+      "id": "compartments",
+      "label": "COMPARTMENTS",
+      "metrics": [
+        {
+          "id": "sealed",
+          "label": "SEALED",
+          "range": [
+            11,
+            12
+          ],
+          "unit": "",
+          "prefer": [
+            "readout"
+          ],
+          "precision": 0
+        },
+        {
+          "id": "pressure",
+          "label": "AVERAGE PRESSURE",
+          "range": [
+            99,
+            101
+          ],
+          "unit": "kPa",
+          "alertRange": [
+            40,
+            80
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "label": "SEAL DECK 3",
+          "actions": [
+            {
+              "do": "setState",
+              "state": "yellow-alert"
+            }
+          ]
+        },
+        {
+          "label": "VENT DECK 3",
+          "danger": true
+        }
+      ],
+      "short": "DECKS"
+    },
+    {
+      "id": "crews",
+      "label": "REPAIR CREWS",
+      "metrics": [
+        {
+          "id": "ready",
+          "label": "CREWS READY",
+          "range": [
+            3,
+            4
+          ],
+          "unit": "",
+          "prefer": [
+            "readout"
+          ],
+          "precision": 0
+        },
+        {
+          "id": "progress",
+          "label": "REPAIR PROGRESS",
+          "range": [
+            0,
+            100
+          ],
+          "unit": "%",
+          "prefer": [
+            "gauge"
+          ],
+          "motion": "wave"
+        }
+      ],
+      "actions": [
+        {
+          "label": "DISPATCH CREW"
+        },
+        {
+          "label": "RECALL CREWS"
+        }
+      ],
+      "short": "CREWS",
+      "notes": [
+        "Mechs charged and on standby"
+      ]
+    }
+  ],
+  "blocks": {
+    "prefer": [
+      "status-board",
+      "button-column",
+      "readout-column"
+    ],
+    "avoid": []
+  },
+  "alert": {
+    "banner": true,
+    "emphasise": [
+      "integrity",
+      "breaches",
+      "pressure"
+    ],
+    "status": [
+      "HULL BREACH · DECK 3",
+      "FIRE IN MACHINE SHOP",
+      "DECOMPRESSION"
+    ]
+  },
+  "tags": [
+    "damage",
+    "hull",
+    "repair",
+    "breach",
+    "compartments"
+  ]
+}
