@@ -3,6 +3,7 @@ import { SignalDefSchema, SourceSchema } from "../schema/signal.ts";
 import {
   formatClock,
   isServerOwned,
+  isSettable,
   isTicking,
   nextManualValue,
   roundValue,
@@ -105,6 +106,8 @@ describe("server-owned signals", () => {
     expect(isTicking(shared({ kind: "manual" }))).toBe(false);
     expect(isTicking(shared({ kind: "wave", min: 0, max: 1 }))).toBe(true);
     expect(isServerOwned(SignalDefSchema.parse({ id: "a", label: "A", source: { kind: "manual" } }))).toBe(false);
+    expect(isSettable(shared({ kind: "manual" }))).toBe(true);
+    expect(isSettable(shared({ kind: "walk", min: 0, max: 1 }))).toBe(false);
   });
 });
 

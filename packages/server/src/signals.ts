@@ -1,4 +1,5 @@
 import {
+  isSettable,
   isTicking,
   nextManualValue,
   roundValue,
@@ -10,9 +11,6 @@ import {
   type SignalValues,
   sourceInState,
 } from "@interactive-displays/core";
-
-// Shared signals whose value the operator or a display control sets.
-export const isSettable = (signal: SignalDef): boolean => signal.scope === "shared" && signal.source.kind === "manual";
 
 // The server's half of the live values. Manual signals hold the value someone set (or their initial value);
 // ticking ones are worked out from the clock, and only changes go out. Ambient signals never reach the

@@ -1,6 +1,7 @@
 import { type Field, TONES, type ThemeTokens } from "@interactive-displays/core";
 import { useEffect, useId, useRef, useState } from "react";
 import { useEditor } from "./EditorContext.ts";
+import { formatField, parseField } from "./fieldText.ts";
 
 const TYPING_MS = 600;
 
@@ -53,6 +54,63 @@ const TextInput = ({
         if (event.key === "Enter") commit(draft);
       }}
     />
+  );
+};
+
+// Text that becomes a number, a list or a table. It is saved when the field loses focus (or on Enter in a
+// one-line field), never mid-typing, so "6." or a half-typed row is not reformatted under the cursor.
+const ParsedInput = ({
+  id,
+  field,
+  value,
+  onCommit,
+}: {
+  id: string;
+  field: Extract<Field, { type: "value" | "list" | "numbers" | "table" }>;
+  value: unknown;
+  onCommit: (value: unknown) => void;
+}) => {
+  const text = formatField(field, value);
+  const [draft, setDraft] = useState(text);
+  const [problem, setProblem] = useState<string | undefined>(undefined);
+  useEffect(() => setDraft(text), [text]);
+  const commit = () => {
+    if (draft === text) return setProblem(undefined);
+    const parsed = parseField(field, draft);
+    if ("problem" in parsed) return setProblem(parsed.problem);
+    setProblem(undefined);
+    onCommit(parsed.value);
+  };
+  const common = {
+    id,
+    value: draft,
+    "aria-invalid": problem ? true : undefined,
+    onBlur: commit,
+  };
+  const hint = field.type === "list" ? "One per line" : field.type === "table" ? "One row per line, cells split by |" : undefined;
+  return (
+    <>
+      {field.type === "list" || field.type === "table" ? (
+        <textarea
+          className="tool-textarea"
+          rows={Math.min(8, Math.max(3, draft.split("\n").length + 1))}
+          placeholder={hint}
+          {...common}
+          onChange={(event) => setDraft(event.target.value)}
+        />
+      ) : (
+        <input
+          className="tool-input"
+          {...(field.type === "numbers" ? { inputMode: "decimal" as const, placeholder: "40, 65, 80" } : {})}
+          {...common}
+          onChange={(event) => setDraft(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") commit();
+          }}
+        />
+      )}
+      {problem ? <span className="field__problem">{problem}</span> : null}
+    </>
   );
 };
 
@@ -215,6 +273,11 @@ export const FieldInput = ({
           </select>
         );
       }
+      case "value":
+      case "list":
+      case "numbers":
+      case "table":
+        return <ParsedInput id={id} field={field} value={value} onCommit={onChange} />;
       case "json":
         return <JsonInput id={id} value={value} onCommit={onChange} />;
     }

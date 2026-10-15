@@ -47,12 +47,23 @@
   padding: 16px;
 }
 
-.operator__states,
+.operator__controls,
+.operator__section,
 .operator__displays {
   display: flex;
   flex-direction: column;
   gap: 12px;
   min-width: 0;
+}
+
+.operator__controls {
+  gap: 24px;
+}
+
+.operator__hint {
+  margin: 0;
+  color: var(--tool-muted);
+  font-size: 14px;
 }
 
 /* States */
@@ -161,6 +172,141 @@
   }
 }
 
+/* Live values: a thumb-sized slider with a step either way. */
+.signal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.signal-control {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--tool-border);
+  border-radius: 14px;
+  background: var(--tool-panel);
+}
+
+.signal-control__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.signal-control__label {
+  font-weight: 700;
+}
+
+.signal-control__value {
+  font-size: 20px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.signal-control--reading .signal-control__value {
+  color: var(--tool-muted);
+}
+
+.signal-control__row {
+  display: grid;
+  grid-template-columns: 60px 1fr 60px;
+  align-items: center;
+  gap: 10px;
+}
+
+.signal-control__row .tool-button {
+  padding: 0;
+  font-size: 24px;
+}
+
+.signal-control__slider {
+  width: 100%;
+  height: 60px;
+  margin: 0;
+  background: transparent;
+  accent-color: var(--tool-accent);
+  cursor: pointer;
+  appearance: none;
+}
+
+.signal-control__slider::-webkit-slider-runnable-track {
+  height: 10px;
+  border-radius: 5px;
+  background: var(--tool-raised);
+}
+
+.signal-control__slider::-moz-range-track {
+  height: 10px;
+  border-radius: 5px;
+  background: var(--tool-raised);
+}
+
+.signal-control__slider::-webkit-slider-thumb {
+  width: 44px;
+  height: 44px;
+  margin-top: -17px;
+  border: 3px solid var(--tool-bg);
+  border-radius: 50%;
+  background: var(--tool-accent);
+  appearance: none;
+}
+
+.signal-control__slider::-moz-range-thumb {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--tool-bg);
+  border-radius: 50%;
+  background: var(--tool-accent);
+}
+
+/* Show switches */
+.show-switches {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.show-switch {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 8px 12px;
+  border: 1px solid var(--tool-border);
+  border-radius: 14px;
+  background: var(--tool-panel);
+  cursor: pointer;
+}
+
+.show-switch__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.show-switch__label {
+  font-weight: 700;
+}
+
+.show-switch__hint {
+  color: var(--tool-muted);
+  font-size: 13px;
+}
+
+.show-switch input {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  accent-color: var(--tool-accent);
+}
+
 /* Displays */
 .display-list {
   display: grid;
@@ -253,6 +399,18 @@
   padding: 0 8px;
 }
 
+.display-card__video {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.display-card__transport {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
 .display-card__rename {
   display: grid;
   grid-template-columns: 1fr auto auto;
@@ -291,9 +449,11 @@
     padding: 24px;
   }
 
-  .operator__states {
+  .operator__controls {
     position: sticky;
     top: 88px;
+    max-height: calc(100vh - 112px);
+    overflow-y: auto;
   }
 
   .display-list {

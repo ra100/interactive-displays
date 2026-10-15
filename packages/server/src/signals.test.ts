@@ -1,6 +1,6 @@
-import { type Show, ShowSchema } from "@interactive-displays/core";
+import { isSettable, type Show, ShowSchema } from "@interactive-displays/core";
 import { describe, expect, it } from "vitest";
-import { createSignals, isSettable } from "./signals.ts";
+import { createSignals } from "./signals.ts";
 
 const show: Show = ShowSchema.parse({
   schemaVersion: 1,

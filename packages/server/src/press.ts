@@ -1,4 +1,4 @@
-import { catalog, findNode, type Node, nodeInState, type Screen, walkNodes, type WidgetNode } from "@interactive-displays/core";
+import { catalog, findNode, type Node, nodeInState, type Screen, type WidgetNode, widgetIds } from "@interactive-displays/core";
 
 // The control an actor pressed, if it is one: a widget with actions, of an interactive kind, that is visible in
 // the current state (it and every container around it). A press for anything else is stale or forged and is
@@ -13,11 +13,4 @@ export const pressTarget = (screen: Screen, nodeId: string, state: string): Widg
 };
 
 // Ids of the video widgets on a screen, for the operator's transport controls.
-export const videoIds = (screen: Screen | null): string[] => {
-  if (!screen) return [];
-  const ids: string[] = [];
-  walkNodes(screen.root, (node) => {
-    if (node.type === "widget" && node.kind === "video") ids.push(node.id);
-  });
-  return ids;
-};
+export const videoIds = (screen: Screen | null): string[] => (screen ? widgetIds(screen.root, "video") : []);

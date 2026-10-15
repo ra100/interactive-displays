@@ -6,6 +6,7 @@ import {
   type DisplayDef,
   findSignal,
   findState,
+  isSettable,
   lintScreen,
   type LintIssue,
   type Op,
@@ -40,7 +41,7 @@ import {
   trashScreen,
 } from "./storage/repository.ts";
 import { pressTarget, videoIds } from "./press.ts";
-import { createSignals, isSettable } from "./signals.ts";
+import { createSignals } from "./signals.ts";
 
 type Log = Pick<FastifyBaseLogger, "info" | "warn" | "error">;
 

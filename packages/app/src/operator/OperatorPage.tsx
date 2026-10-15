@@ -1,4 +1,5 @@
-import type { DisplayStatus, ShowOverview } from "@interactive-displays/core";
+import type { DisplayStatus, ShowOverview, VideoCommand } from "@interactive-displays/core";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { api, type ApiResult } from "../tools/api.ts";
 import { QrCode } from "../tools/QrCode.tsx";
@@ -7,6 +8,8 @@ import { type ScreenRef, useScreenDocs } from "../tools/useScreenDocs.ts";
 import { publicOrigin } from "../tools/useSession.ts";
 import { useToast } from "../tools/useToast.tsx";
 import { DisplayCard } from "./DisplayCard.tsx";
+import { ShowSwitches } from "./ShowSwitches.tsx";
+import { SignalControls } from "./SignalControls.tsx";
 import { StateButtons } from "./StateButtons.tsx";
 import "./operator.css";
 
@@ -28,6 +31,8 @@ const OperatorConsole = ({ overview, connection, session }: Tools) => {
   const screenFor = useScreenDocs(refs);
   const origin = publicOrigin(session);
   const connectedCount = overview.displays.filter((display) => display.connected).length;
+  // Thumbnails show shared values as they move, like the displays themselves.
+  const live = useMemo(() => ({ signals: overview.show.signals, store: connection.signals }), [overview.show.signals, connection.signals]);
 
   const run = async (action: Promise<ApiResult<unknown>>, done?: string) => {
     const result = await action;
@@ -44,6 +49,7 @@ const OperatorConsole = ({ overview, connection, session }: Tools) => {
       reload: () => void run(api("POST", `${path}/reload`), `Reloading ${display.name ?? display.id}`),
       endPreview: () => void run(api("DELETE", `${path}/preview`)),
       forget: () => void run(api("DELETE", path)),
+      video: (target: string, command: VideoCommand) => void run(api("POST", `${path}/video`, { target, command })),
     };
   };
 
@@ -64,12 +70,35 @@ const OperatorConsole = ({ overview, connection, session }: Tools) => {
       </header>
 
       <div className="operator__layout">
-        <section className="operator__states" aria-labelledby="states-title">
-          <h2 id="states-title" className="tool-label">
-            Show state
-          </h2>
-          <StateButtons overview={overview} onSet={(state) => void run(api("POST", "/api/state", { state }))} />
-        </section>
+        <div className="operator__controls">
+          <section className="operator__section" aria-labelledby="states-title">
+            <h2 id="states-title" className="tool-label">
+              Show state
+            </h2>
+            <StateButtons overview={overview} onSet={(state) => void run(api("POST", "/api/state", { state }))} />
+          </section>
+
+          <section className="operator__section" aria-labelledby="values-title">
+            <h2 id="values-title" className="tool-label">
+              Live values
+            </h2>
+            <SignalControls
+              signals={overview.show.signals}
+              store={connection.signals}
+              onSet={(id, change) => void run(api("PUT", `/api/signals/${id}/value`, change))}
+            />
+          </section>
+
+          <section className="operator__section" aria-labelledby="switches-title">
+            <h2 id="switches-title" className="tool-label">
+              Displays
+            </h2>
+            <ShowSwitches
+              settings={overview.show.settings}
+              onChange={(patch) => void run(api("PUT", "/api/show/settings", patch))}
+            />
+          </section>
+        </div>
 
         <section className="operator__displays" aria-labelledby="displays-title">
           <h2 id="displays-title" className="tool-label">
@@ -83,6 +112,7 @@ const OperatorConsole = ({ overview, connection, session }: Tools) => {
                 overview={overview}
                 screen={screenFor(shownRef(display, overview))}
                 url={`${origin}/d/${display.id}`}
+                live={live}
                 actions={actionsFor(display)}
               />
             ))}
