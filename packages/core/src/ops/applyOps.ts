@@ -2,7 +2,7 @@ import type { DecorCatalog } from "../catalog/defineDecor.ts";
 import type { Catalog } from "../catalog/defineWidget.ts";
 import type { ChildEntry, ContainerNode, Node } from "../schema/node.ts";
 import type { Screen } from "../schema/screen.ts";
-import { findNode } from "../tree/tree.ts";
+import { findNode, lockedParts, sameValue } from "../tree/tree.ts";
 import { type ValidationIssue, validateScreen } from "../validate/validateScreen.ts";
 import type { Op } from "./ops.ts";
 
@@ -41,6 +41,16 @@ const assertUnlocked = (root: Node, id: string, options: ApplyOptions) => {
   }
 };
 
+// Generator and AI may rebuild around locked parts, but never drop or change one: every locked part inside the
+// node they remove or replace must come back exactly as it was.
+const assertKeepsLockedParts = (before: Node, after: Node | undefined, options: ApplyOptions) => {
+  if (!options.respectLocks || before.type !== "container") return;
+  for (const part of before.children.flatMap((child) => lockedParts(child.node))) {
+    const kept = after ? findNode(after, part.id)?.node : undefined;
+    if (!kept || !sameValue(kept, part)) fail(`Node "${part.id}" is locked`);
+  }
+};
+
 const clampIndex = (index: number | undefined, length: number) =>
   index === undefined ? length : Math.min(Math.max(index, 0), length);
 
@@ -67,6 +77,7 @@ const applyOne = (screen: Screen, op: Op, options: ApplyOptions): Op => {
 
     case "remove": {
       assertUnlocked(root, op.id, options);
+      assertKeepsLockedParts(locate(root, op.id).node, undefined, options);
       const { parent, index, entry } = removeEntry(root, op.id);
       return { op: "insert", parent: parent.id, index, child: entry };
     }
@@ -144,6 +155,7 @@ const applyOne = (screen: Screen, op: Op, options: ApplyOptions): Op => {
     case "replace": {
       assertUnlocked(root, op.id, options);
       const location = locate(root, op.id);
+      assertKeepsLockedParts(location.node, op.node, options);
       const replacement = structuredClone(op.node);
       if (!location.entry) screen.root = replacement;
       else location.entry.node = replacement;
@@ -168,6 +180,11 @@ const applyOne = (screen: Screen, op: Op, options: ApplyOptions): Op => {
       if (op.profile !== undefined) {
         inverse.profile = screen.profile;
         screen.profile = { ...op.profile };
+      }
+      if (op.generator !== undefined) {
+        inverse.generator = screen.generator ?? null;
+        if (op.generator === null) delete screen.generator;
+        else screen.generator = { ...op.generator };
       }
       return inverse;
     }
