@@ -1,6 +1,9 @@
 import path from "node:path";
 import { type APIRequestContext, type Browser, expect, type Page, test } from "@playwright/test";
-import { identify, setState } from "./support/api.ts";
+import { createScreen, identify, setState } from "./support/api.ts";
+import { startFakeClaude } from "./support/fakeClaude.ts";
+import { mcpTool } from "./support/mcp.ts";
+import { createManagedServer } from "./support/server.ts";
 
 // Screenshots for the PR and docs/showcase. Run with: SHOWCASE=phase-1 pnpm test:e2e showcase
 // Each phase captures what it added; earlier phases' images stay in their own folders.
@@ -423,5 +426,145 @@ test.describe("showcase phase 4", () => {
     await page.getByRole("button", { name: /Placeholder/ }).click();
     await settle(page);
     await page.screenshot({ path: out("editor-placeholder") });
+  });
+});
+
+test.describe("showcase phase 5", () => {
+  test.skip(phase !== "phase-5", "set SHOWCASE=phase-5 to capture screenshots");
+  const DISPLAY = "showcase-ai";
+
+  test.afterEach(async ({ request }) => {
+    await request.put("/api/show/settings", { data: { aiPublish: false, aiLiveControl: false } });
+    await request.put(`/api/displays/${DISPLAY}`, { data: { screen: null } });
+    for (const id of ["mcp-tactical", "shuttle-bay"]) await request.delete(`/api/screens/${id}`);
+  });
+
+  const onDisplay = async (page: Page, url: string, name: string) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto(url);
+    await expect(page.locator(".screen")).toBeVisible();
+    await settle(page);
+    await page.screenshot({ path: out(name) });
+  };
+
+  test("an MCP client designs a screen while the editor watches", async ({ page, request }) => {
+    await mcpTool(request, "generate_screen", { section: "trek/tactical", id: "mcp-tactical", seed: 7 });
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/builder/mcp-tactical");
+    await expect(page.getByRole("heading", { name: "Tactical", level: 1, exact: true })).toBeVisible();
+    const { revision } = (await mcpTool(request, "get_screen", { id: "mcp-tactical", format: "json" })).data as { revision: number };
+    await mcpTool(request, "apply_ops", {
+      id: "mcp-tactical",
+      baseRevision: revision,
+      ops: [
+        { op: "update", id: "title", props: { text: "PHASER CONTROL" } },
+        { op: "meta", name: "Phaser control" },
+      ],
+    });
+    await expect(page.locator(".preview-stage").getByText("PHASER CONTROL")).toBeVisible();
+    await settle(page);
+    await page.screenshot({ path: out("editor-mcp-live") });
+
+    await page.goto("/operator");
+    await page.getByRole("switch", { name: /AI may publish/ }).click();
+    await expect(page.getByRole("switch", { name: /AI may publish/ })).toBeChecked();
+    const switches = page.locator(".show-switches");
+    await switches.scrollIntoViewIfNeeded();
+    await settle(page);
+    await switches.screenshot({ path: out("operator-ai-switches") });
+
+    await mcpTool(request, "publish_screen", { id: "mcp-tactical" });
+    await request.put(`/api/displays/${DISPLAY}`, { data: { screen: "mcp-tactical" } });
+    await onDisplay(page, `/d/${DISPLAY}`, "display-mcp-tactical");
+  });
+
+  test("an MCP client writes a new section recipe and generates from it", async ({ page, request }) => {
+    const helm = ((await mcpTool(request, "list_recipes", { section: "trek/helm" })).data as { recipe: Record<string, unknown> }).recipe;
+    const shuttleBay = {
+      ...helm,
+      id: "shuttle-bay",
+      label: "Shuttle bay",
+      description: "Launch control for the shuttle bay: doors, tractor beam and craft status.",
+      code: "SHB",
+      titles: ["SHUTTLE BAY 2", "FLIGHT DECK OPERATIONS"],
+      nav: ["BAY DOORS", "TRACTOR", "CRAFT", "ATMOSPHERE", "LOGS"],
+      status: ["BAY DOORS SEALED · ATMOSPHERE NOMINAL", "SHUTTLE GALILEO CLEARED FOR LAUNCH"],
+      systems: [
+        {
+          id: "doors",
+          label: "BAY DOORS",
+          metrics: [
+            { id: "aperture", label: "APERTURE", unit: "%", range: [0, 5], alertRange: [60, 100] },
+            { id: "field", label: "FORCE FIELD", unit: "%", range: [96, 100], alertRange: [40, 70] },
+          ],
+          actions: [{ label: "OPEN DOORS" }, { label: "SEAL BAY", danger: true }],
+          notes: ["Annular force field holding atmosphere"],
+        },
+        {
+          id: "tractor",
+          label: "TRACTOR BEAM",
+          metrics: [
+            { id: "lock", label: "BEAM LOCK", unit: "%", range: [80, 100], prefer: ["gauge"] },
+            { id: "range", label: "RANGE", unit: "km", range: [0, 4], precision: 1, prefer: ["readout"] },
+          ],
+          actions: [{ label: "ENGAGE BEAM" }, { label: "RELEASE" }],
+        },
+        {
+          id: "craft",
+          label: "CRAFT STATUS",
+          metrics: [
+            { id: "fuel", label: "DEUTERIUM", unit: "%", range: [70, 95], prefer: ["gauge"] },
+            { id: "hull", label: "HULL", unit: "%", range: [92, 100] },
+            { id: "crew", label: "CREW ABOARD", range: [2, 6], precision: 0, prefer: ["readout"] },
+          ],
+          actions: [{ label: "PREFLIGHT" }],
+        },
+      ],
+      blocks: { prefer: [], avoid: [] },
+      alert: { banner: true, emphasise: ["aperture", "field"], status: ["BAY DOORS OPEN · FORCE FIELD FAILING"] },
+      tags: ["shuttle", "launch", "flight deck"],
+    };
+    expect((await mcpTool(request, "save_recipe", { recipe: shuttleBay })).data).toEqual({ section: "trek/shuttle-bay" });
+    await mcpTool(request, "generate_screen", { section: "trek/shuttle-bay", seed: 2, archetype: "sidebar" });
+    await request.post("/api/screens/shuttle-bay/publish", { data: {} });
+    await request.put(`/api/displays/${DISPLAY}`, { data: { screen: "shuttle-bay" } });
+    await onDisplay(page, `/d/${DISPLAY}`, "display-mcp-shuttle-bay");
+    await setState(request, "red-alert");
+    await onDisplay(page, `/d/${DISPLAY}`, "display-mcp-shuttle-bay-red-alert");
+    await setState(request, "normal");
+  });
+
+  test.describe("Fill with AI", () => {
+    const fake = { close: async () => {} };
+    const server = createManagedServer(3016, { ANTHROPIC_API_KEY: "showcase", ANTHROPIC_BASE_URL: "http://127.0.0.1:3017" });
+
+    test.beforeAll(async () => {
+      fake.close = (await startFakeClaude(3017)).close;
+      await server.start();
+    });
+
+    test.afterAll(async () => {
+      await server.stop();
+      await fake.close();
+    });
+
+    test("fill a screen from a brief", async ({ page, request }) => {
+      await createScreen(request, "torpedo", "Torpedo", server.url);
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await page.goto(`${server.url}/builder/torpedo`);
+      await page.getByRole("button", { name: "Fill with AI" }).click();
+      const dialog = page.getByRole("dialog", { name: "Fill with AI" });
+      await dialog.getByLabel("What should change?").fill("Make this the torpedo bay: each tube's status and the firing spread");
+      await settle(page);
+      await page.screenshot({ path: out("fill-brief") });
+      await dialog.getByRole("button", { name: "Ask" }).click();
+      await expect(dialog.getByRole("button", { name: "Apply" })).toBeVisible();
+      await settle(page);
+      await page.screenshot({ path: out("fill-proposal") });
+      await dialog.getByRole("button", { name: "Apply" }).click();
+      await expect(page.getByText("Saved", { exact: true })).toBeVisible();
+      await settle(page);
+      await page.screenshot({ path: out("fill-applied") });
+    });
   });
 });

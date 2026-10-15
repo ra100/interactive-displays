@@ -60,15 +60,16 @@ test.describe("generating screens", () => {
     const title = await page.getByRole("tabpanel", { name: "Selection" }).getByLabel("Text").inputValue();
     await page.getByRole("tabpanel", { name: "Selection" }).getByRole("checkbox", { name: /Locked/ }).check();
     await expect(page.getByText("Saved", { exact: true })).toBeVisible();
-    const before = await page.locator(".preview-stage").innerText();
+    // The outline, not the preview: readings in the preview keep moving.
+    const before = await outline.innerText();
 
     await page.getByRole("button", { name: "Regenerate", exact: true }).click();
     await expect(page.getByText(/Regenerated everything that is not locked/)).toBeVisible();
-    await expect.poll(() => page.locator(".preview-stage").innerText()).not.toBe(before);
+    await expect.poll(() => outline.innerText()).not.toBe(before);
     await expect(page.locator(".preview-stage").getByText(title, { exact: true })).toBeVisible();
 
     await page.getByRole("button", { name: "Undo" }).click();
-    await expect.poll(() => page.locator(".preview-stage").innerText()).toBe(before);
+    await expect.poll(() => outline.innerText()).toBe(before);
   });
 
   test("generates a suite whose nav buttons move between its screens", async ({ page, browser, request }) => {
