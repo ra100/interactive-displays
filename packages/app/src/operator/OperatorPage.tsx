@@ -8,6 +8,7 @@ import { type ScreenRef, useScreenDocs } from "../tools/useScreenDocs.ts";
 import { publicOrigin } from "../tools/useSession.ts";
 import { useToast } from "../tools/useToast.tsx";
 import { DisplayCard } from "./DisplayCard.tsx";
+import { LookPicker } from "./LookPicker.tsx";
 import { ShowSwitches } from "./ShowSwitches.tsx";
 import { SignalControls } from "./SignalControls.tsx";
 import { StateButtons } from "./StateButtons.tsx";
@@ -87,6 +88,13 @@ const OperatorConsole = ({ overview, connection, session }: Tools) => {
               store={connection.signals}
               onSet={(id, change) => void run(api("PUT", `/api/signals/${id}/value`, change))}
             />
+          </section>
+
+          <section className="operator__section" aria-labelledby="look-title">
+            <h2 id="look-title" className="tool-label">
+              Look
+            </h2>
+            <LookPicker theme={overview.show.theme} onChange={(theme) => void run(api("PUT", "/api/show/theme", theme))} />
           </section>
 
           <section className="operator__section" aria-labelledby="switches-title">

@@ -222,6 +222,15 @@ describe("live values and display controls", () => {
     ]);
   });
 
+  it("re-skins the show in another theme and variant", async () => {
+    await open();
+    const theme = screen.getByRole("combobox", { name: "Theme" });
+    expect(theme).toHaveValue("base");
+    expect(screen.getByRole("combobox", { name: "Variant" })).toBeDisabled();
+    await userEvent.selectOptions(theme, "Holo HUD");
+    expect(writes().map((call) => [call.path, call.body])).toEqual([["/api/show/theme", { id: "hud" }]]);
+  });
+
   it("keeps AI off the air until the crew lets it on", async () => {
     await open();
     const publish = screen.getByRole("switch", { name: /AI may publish/ });

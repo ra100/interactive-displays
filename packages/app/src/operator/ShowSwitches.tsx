@@ -13,7 +13,7 @@ const SWITCHES: Array<{ key: Switchable; label: string; hint: string }> = [
   {
     key: "aiLiveControl",
     label: "AI may run the show",
-    hint: "An AI assistant can change the show state and shared values and assign screens to displays",
+    hint: "An AI assistant can change the show state, shared values and look, and assign screens to displays",
   },
 ];
 

@@ -352,6 +352,17 @@ export const createMcpServer = ({ service, generation, connected }: McpDeps): Mc
   );
 
   server.registerTool(
+    "set_theme",
+    {
+      title: "Re-skin the show",
+      description: 'Redraws every display in another theme and optional variant (see get_theme). Needs "AI may run the show".',
+      inputSchema: { id: IdSchema, variant: IdSchema.optional() },
+      annotations: LIVE,
+    },
+    ({ id, variant }) => gated("aiLiveControl", async () => result(await service.setTheme({ id, variant }), (theme) => ({ theme }))),
+  );
+
+  server.registerTool(
     "set_signal",
     {
       title: "Set a signal",
