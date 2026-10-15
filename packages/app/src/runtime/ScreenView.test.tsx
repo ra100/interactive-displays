@@ -328,7 +328,7 @@ describe("live values and controls", () => {
     );
 
     fireEvent.change(view.getByRole("slider"), { target: { value: "60" } });
-    expect(press).toHaveBeenCalledWith("level", 60);
+    expect(press).toHaveBeenCalledWith("level", 60, true);
   });
 
   it("names the current state for widgets that show it", () => {

@@ -48,7 +48,7 @@ export interface Live {
   store: SignalStore | null;
   media: MediaBus;
   // Sends a control's use to the server, which runs navigation, state and shared signal actions.
-  press?: ((nodeId: string, value?: number) => void) | undefined;
+  press?: ((nodeId: string, value?: number, moving?: boolean) => void) | undefined;
   // Plays a theme sound; the player decides whether sounds are on.
   playSound?: ((soundId: string) => void) | undefined;
 }
@@ -63,7 +63,7 @@ export const useLive = (): Live => useContext(LiveContext);
 export const runControl = (live: Live, node: WidgetNode, value?: number, moving = false): void => {
   const actions = node.actions ?? [];
   if (moving) {
-    if (live.press && actions.some((action) => action.do === "setSignal")) live.press(node.id, value);
+    if (live.press && actions.some((action) => action.do === "setSignal")) live.press(node.id, value, true);
     return;
   }
   live.playSound?.("press");

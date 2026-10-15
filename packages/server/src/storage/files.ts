@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { access, mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 export const exists = async (file: string): Promise<boolean> =>
@@ -21,8 +21,14 @@ export const writeFileAtomic = (file: string, data: string | Buffer): Promise<vo
     .then(async () => {
       await mkdir(path.dirname(file), { recursive: true });
       const temp = `${file}.${randomBytes(4).toString("hex")}.tmp`;
-      await writeFile(temp, data);
-      await rename(temp, file);
+      try {
+        await writeFile(temp, data);
+        await rename(temp, file);
+      } catch (error) {
+        // A failed write must not leave its temp file behind, one more on every retry.
+        await rm(temp, { force: true }).catch(() => undefined);
+        throw error;
+      }
     });
   pending.set(file, next);
   // Cleans up whether the write worked or not; a failure reaches the caller through `next` only (a bare

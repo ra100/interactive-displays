@@ -31,7 +31,13 @@ export type Watch = z.infer<typeof WatchSchema>;
 // An actor used a control on a display. The server looks the node up on the screen that display shows and runs
 // the actions that are the server's to run (navigation, show state, shared signals); the display runs the rest.
 // `value` is the control's own value: the slider position, the chosen option, 1 or 0 for a toggle.
-export const PressSchema = z.object({ nodeId: IdSchema, value: z.number().finite().optional() });
+// `moving` marks a control still being used (a slider being dragged): only its shared values follow it, and
+// navigation and show state wait for the final use.
+export const PressSchema = z.object({
+  nodeId: IdSchema,
+  value: z.number().finite().optional(),
+  moving: z.boolean().optional(),
+});
 
 export type Press = z.infer<typeof PressSchema>;
 

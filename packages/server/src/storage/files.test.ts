@@ -39,6 +39,8 @@ describe("writeJsonAtomic", () => {
       const file = path.join(dir, "blocked.json");
       await mkdir(path.join(file, "inside"), { recursive: true });
       await expect(writeJsonAtomic(file, { a: 1 })).rejects.toThrow();
+      await expect(writeJsonAtomic(file, { a: 1 })).rejects.toThrow();
+      expect((await readdir(dir)).filter((name) => name.endsWith(".tmp"))).toEqual([]);
       await rm(file, { recursive: true });
       await writeJsonAtomic(file, { a: 2 });
       expect(await readJson(file)).toEqual({ a: 2 });

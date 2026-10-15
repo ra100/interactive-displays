@@ -132,6 +132,18 @@ describe("nextManualValue", () => {
     expect(nextManualValue(shields, 0, { delta: -1 })).toBe(0);
   });
 
+  it("reaches and keeps the top of a range its step does not divide evenly", () => {
+    const power = SignalDefSchema.parse({ id: "power", label: "Power", source: { kind: "manual", initial: 100, max: 100, step: 30 } });
+    expect(manualStart(ManualSourceSchema.parse(power.source))).toBe(100);
+    expect(nextManualValue(power, 90, { delta: 30 })).toBe(100);
+    expect(nextManualValue(power, 100, { value: 100 })).toBe(100);
+    expect(nextManualValue(power, 100, { delta: -30 })).toBe(90);
+    expect(nextManualValue(power, 100, { delta: -60 })).toBe(60);
+    expect(nextManualValue(power, 60, { delta: 90 })).toBe(100);
+    expect(nextManualValue(power, 50, { value: 97 })).toBe(100);
+    expect(nextManualValue(power, 50, { value: 94 })).toBe(90);
+  });
+
   it("starts from the initial value kept in range and on the step", () => {
     const start = (source: object) => manualStart(ManualSourceSchema.parse({ kind: "manual", ...source }));
     expect(start({ initial: 0, min: 20, max: 100 })).toBe(20);

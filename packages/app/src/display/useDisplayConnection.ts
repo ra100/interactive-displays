@@ -51,8 +51,12 @@ export const useDisplayConnection = (displayId: string): DisplayConnection => {
   const [live] = useState(() => ({
     signals: createSignalStore(),
     media: createMediaBus(),
-    press: (nodeId: string, value?: number) => {
-      socketRef.current?.emit("press", value === undefined ? { nodeId } : { nodeId, value });
+    press: (nodeId: string, value?: number, moving?: boolean) => {
+      socketRef.current?.emit("press", {
+        nodeId,
+        ...(value === undefined ? {} : { value }),
+        ...(moving ? { moving: true } : {}),
+      });
     },
   }));
   const [connection, setConnection] = useState<Omit<DisplayConnection, keyof typeof live>>({

@@ -471,6 +471,7 @@ export const createShowService = ({
       const ran: Action["do"][] = [];
       const global = loaded.show.settings.displayGlobalActions;
       for (const action of node?.actions ?? []) {
+        if (input.moving && action.do !== "setSignal") continue;
         if (action.do === "navigate" && !preview && navigate(loaded, displayId, action.screen)) ran.push(action.do);
         if (action.do === "back" && !preview && back(displayId)) ran.push(action.do);
         if (action.do === "setState" && global && (await stateFromDisplay(action.state)).ok) ran.push(action.do);
