@@ -7,6 +7,19 @@ body,
   background: #000;
 }
 
+/* A set panel (see useKiosk): no text selection, callouts or double-tap zoom from a long or quick press. */
+body[data-kiosk] {
+  -webkit-touch-callout: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+/* The pointer has rested: hide the cursor everywhere (see useKiosk). */
+body[data-kiosk][data-idle],
+body[data-kiosk][data-idle] * {
+  cursor: none !important;
+}
+
 .status-message {
   display: flex;
   flex-direction: column;
