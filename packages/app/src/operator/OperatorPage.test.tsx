@@ -247,6 +247,60 @@ describe("live values and display controls", () => {
     ]);
   });
 
+  describe("cues", () => {
+    const withCues = (cue: string | null = null) =>
+      sampleOverview({
+        cue,
+        show: ShowSchema.parse({
+          ...sampleOverview().show,
+          cues: [
+            { id: "top", label: "Top of scene", state: "normal" },
+            { id: "hit", label: "First hit", note: "On the impact", state: "red-alert" },
+          ],
+        }),
+      });
+
+    it("runs the next cue with GO or the space bar, and marks where the show is", async () => {
+      await open(withCues("top"));
+      expect(screen.getByText("First hit", { selector: "#go-next *, #go-next" })).toBeInTheDocument();
+      expect(screen.getByRole("listitem", { name: "Top of scene" })).toHaveAttribute("data-current", "true");
+      expect(screen.getByRole("listitem", { name: "First hit" })).toHaveAttribute("data-next", "true");
+      await userEvent.click(screen.getByRole("button", { name: "GO" }));
+      fireEvent.keyDown(window, { code: "Space" });
+      await userEvent.click(within(screen.getByRole("listitem", { name: "Top of scene" })).getByRole("button", { name: "Run" }));
+      await userEvent.click(screen.getByRole("button", { name: "Back to top" }));
+      expect(writes().map((call) => [call.method, call.path])).toEqual([
+        ["POST", "/api/cues/go"],
+        ["POST", "/api/cues/go"],
+        ["POST", "/api/cues/top/run"],
+        ["POST", "/api/cues/reset"],
+      ]);
+    });
+
+    it("does not press GO while someone types", async () => {
+      await open(withCues());
+      fireEvent.keyDown(screen.getByRole("textbox", { name: "New cue name" }), { code: "Space" });
+      expect(writes()).toEqual([]);
+    });
+
+    it("records what is on air as a new cue, and reorders and deletes cues", async () => {
+      await open(withCues());
+      await userEvent.type(screen.getByRole("textbox", { name: "New cue name" }), "Breach");
+      await userEvent.click(screen.getByRole("button", { name: "Record what is on air" }));
+      await userEvent.click(screen.getByRole("button", { name: "Move First hit up" }));
+      await userEvent.click(screen.getByRole("button", { name: "Delete Top of scene" }));
+      const saved = writes().map((call) => (call.body as { cues: Array<{ id: string }> }).cues.map((cue) => cue.id));
+      expect(saved).toEqual([["top", "hit", "breach"], ["hit", "top"], ["hit"]]);
+      expect(writes()[0]?.body).toMatchObject({ cues: [{}, {}, { id: "breach", label: "Breach", state: "normal", screens: { "eng-1": "engineering" } }] });
+    });
+
+    it("says when the running order is over", async () => {
+      await open(withCues("hit"));
+      expect(screen.getByRole("button", { name: "GO" })).toBeDisabled();
+      expect(screen.getByText("End of the running order")).toBeInTheDocument();
+    });
+  });
+
   it("keeps AI off the air until the crew lets it on", async () => {
     await open();
     const publish = screen.getByRole("switch", { name: /AI may publish/ });

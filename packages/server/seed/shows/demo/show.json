@@ -167,5 +167,70 @@
         "format": "stardate"
       }
     }
+  ],
+  "cues": [
+    {
+      "id": "top",
+      "label": "Top of scene",
+      "note": "Before every take",
+      "state": "normal",
+      "signals": {
+        "shields": 100,
+        "hull": 100,
+        "warp.factor": 6
+      },
+      "screens": {
+        "corridor-1": "standby"
+      },
+      "videos": [
+        {
+          "display": "viewscreen-1",
+          "target": "feed",
+          "command": "restart"
+        }
+      ]
+    },
+    {
+      "id": "contact",
+      "label": "Contact",
+      "note": "On \"Sensors are picking something up\"",
+      "state": "yellow-alert",
+      "signals": {
+        "warp.factor": 2
+      }
+    },
+    {
+      "id": "first-hit",
+      "label": "First hit",
+      "note": "On the first impact",
+      "state": "red-alert",
+      "signals": {
+        "shields": 40,
+        "hull": 82
+      }
+    },
+    {
+      "id": "breach",
+      "label": "Hull breach",
+      "note": "On the second impact",
+      "state": "damaged",
+      "signals": {
+        "shields": 0,
+        "hull": 41
+      },
+      "screens": {
+        "corridor-1": "schematic"
+      }
+    },
+    {
+      "id": "all-clear",
+      "label": "All clear",
+      "note": "On \"Stand down\"",
+      "state": "normal",
+      "signals": {
+        "shields": 25,
+        "warp.factor": 0
+      }
+    }
   ]
 }

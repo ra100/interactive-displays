@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_UI_SCALE, displayScale, findState, resolveScreenId, ShowSchema } from "./show.ts";
+import { CueListSchema, DEFAULT_UI_SCALE, displayScale, findState, nextCue, resolveScreenId, ShowSchema } from "./show.ts";
 
 const show = ShowSchema.parse({
   schemaVersion: 1,
@@ -51,6 +51,20 @@ describe("ShowSchema", () => {
     expect(displayScale(parsed, "bridge")).toBe(DEFAULT_UI_SCALE);
     expect(displayScale(parsed, "unknown")).toBe(DEFAULT_UI_SCALE);
     expect(ShowSchema.safeParse({ ...parsed, scale: 3 }).success).toBe(false);
+  });
+
+  it("takes a running order of cues that each change something", () => {
+    const cues = CueListSchema.parse([
+      { id: "a", label: "A", state: "normal" },
+      { id: "b", label: "B", signals: { "warp.output": 3 }, screens: { "bridge-1": null } },
+      { id: "c", label: "C", videos: [{ display: "view", target: "feed", command: "play" }] },
+    ]);
+    expect(nextCue({ cues }, null)?.id).toBe("a");
+    expect(nextCue({ cues }, "a")?.id).toBe("b");
+    expect(nextCue({ cues }, "c")).toBeUndefined();
+    expect(nextCue({ cues }, "gone")?.id).toBe("a");
+    expect(CueListSchema.safeParse([{ id: "a", label: "A" }]).success).toBe(false);
+    expect(CueListSchema.safeParse([cues[0], cues[0]]).success).toBe(false);
   });
 
   it("rejects an unsupported schema version", () => {

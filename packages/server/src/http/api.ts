@@ -46,6 +46,7 @@ const SettingsBody = z
   .strict();
 const ThemeBody = z.object({ id: IdSchema, variant: IdSchema.optional() }).strict();
 const ScaleBody = z.object({ scale: UiScaleSchema }).strict();
+const CuesBody = z.object({ cues: z.unknown() }).strict();
 const SignalsBody = z.object({ signals: z.unknown() }).strict();
 const SignalParams = z.object({ id: SignalIdSchema });
 const SignalValueBody = z
@@ -211,6 +212,26 @@ export const registerApi = (
     const body = ScaleBody.safeParse(request.body);
     if (!body.success) return badRequest(reply, body.error);
     return send(reply, await service.setScale(body.data.scale), (scale) => ({ scale }));
+  });
+
+  // Replaces the running order.
+  app.put("/api/show/cues", async (request, reply) => {
+    const body = CuesBody.safeParse(request.body);
+    if (!body.success) return badRequest(reply, body.error);
+    return send(reply, await service.defineCues(body.data.cues), (cues) => ({ cues }));
+  });
+
+  // GO: runs the cue after the last one run.
+  app.post("/api/cues/go", async (_request, reply) => send(reply, await service.go(), (ran) => ran));
+
+  // Back to the top of the running order.
+  app.post("/api/cues/reset", async (_request, reply) => send(reply, await service.resetCues(), () => ({ cue: null })));
+
+  // Runs one cue out of order, e.g. to repeat a beat.
+  app.post("/api/cues/:id/run", async (request, reply) => {
+    const params = IdParams.safeParse(request.params);
+    if (!params.success) return badRequest(reply, params.error);
+    return send(reply, await service.runCue(params.data.id), (ran) => ran);
   });
 
   // Replaces the show's signal definitions.

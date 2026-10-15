@@ -1,6 +1,7 @@
 import { z } from "zod";
+import { VideoCommandSchema } from "./action.ts";
 import { IdSchema } from "./ids.ts";
-import { type SignalDef, SignalDefSchema } from "./signal.ts";
+import { type SignalDef, SignalDefSchema, SignalIdSchema } from "./signal.ts";
 
 // What a state looks like is up to the theme; the show only names the effect.
 export const EFFECTS = ["none", "warning", "alert", "damaged", "blackout"] as const;
@@ -60,6 +61,36 @@ const uniqueIds = (items: readonly { id: string }[]) => new Set(items.map((item)
 // Live values that screens bind to.
 export const SignalListSchema = z.array(SignalDefSchema).max(200).refine(uniqueIds, "Signal ids must be unique");
 
+// One step of a show's running order: GO runs everything in it at once, so a whole beat ("the ship is hit")
+// is one button press instead of five.
+export const CueSchema = z
+  .object({
+    id: IdSchema,
+    label: z.string().min(1).max(60),
+    // For the operator: when to press GO, e.g. "on 'Engage'".
+    note: z.string().max(200).optional(),
+    state: IdSchema.optional(),
+    // Shared manual signals set to these values.
+    signals: z.record(SignalIdSchema, z.number().finite()).optional(),
+    // displayId -> the screen it shows from now on; null goes back to the show's default screen.
+    screens: z.record(IdSchema, IdSchema.nullable()).optional(),
+    // Video commands for a video widget on a display.
+    videos: z
+      .array(z.object({ display: IdSchema, target: IdSchema, command: VideoCommandSchema }))
+      .max(20)
+      .optional(),
+  })
+  .refine(
+    (cue) =>
+      cue.state !== undefined ||
+      Object.keys(cue.signals ?? {}).length > 0 ||
+      Object.keys(cue.screens ?? {}).length > 0 ||
+      (cue.videos?.length ?? 0) > 0,
+    "A cue must change something: a state, signals, screens or videos",
+  );
+
+export const CueListSchema = z.array(CueSchema).max(200).refine(uniqueIds, "Cue ids must be unique");
+
 export const ShowSchema = z.object({
   schemaVersion: z.literal(1),
   id: IdSchema,
@@ -77,6 +108,8 @@ export const ShowSchema = z.object({
   defaultScreen: IdSchema.optional(),
   displays: z.array(DisplayDefSchema).max(100).refine(uniqueIds, "Display ids must be unique").default([]),
   signals: SignalListSchema.default([]),
+  // The running order, first to last.
+  cues: CueListSchema.default([]),
   settings: ShowSettingsSchema.default(DEFAULT_SETTINGS),
 });
 
@@ -84,6 +117,7 @@ export type Effect = z.infer<typeof EffectSchema>;
 export type StateDef = z.infer<typeof StateDefSchema>;
 export type DisplayDef = z.infer<typeof DisplayDefSchema>;
 export type ShowSettings = z.infer<typeof ShowSettingsSchema>;
+export type Cue = z.infer<typeof CueSchema>;
 export type Show = z.infer<typeof ShowSchema>;
 export type ShowInput = z.input<typeof ShowSchema>;
 
@@ -99,3 +133,10 @@ export const findSignal = (show: Pick<Show, "signals">, signalId: string): Signa
 // The scale a display draws at: its own, or the show's.
 export const displayScale = (show: Show, displayId: string): number =>
   show.displays.find((display) => display.id === displayId)?.scale ?? show.scale;
+
+// The cue GO runs next: the one after the last cue run, or the first. Undefined after the last cue.
+export const nextCue = (show: Pick<Show, "cues">, lastCueId: string | null): Cue | undefined => {
+  if (lastCueId === null) return show.cues[0];
+  const index = show.cues.findIndex((cue) => cue.id === lastCueId);
+  return index === -1 ? show.cues[0] : show.cues[index + 1];
+};
