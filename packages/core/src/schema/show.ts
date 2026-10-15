@@ -30,9 +30,19 @@ export const ShowSettingsSchema = z.object({
   displayGlobalActions: z.boolean().default(true),
   // Displays play theme sounds (button presses, state changes). Off by default: sets record their own sound.
   sounds: z.boolean().default(false),
+  // AI through MCP may publish screens (they go on air on every display showing them).
+  aiPublish: z.boolean().default(false),
+  // AI through MCP may change the show state and shared values, and assign screens to displays.
+  aiLiveControl: z.boolean().default(false),
 });
 
-export const DEFAULT_SETTINGS: ShowSettings = { liveEdit: false, displayGlobalActions: true, sounds: false };
+export const DEFAULT_SETTINGS: ShowSettings = {
+  liveEdit: false,
+  displayGlobalActions: true,
+  sounds: false,
+  aiPublish: false,
+  aiLiveControl: false,
+};
 
 export const DEFAULT_STATES: StateDef[] = [{ id: "normal", label: "Normal", effect: "none" }];
 

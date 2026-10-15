@@ -1,4 +1,4 @@
-import type { Screen, ScreenSummary, ShowOverview } from "@interactive-displays/core";
+import { type Screen, type ScreenSummary, type ShowOverview, sectionsOf } from "@interactive-displays/core";
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../../tools/api.ts";
@@ -8,6 +8,7 @@ import { ToolGate, type Tools } from "../../tools/ToolGate.tsx";
 import { useScreenDocs } from "../../tools/useScreenDocs.ts";
 import { useToast } from "../../tools/useToast.tsx";
 import { generationBase } from "../generation.ts";
+import { usePacks } from "../usePacks.ts";
 import { publishStatus } from "../publishStatus.ts";
 import { GenerateDialog } from "./GenerateDialog.tsx";
 import { NewScreenDialog } from "./NewScreenDialog.tsx";
@@ -51,6 +52,8 @@ const Library = ({ overview, connection }: Tools) => {
 
   const screenIds = useMemo(() => overview.screens.map((screen) => screen.id), [overview.screens]);
   const base = useMemo(() => generationBase(overview.show, screenIds), [overview.show, screenIds]);
+  const packs = usePacks();
+  const generatable = useMemo(() => sectionsOf(packs), [packs]);
 
   // Screens of a suite are created in order, so the overview opens in the editor once they all exist.
   const createGenerated = async (screens: Screen[]) => {
@@ -89,9 +92,11 @@ const Library = ({ overview, connection }: Tools) => {
         <button type="button" className="tool-button" onClick={() => setEditingSignals(true)}>
           Signals
         </button>
-        <button type="button" className="tool-button" onClick={() => setGenerating(true)}>
-          Generate
-        </button>
+        {generatable.length > 0 ? (
+          <button type="button" className="tool-button" onClick={() => setGenerating(true)}>
+            Generate
+          </button>
+        ) : null}
         <button type="button" className="tool-button tool-button--primary" onClick={() => setCreating(true)}>
           New screen
         </button>
@@ -185,6 +190,7 @@ const Library = ({ overview, connection }: Tools) => {
           theme={overview.show.theme}
           states={overview.show.states}
           base={base}
+          sections={generatable}
           takenIds={new Set(screenIds)}
           onCreate={createGenerated}
           onClose={() => setGenerating(false)}

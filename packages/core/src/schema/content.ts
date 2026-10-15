@@ -231,6 +231,25 @@ export const ContentPackSchema = z
     if (blocks.size !== pack.blocks.length) context.addIssue({ code: "custom", path: ["blocks"], message: "Block ids must be unique" });
   });
 
+// Recipes and blocks a show adds to a pack (written by people or AI), saved with the show. A recipe or block with the
+// id of a built-in one replaces it.
+export const ContentOverlaySchema = z.object({
+  recipes: z.array(RecipeSchema).max(60).default([]),
+  blocks: z.array(BlockSchema).max(60).default([]),
+});
+
+export const EMPTY_OVERLAY: ContentOverlay = { recipes: [], blocks: [] };
+
+const byId = <T extends { id: string }>(base: readonly T[], extra: readonly T[]): T[] => [
+  ...base.filter((item) => !extra.some((each) => each.id === item.id)),
+  ...extra,
+];
+
+// A pack with a show's additions, checked as a whole (so a saved recipe cannot prefer a block that does not exist).
+export const mergePack = (pack: ContentPack, overlay: ContentOverlay) =>
+  ContentPackSchema.safeParse({ ...pack, recipes: byId(pack.recipes, overlay.recipes), blocks: byId(pack.blocks, overlay.blocks) });
+
+export type ContentOverlay = z.infer<typeof ContentOverlaySchema>;
 export type Metric = z.infer<typeof MetricSchema>;
 export type MetricWidget = z.infer<typeof MetricWidgetSchema>;
 export type RecipeAction = z.infer<typeof RecipeActionSchema>;
