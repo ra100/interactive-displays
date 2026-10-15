@@ -1,0 +1,55 @@
+{
+  "id": "communications",
+  "label": "Communications",
+  "description": "Subspace channels, hailing, translation and encryption.",
+  "code": "COM",
+  "archetypes": { "sidebar": 3, "header-main": 2, "dashboard": 1 },
+  "titles": ["COMMUNICATIONS", "SUBSPACE RELAY", "HAILING FREQUENCIES"],
+  "nav": ["HAIL", "CHANNELS", "TRANSLATOR", "ENCRYPTION", "RELAY", "INTERNAL", "LOGS"],
+  "status": ["CHANNEL OPEN ON 1701.4", "UNIVERSAL TRANSLATOR ONLINE", "NO INCOMING TRANSMISSIONS"],
+  "systems": [
+    {
+      "id": "subspace",
+      "label": "SUBSPACE ARRAY",
+      "short": "SUBSPACE",
+      "metrics": [
+        { "id": "signal", "label": "SIGNAL STRENGTH", "unit": "%", "range": [70, 90], "alertRange": [5, 25], "motion": "wave", "prefer": ["sparkline", "gauge"] },
+        { "id": "bandwidth", "label": "BANDWIDTH", "unit": "TB/s", "range": [12, 18], "precision": 1, "prefer": ["readout"] },
+        { "id": "lag", "label": "RELAY LAG", "unit": "ms", "range": [200, 400] }
+      ],
+      "actions": [{ "label": "OPEN CHANNEL" }, { "label": "HAIL VESSEL" }, { "label": "CLOSE CHANNEL" }],
+      "notes": ["Relay station 47 acknowledging"]
+    },
+    {
+      "id": "translator",
+      "label": "TRANSLATOR",
+      "metrics": [
+        { "id": "match", "label": "LINGUISTIC MATCH", "unit": "%", "range": [70, 95], "prefer": ["gauge"] },
+        { "id": "samples", "label": "SAMPLES", "range": [300, 900], "prefer": ["readout"] }
+      ],
+      "actions": [{ "label": "ANALYSE SYNTAX" }]
+    },
+    {
+      "id": "encryption",
+      "label": "ENCRYPTION",
+      "metrics": [
+        { "id": "cipher", "label": "CIPHER CYCLE", "unit": "s", "range": [30, 60], "motion": "wave" },
+        { "id": "intrusion", "label": "INTRUSION ATTEMPTS", "range": [0, 2], "alertRange": [20, 60], "prefer": ["readout"] }
+      ],
+      "actions": [{ "label": "ROTATE KEYS" }, { "label": "JAM SIGNAL", "danger": true }]
+    },
+    {
+      "id": "internal",
+      "label": "INTERNAL COMMS",
+      "short": "INTERNAL",
+      "metrics": [{ "id": "active", "label": "OPEN LINES", "range": [4, 12], "prefer": ["readout"] }],
+      "actions": [
+        { "label": "SHIPWIDE", "actions": [{ "do": "sound", "sound": "hail" }] },
+        { "label": "BRIDGE" }
+      ]
+    }
+  ],
+  "blocks": { "prefer": ["data-log", "trend-panel", "button-column"], "avoid": [] },
+  "alert": { "banner": true, "emphasise": ["signal", "intrusion"], "status": ["SUBSPACE INTERFERENCE · COMMS DOWN", "SIGNAL JAMMED"] },
+  "tags": ["comms", "signal", "channel", "message"]
+}

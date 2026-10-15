@@ -1,0 +1,26 @@
+{
+  "codeFormats": ["##-####", "###-##", "@@-####", "####.#", "@-###-@", "##@-###"],
+  "statuses": ["NOMINAL", "STANDBY", "ONLINE", "ALIGNED", "CYCLING", "LOCKED", "SYNCED", "READY", "IDLE", "ACTIVE"],
+  "alertStatuses": ["CRITICAL", "FAILING", "OFFLINE", "OVERLOAD", "BREACH", "UNSTABLE"],
+  "phrases": [
+    "{system} {word} variance within tolerance",
+    "Realigning {word} matrix for {system}",
+    "{system}: {word} buffers at capacity",
+    "Diagnostic level 3 running on {word} relays",
+    "Rerouting {word} flow through secondary conduits",
+    "{system} {word} harmonics compensated",
+    "Phase variance in {word} coils corrected",
+    "{word} subroutine loaded into {system} core",
+    "Awaiting {word} confirmation from bridge",
+    "Cycling {word} manifolds, sequence {system}",
+    "{system} running on auxiliary {word} reserve",
+    "Isolinear {word} array re-indexed"
+  ],
+  "words": [
+    "plasma", "subspace", "tachyon", "verteron", "isolinear", "deflector", "graviton", "positron",
+    "dilithium", "antimatter", "inertial", "tetryon", "polaron", "chroniton", "neutrino", "baryon",
+    "magneton", "phaser", "warp field", "EPS", "field coil", "bio-neural", "transporter", "sensor",
+    "astrometric", "nadion", "kinetic", "thermal", "quantum", "harmonic"
+  ],
+  "logColumns": ["CODE", "SECTOR", "VALUE", "STATUS"]
+}

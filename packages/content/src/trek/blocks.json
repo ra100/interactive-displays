@@ -1,0 +1,195 @@
+[
+  {
+    "id": "hero-gauge",
+    "label": "Hero gauge",
+    "description": "A heading, one large gauge and two readouts beneath it.",
+    "fits": ["main"],
+    "size": "large",
+    "needs": { "metrics": 2 },
+    "tags": ["output", "gauge", "level", "power"],
+    "layout": {
+      "part": "stack",
+      "direction": "column",
+      "children": [
+        { "part": "heading" },
+        { "part": "metric", "show": ["gauge"], "weight": 3 },
+        { "part": "metrics", "show": ["readout"], "max": 2, "direction": "row", "weight": 1 }
+      ]
+    }
+  },
+  {
+    "id": "gauge-bank",
+    "label": "Gauge bank",
+    "description": "A heading over a row of gauges, one per reading.",
+    "fits": ["main"],
+    "size": "large",
+    "needs": { "metrics": 3 },
+    "tags": ["levels", "gauges", "bank", "power"],
+    "layout": {
+      "part": "stack",
+      "direction": "column",
+      "children": [{ "part": "heading" }, { "part": "metrics", "show": ["gauge"], "max": 4, "direction": "row", "weight": 4 }]
+    }
+  },
+  {
+    "id": "trend-panel",
+    "label": "Trend panel",
+    "description": "A heading, a sparkline of the main reading and a note.",
+    "fits": ["main", "aside"],
+    "size": "medium",
+    "needs": { "metrics": 1 },
+    "tags": ["trend", "history", "graph", "flow"],
+    "layout": {
+      "part": "stack",
+      "direction": "column",
+      "children": [{ "part": "heading" }, { "part": "metric", "show": ["sparkline"], "weight": 3 }, { "part": "notes" }]
+    }
+  },
+  {
+    "id": "readout-column",
+    "label": "Readout column",
+    "description": "A heading over a column of readouts.",
+    "fits": ["main", "aside"],
+    "size": "small",
+    "needs": { "metrics": 2 },
+    "tags": ["readings", "values", "numbers"],
+    "layout": {
+      "part": "stack",
+      "direction": "column",
+      "children": [{ "part": "heading" }, { "part": "metrics", "show": ["readout"], "max": 4, "direction": "column", "weight": 3 }]
+    }
+  },
+  {
+    "id": "control-panel",
+    "label": "Control panel",
+    "description": "A heading, the main reading and the system's buttons.",
+    "fits": ["main"],
+    "size": "medium",
+    "needs": { "metrics": 1, "actions": 2 },
+    "tags": ["controls", "buttons", "commands", "operate"],
+    "layout": {
+      "part": "stack",
+      "direction": "column",
+      "children": [
+        { "part": "heading" },
+        {
+          "part": "stack",
+          "direction": "row",
+          "weight": 4,
+          "children": [
+            { "part": "metric", "show": ["gauge", "readout"], "weight": 2 },
+            { "part": "actions", "max": 3, "direction": "column", "weight": 1 }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "button-column",
+    "label": "Button column",
+    "description": "A heading over the system's buttons.",
+    "fits": ["main", "aside"],
+    "size": "small",
+    "needs": { "actions": 2 },
+    "tags": ["controls", "buttons", "commands"],
+    "layout": {
+      "part": "stack",
+      "direction": "column",
+      "children": [{ "part": "heading" }, { "part": "actions", "max": 4, "direction": "column", "weight": 4 }]
+    }
+  },
+  {
+    "id": "status-board",
+    "label": "Status board",
+    "description": "A heading, a status light per reading and a note.",
+    "fits": ["main", "aside"],
+    "size": "small",
+    "needs": { "metrics": 2 },
+    "tags": ["status", "lights", "health", "alarms"],
+    "layout": {
+      "part": "stack",
+      "direction": "column",
+      "children": [{ "part": "heading" }, { "part": "lights", "max": 5, "weight": 3 }, { "part": "notes" }]
+    }
+  },
+  {
+    "id": "telemetry",
+    "label": "Telemetry",
+    "description": "A sparkline beside busy ambient activity and readouts.",
+    "fits": ["main"],
+    "size": "large",
+    "needs": { "metrics": 2 },
+    "tags": ["telemetry", "scan", "trend", "activity"],
+    "layout": {
+      "part": "stack",
+      "direction": "column",
+      "children": [
+        { "part": "heading" },
+        {
+          "part": "stack",
+          "direction": "row",
+          "weight": 4,
+          "children": [
+            { "part": "metric", "show": ["sparkline"], "weight": 2 },
+            { "part": "ambient", "show": ["status-matrix", "bar-graph"], "weight": 1 }
+          ]
+        },
+        { "part": "metrics", "show": ["readout"], "max": 3, "direction": "row", "weight": 1 }
+      ]
+    }
+  },
+  {
+    "id": "data-log",
+    "label": "Data log",
+    "description": "A heading over a table of coded entries.",
+    "fits": ["main", "aside"],
+    "size": "medium",
+    "tags": ["log", "records", "table", "data", "history"],
+    "layout": { "part": "stack", "direction": "column", "children": [{ "part": "heading" }, { "part": "log", "rows": 5, "weight": 4 }] }
+  },
+  {
+    "id": "cascade",
+    "label": "Data cascade",
+    "description": "Scrolling data beside the system's status lights.",
+    "fits": ["main", "aside"],
+    "size": "small",
+    "needs": { "metrics": 1 },
+    "tags": ["activity", "data", "processing", "computer"],
+    "layout": {
+      "part": "stack",
+      "direction": "row",
+      "children": [{ "part": "ambient", "show": ["data-cascade"], "weight": 2 }, { "part": "lights", "max": 3, "weight": 1 }]
+    }
+  },
+  {
+    "id": "chronometer",
+    "label": "Chronometer",
+    "description": "Stardate clock above a busy bar graph.",
+    "fits": ["aside"],
+    "size": "small",
+    "tags": ["time", "clock", "stardate"],
+    "layout": {
+      "part": "stack",
+      "direction": "column",
+      "children": [{ "part": "clock" }, { "part": "ambient", "show": ["bar-graph", "status-matrix"], "weight": 2 }]
+    }
+  },
+  {
+    "id": "summary-strip",
+    "label": "Summary strip",
+    "description": "Readouts in a row with status lights underneath.",
+    "fits": ["main"],
+    "size": "medium",
+    "needs": { "metrics": 3 },
+    "tags": ["summary", "overview", "values"],
+    "layout": {
+      "part": "stack",
+      "direction": "column",
+      "children": [
+        { "part": "heading" },
+        { "part": "metrics", "show": ["readout", "gauge"], "max": 3, "direction": "row", "weight": 2 },
+        { "part": "lights", "max": 3, "weight": 1 }
+      ]
+    }
+  }
+]
