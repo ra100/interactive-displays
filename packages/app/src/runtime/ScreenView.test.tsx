@@ -1,6 +1,7 @@
-import { type Node, type Screen, ScreenSchema } from "@interactive-displays/core";
-import { render, screen as view } from "@testing-library/react";
+import { type Node, type Screen, ScreenSchema, SignalDefSchema } from "@interactive-displays/core";
+import { act, fireEvent, render, screen as view } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { createSignalStore } from "./live.ts";
 import { ScreenView } from "./ScreenView.tsx";
 import { WidgetErrorBoundary } from "./WidgetErrorBoundary.tsx";
 
@@ -241,6 +242,102 @@ describe("show states", () => {
   it("ignores a variant the theme does not have", () => {
     const { container } = render(<ScreenView screen={screenWithOverrides} themeId="lcars" variant="mirror" />);
     expect(container.querySelector(".screen")).not.toHaveAttribute("data-variant");
+  });
+});
+
+describe("live values and controls", () => {
+  const signals = [
+    SignalDefSchema.parse({ id: "shields", label: "Shields", scope: "shared", source: { kind: "manual", initial: 50 } }),
+    SignalDefSchema.parse({ id: "callsign", label: "Callsign", source: { kind: "static", value: "NCC-1701-D" } }),
+  ];
+  const readout = (bind: Record<string, unknown>) =>
+    makeScreen([widget("shields", "readout", { label: "SHIELDS", value: 0 }, { bind } as Partial<Node>)]);
+  const valueOf = (container: HTMLElement) => container.querySelector(".base-readout__value")?.textContent;
+
+  it("shows the server's value for a bound prop and follows it as it changes", () => {
+    const store = createSignalStore({ shields: 70 });
+    const { container } = render(
+      <ScreenView screen={readout({ value: { signal: "shields" } })} themeId="base" live={{ signals, store }} />,
+    );
+    expect(valueOf(container)).toBe("70");
+
+    act(() => store.merge({ shields: 25 }));
+    expect(valueOf(container)).toBe("25");
+  });
+
+  it("works a value out locally until the server sends one", () => {
+    const { container } = render(
+      <ScreenView screen={readout({ value: { signal: "shields" } })} themeId="base" live={{ signals }} />,
+    );
+    expect(valueOf(container)).toBe("50");
+  });
+
+  it("keeps the widget's own props when a bound value does not fit", () => {
+    const { container } = render(
+      <ScreenView screen={readout({ label: { signal: "callsign" }, unit: { signal: "callsign" } })} themeId="base" live={{ signals }} />,
+    );
+    // A unit is at most 8 characters, so the whole binding falls back rather than failing the widget.
+    expect(view.getByText("SHIELDS")).toBeInTheDocument();
+    expect(valueOf(container)).toBe("0");
+  });
+
+  it("sends a control's use to the server and plays its sounds", () => {
+    const press = vi.fn();
+    const playSound = vi.fn();
+    render(
+      <ScreenView
+        screen={makeScreen([
+          widget("alert", "button", { label: "RED ALERT" }, {
+            actions: [
+              { do: "setState", state: "red-alert" },
+              { do: "sound", sound: "alert" },
+            ],
+          } as Partial<Node>),
+        ])}
+        themeId="base"
+        live={{ press, playSound }}
+      />,
+    );
+
+    fireEvent.click(view.getByRole("button", { name: "RED ALERT" }));
+    expect(press).toHaveBeenCalledWith("alert", undefined);
+    expect(playSound.mock.calls).toEqual([["press"], ["alert"]]);
+  });
+
+  it("sends a slider's position with the press", () => {
+    const press = vi.fn();
+    render(
+      <ScreenView
+        screen={makeScreen([
+          widget("level", "slider", { label: "SHIELDS", value: 0 }, {
+            actions: [{ do: "setSignal", signal: "shields" }],
+          } as Partial<Node>),
+        ])}
+        themeId="base"
+        live={{ press }}
+      />,
+    );
+
+    fireEvent.change(view.getByRole("slider"), { target: { value: "60" } });
+    expect(press).toHaveBeenCalledWith("level", 60);
+  });
+
+  it("names the current state for widgets that show it", () => {
+    render(
+      <ScreenView
+        screen={makeScreen([widget("banner", "alert-banner", {})])}
+        themeId="base"
+        state="red-alert"
+        effect="alert"
+        states={[{ id: "red-alert", label: "Red alert", effect: "alert", banner: "BATTLE STATIONS" }]}
+      />,
+    );
+    expect(view.getByText("BATTLE STATIONS")).toBeInTheDocument();
+  });
+
+  it("stands still for thumbnails", () => {
+    const { container } = render(<ScreenView screen={makeScreen([])} themeId="base" still />);
+    expect(container.querySelector(".screen")).toHaveAttribute("data-still", "true");
   });
 });
 

@@ -69,6 +69,11 @@ export const useNow = (intervalMs: number | null): number => {
   return now;
 };
 
+// True in thumbnails and screenshots: time stands still, so videos stay on their first frame.
+export const StillContext = createContext(false);
+
+export const useStill = (): boolean => useContext(StillContext);
+
 // Commands for video widgets, from display buttons and the operator console, addressed by node id.
 export type MediaListener = (command: VideoCommand) => void;
 
