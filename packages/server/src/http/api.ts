@@ -1,25 +1,22 @@
 import {
   ARCHETYPE_IDS,
   type ArchetypeId,
-  ARCHETYPES,
   DENSITIES,
   ProfileSchema,
   AssetNameSchema,
   assetContentType,
-  catalog,
-  EFFECTS,
   IdSchema,
   ShowSettingsSchema,
   SignalIdSchema,
   VideoCommandSchema,
 } from "@interactive-displays/core";
-import { themeManifests } from "@interactive-displays/themes/manifest";
 import type { FastifyInstance, FastifyReply } from "fastify";
 import { z } from "zod";
 import { bearerToken, tokenAccepted } from "../auth.ts";
+import { catalogInfo } from "../catalogInfo.ts";
 import { buildOverview } from "../overview.ts";
 import { connectedDisplayIds, type RealtimeServer } from "../realtime.ts";
-import type { Generation } from "../generation.ts";
+import type { GenerateRequest, Generation, RegenerateRequest } from "../generation.ts";
 import type { CommandResult, ShowService } from "../showService.ts";
 
 export const ASSET_LIMIT_BYTES = 100 * 1024 * 1024;
@@ -81,6 +78,17 @@ export const RegenerateBody = z
   })
   .strict();
 
+// Parsed bodies leave unset fields undefined; requests leave them out.
+const defined = <T extends object>(value: T) =>
+  Object.fromEntries(Object.entries(value).filter(([, each]) => each !== undefined)) as { [K in keyof T]?: Exclude<T[K], undefined> };
+
+export const toGenerateRequest = ({ section, ...rest }: z.infer<typeof GenerateBody>): GenerateRequest => ({ section, ...defined(rest) });
+
+export const toRegenerateRequest = ({ baseRevision, ...rest }: z.infer<typeof RegenerateBody>): RegenerateRequest => ({
+  baseRevision,
+  ...defined(rest),
+});
+
 const badRequest = (reply: FastifyReply, error: z.ZodError) =>
   reply.code(400).send({
     error: "Request is not valid",
@@ -94,8 +102,6 @@ const send = <T>(reply: FastifyReply, result: CommandResult<T>, success: (value:
     .code(code)
     .send({ error: message, ...(issues ? { issues } : {}), ...(revision !== undefined ? { revision } : {}) });
 };
-
-const jsonSchema = (schema: z.ZodType) => z.toJSONSchema(schema, { io: "input", unrepresentable: "any" });
 
 const isRead = (method: string) => method === "GET" || method === "HEAD";
 
@@ -128,32 +134,7 @@ export const registerApi = (
     publicUrl: publicUrl ?? null,
   }));
 
-  app.get("/api/catalog", async () => ({
-    widgets: [...catalog.values()].map((definition) => ({
-      kind: definition.kind,
-      label: definition.label,
-      category: definition.category,
-      description: definition.description,
-      props: jsonSchema(definition.props),
-      example: definition.example,
-    })),
-    archetypes: ARCHETYPES,
-    effects: EFFECTS,
-    themes: [...themeManifests.values()].map((theme) => ({
-      id: theme.id,
-      name: theme.name,
-      description: theme.description,
-      archetypes: theme.archetypes,
-      variants: Object.fromEntries(Object.entries(theme.variants).map(([id, variant]) => [id, variant.name])),
-      decor: theme.decor.map((definition) => ({
-        kind: definition.kind,
-        label: definition.label,
-        description: definition.description,
-        props: jsonSchema(definition.props),
-        example: definition.example,
-      })),
-    })),
-  }));
+  app.get("/api/catalog", async () => catalogInfo());
 
   // Content packs as the generator sees them: built in, with the show's own recipes and blocks.
   app.get("/api/content", async () => ({ packs: generation.packs() }));
@@ -173,8 +154,7 @@ export const registerApi = (
   app.post("/api/generate", async (request, reply) => {
     const body = GenerateBody.safeParse(request.body);
     if (!body.success) return badRequest(reply, body.error);
-    const { section, ...rest } = body.data;
-    const result = await generation.generate({ section, ...Object.fromEntries(Object.entries(rest).filter(([, value]) => value !== undefined)) });
+    const result = await generation.generate(toGenerateRequest(body.data));
     return send(reply, result, (screens) => ({ screens, lint: screens.map((screen) => service.lint(screen)) }), 201);
   });
 
@@ -183,8 +163,7 @@ export const registerApi = (
     if (!params.success) return badRequest(reply, params.error);
     const body = RegenerateBody.safeParse(request.body);
     if (!body.success) return badRequest(reply, body.error);
-    const { baseRevision, seed, nodes } = body.data;
-    const result = await generation.regenerate(params.data.id, { baseRevision, ...(seed === undefined ? {} : { seed }), ...(nodes ? { nodes } : {}) });
+    const result = await generation.regenerate(params.data.id, toRegenerateRequest(body.data));
     return send(reply, result, (screen) => ({ screen, lint: service.lint(screen) }));
   });
 
@@ -196,13 +175,7 @@ export const registerApi = (
   app.put("/api/show/settings", async (request, reply) => {
     const body = SettingsBody.safeParse(request.body);
     if (!body.success) return badRequest(reply, body.error);
-    const { liveEdit, displayGlobalActions, sounds } = body.data;
-    const patch = {
-      ...(liveEdit === undefined ? {} : { liveEdit }),
-      ...(displayGlobalActions === undefined ? {} : { displayGlobalActions }),
-      ...(sounds === undefined ? {} : { sounds }),
-    };
-    return send(reply, await service.updateSettings(patch), (settings) => ({ settings }));
+    return send(reply, await service.updateSettings(defined(body.data)), (settings) => ({ settings }));
   });
 
   // Replaces the show's signal definitions.
