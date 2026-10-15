@@ -46,6 +46,9 @@ packages/
             signals.ts      shared signal values: manual ones set by people, walking ones ticked every 250 ms
             press.ts        which node a display press may run (visible, interactive, with actions)
             http/api.ts     REST adapter over the command layer; EDITOR_TOKEN guards every write
+            generation.ts   content packs (built in plus the show's saved recipes and blocks), generate, regenerate
+            mcp/            MCP at /mcp (Streamable HTTP, stateless): tools, resources and prompts over the same
+                            command layer; publishing and live control only when the operator allows them
             realtime.ts     Socket.io adapter: display snapshots, tool overviews, watched drafts
             storage/        data directory: atomic JSON writes, revision history, published copies, assets
             seed/           LCARS demo show copied into an empty data directory on first start
@@ -68,8 +71,7 @@ data/       runtime data (gitignored): settings.json, shows/<id>/{show,runtime}.
 ```
 
 **Import boundaries:** `core` imports only `zod`. `content` imports only `core`. Theme manifests import only `core`
-and `zod`. The server
-imports `core` and `@interactive-displays/themes/manifest`. Only `app` imports `@interactive-displays/themes/react`.
+and `zod`. The server imports `core`, `content`, `@interactive-displays/themes/manifest` and the MCP SDK. Only `app` imports `@interactive-displays/themes/react`.
 
 **Key ideas** (details in the plan):
 
@@ -93,7 +95,10 @@ imports `core` and `@interactive-displays/themes/manifest`. Only `app` imports `
   show's alert and damaged states. Regenerate and Reroll are ordinary ops (one Undo).
 - Every change goes through the command layer (`showService.ts`) as validated ops with revision checks.
   Ops change a screen's draft; displays show its published copy until someone publishes (or the show is in
-  live edit mode). The editor and operator console are clients of the same REST API and socket.
+  live edit mode). The editor, the operator console and MCP clients all go through the same command layer.
+- AI works through MCP at `/mcp`: discover (catalog, theme, screens, recipes), generate, edit with ops (locks always
+  respected), lint, save recipes and blocks. Publishing needs the show's `aiPublish` setting and assigning screens,
+  changing state or signals needs `aiLiveControl`; both are off until the operator turns them on.
 - Every widget is one `defineWidget()` definition: Zod props schema, defaults, an example, a description for AI.
   Types, validation, JSON Schema, contract tests and the editor's inspector all come from it.
 - Themes are packs: a pure-data manifest (tokens, variants, effects, decor) plus React renderers for widgets,

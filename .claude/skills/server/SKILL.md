@@ -49,7 +49,12 @@ Reads are open. With `EDITOR_TOKEN` set, every other method under `/api/` needs 
 | `GET /api/session` | `{ tokenRequired, tokenValid, publicUrl }` for the tools |
 | `GET /api/catalog` | widgets (JSON Schema props), archetypes, effects, themes with variants and decor |
 | `GET /api/show` | overview: show, current state, shared signal values, screen summaries (revision, published), displays (assigned, showing, preview, navigated, videos, connected, lastSeen) |
-| `PUT /api/show/settings` | `{ liveEdit?, displayGlobalActions?, sounds? }` |
+| `PUT /api/show/settings` | `{ liveEdit?, displayGlobalActions?, sounds?, aiPublish?, aiLiveControl? }` |
+| `GET /api/content` | `{ packs }`: content packs with the show's saved recipes and blocks merged in |
+| `PUT /api/content/:pack/recipes` | a recipe; added or replaced by id if the pack stays valid (422 with issues) |
+| `PUT /api/content/:pack/blocks` | a block, the same way |
+| `POST /api/generate` | `{ section, id?, name?, seed?, density?, aspect?, archetype?, suite? }` → `{ screens, lint }` (201) |
+| `POST /api/screens/:id/regenerate` | `{ baseRevision, seed?, nodes? }`: regenerate what is not locked, or reroll the panels in `nodes` |
 | `PUT /api/show/signals` | `{ signals }`: replaces the show's signal definitions (422 with issue paths) |
 | `GET /api/signals` | `{ values }`: current values of the server-owned signals |
 | `PUT /api/signals/:id/value` | `{ value }` or `{ delta }` for a shared manual signal, clamped and snapped to its step; 409 for any other signal |
@@ -76,6 +81,24 @@ Reads are open. With `EDITOR_TOKEN` set, every other method under `/api/` needs 
 | `PUT /api/assets/:name` | raw file body (≤ 100 MB); served at `/media/<name>` |
 | `DELETE /api/assets/:name` | remove a file |
 
+## MCP
+
+`/mcp` speaks MCP over Streamable HTTP, statelessly (POST only; a fresh server per request). With `EDITOR_TOKEN`
+set, every request needs the bearer token, reads included. `src/mcp/server.ts` defines everything; tools call the
+same `service` and `generation` functions as REST, so add a tool next to the REST route that does the same thing
+and test both (`mcp.integration.test.ts` uses the SDK client).
+
+- Discover: `get_catalog`, `get_theme`, `list_screens`, `get_screen` (outline or json, draft or published),
+  `list_displays`, `list_recipes`, `list_blocks`.
+- Make and edit: `generate_screen`, `generate_suite`, `regenerate`, `apply_ops` (always `respectLocks`),
+  `create_screen`, `lint_screen`, `save_recipe`, `save_block`.
+- Gated: `publish_screen` needs `settings.aiPublish`; `assign_screen`, `set_state`, `set_signal` need
+  `settings.aiLiveControl`. Refusals are tool errors naming the operator switch.
+- Resources: `interactive-displays://guide` (design rules, `src/mcp/guide.ts`), `://catalog`, `://recipes`,
+  `://screens/{id}`. Prompts: `design-screen`, `fill-placeholders`, `new-section-recipe`.
+
+Errors come back as tool results with `isError` and `{ error, status, issues?, revision? }`, like REST bodies.
+
 ## Configuration (environment)
 
 | Variable | Default |
@@ -100,6 +123,7 @@ shows/<showId>/screens/.history/<id>/<rev>.json  replaced revisions, last 50 kep
 shows/<showId>/screens/.trash/<id>-<time>.json   deleted drafts
 shows/<showId>/published/<screenId>.json         what displays show
 shows/<showId>/assets/<name>                     uploaded images and video, served at /media/<name>
+shows/<showId>/content/<packId>.json              the show's own recipes and blocks for a content pack
 ```
 
 A data directory without `settings.json` is seeded from `packages/server/seed/` once; existing files are never

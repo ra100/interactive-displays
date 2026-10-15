@@ -31,6 +31,8 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 COPY packages/core/src packages/core/src
 # The server imports only the theme manifests (plain data); the renderers ship in the app build.
 COPY packages/themes/src packages/themes/src
+# Content packs (JSON and a loader) for generating on the server and over MCP.
+COPY packages/content/src packages/content/src
 COPY packages/server/src packages/server/src
 COPY packages/server/seed packages/server/seed
 COPY --from=build /repo/packages/app/dist packages/app/dist

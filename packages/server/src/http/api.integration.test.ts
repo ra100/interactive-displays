@@ -303,6 +303,11 @@ describe("signals, settings and video", () => {
     expect(body.settings).toEqual({ liveEdit: false, displayGlobalActions: false, sounds: true, aiPublish: false, aiLiveControl: false });
   });
 
+  it("lets the operator allow AI to publish and run the show", async () => {
+    const { body } = await server.api<{ settings: object }>("PUT", "/api/show/settings", { aiPublish: true, aiLiveControl: true });
+    expect(body.settings).toMatchObject({ aiPublish: true, aiLiveControl: true });
+  });
+
   it("changes only the settings a request names", async () => {
     await server.api("PUT", "/api/show/settings", { displayGlobalActions: false });
     await server.api("PUT", "/api/show/settings", { liveEdit: true });
