@@ -1,0 +1,229 @@
+{
+  "id": "weapons",
+  "label": "Weapons",
+  "description": "Point defence, torpedoes and the fire-control solution.",
+  "code": "WPN",
+  "archetypes": {
+    "sidebar": 2,
+    "dashboard": 2,
+    "header-main": 1
+  },
+  "titles": [
+    "WEAPONS",
+    "FIRE CONTROL",
+    "TACTICAL",
+    "TARGETING"
+  ],
+  "nav": [
+    "PDC",
+    "TORPEDOES",
+    "RAILGUN",
+    "TARGETING",
+    "ECM"
+  ],
+  "status": [
+    "WEAPONS COLD",
+    "PDC ON AUTOMATIC",
+    "FIRING SOLUTION PENDING"
+  ],
+  "systems": [
+    {
+      "id": "pdc",
+      "label": "POINT DEFENCE",
+      "metrics": [
+        {
+          "id": "ammo",
+          "label": "PDC AMMUNITION",
+          "range": [
+            70,
+            90
+          ],
+          "unit": "%",
+          "alertRange": [
+            5,
+            20
+          ],
+          "prefer": [
+            "gauge"
+          ]
+        },
+        {
+          "id": "tracks",
+          "label": "TRACKS",
+          "range": [
+            0,
+            3
+          ],
+          "unit": "",
+          "alertRange": [
+            8,
+            20
+          ],
+          "prefer": [
+            "readout"
+          ],
+          "precision": 0
+        },
+        {
+          "id": "heat",
+          "label": "BARREL HEAT",
+          "range": [
+            40,
+            80
+          ],
+          "unit": "°C",
+          "alertRange": [
+            300,
+            420
+          ],
+          "motion": "wave"
+        }
+      ],
+      "actions": [
+        {
+          "label": "PDC AUTO"
+        },
+        {
+          "label": "WEAPONS FREE",
+          "danger": true,
+          "actions": [
+            {
+              "do": "setState",
+              "state": "red-alert"
+            }
+          ]
+        }
+      ],
+      "short": "PDC",
+      "notes": [
+        "All four turrets on line"
+      ]
+    },
+    {
+      "id": "torpedoes",
+      "label": "TORPEDOES",
+      "metrics": [
+        {
+          "id": "loaded",
+          "label": "TUBES LOADED",
+          "range": [
+            2,
+            4
+          ],
+          "unit": "",
+          "prefer": [
+            "readout"
+          ],
+          "precision": 0
+        },
+        {
+          "id": "lock",
+          "label": "TARGET LOCK",
+          "range": [
+            0,
+            40
+          ],
+          "unit": "%",
+          "alertRange": [
+            90,
+            100
+          ],
+          "prefer": [
+            "gauge"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "label": "LOCK TARGET"
+        },
+        {
+          "label": "FIRE TUBE 1",
+          "danger": true
+        },
+        {
+          "label": "SAFE TUBES",
+          "actions": [
+            {
+              "do": "setState",
+              "state": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ecm",
+      "label": "ECM",
+      "metrics": [
+        {
+          "id": "jamming",
+          "label": "JAMMING POWER",
+          "range": [
+            20,
+            40
+          ],
+          "unit": "%",
+          "prefer": [
+            "gauge"
+          ]
+        },
+        {
+          "id": "signature",
+          "label": "OWN SIGNATURE",
+          "range": [
+            10,
+            25
+          ],
+          "unit": "%",
+          "motion": "wave"
+        }
+      ],
+      "actions": [
+        {
+          "label": "GO DARK"
+        },
+        {
+          "label": "BURN ECM",
+          "actions": [
+            {
+              "do": "setState",
+              "state": "yellow-alert"
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "Stealth coating intact"
+      ]
+    }
+  ],
+  "blocks": {
+    "prefer": [
+      "control-panel",
+      "status-board",
+      "gauge-bank"
+    ],
+    "avoid": []
+  },
+  "alert": {
+    "banner": true,
+    "emphasise": [
+      "tracks",
+      "lock",
+      "ammo"
+    ],
+    "status": [
+      "INCOMING TORPEDOES",
+      "WEAPONS FREE",
+      "TARGET LOCKED ON US"
+    ]
+  },
+  "tags": [
+    "weapons",
+    "tactical",
+    "targeting",
+    "defence",
+    "torpedo"
+  ]
+}
