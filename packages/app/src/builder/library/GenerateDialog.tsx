@@ -24,6 +24,17 @@ const ASPECTS = ProfileSchema.shape.aspect.unwrap().options;
 
 const DENSITY_LABELS: Record<Density, string> = { sparse: "Sparse", normal: "Normal", dense: "Dense" };
 
+// Sections grouped by pack, the packs written for the show's theme first.
+export const packGroups = (sections: readonly Section[], themeId: string): { name: string; sections: Section[] }[] => {
+  const groups = new Map<string, { name: string; native: boolean; sections: Section[] }>();
+  for (const section of sections) {
+    const group = groups.get(section.pack.id) ?? { name: section.pack.name, native: section.pack.theme === themeId, sections: [] };
+    group.sections.push(section);
+    groups.set(section.pack.id, group);
+  }
+  return [...groups.values()].sort((a, b) => Number(b.native) - Number(a.native));
+};
+
 const archetypeOf = (screen: Screen) =>
   screen.root.type === "container" && screen.root.layout.kind === "frame" ? screen.root.layout.archetype : "";
 
@@ -46,7 +57,8 @@ export const GenerateDialog = ({
   onCreate: (screens: Screen[]) => Promise<string | undefined>;
   onClose: () => void;
 }) => {
-  const [key, setKey] = useState(sections[0]?.key ?? "");
+  const groups = useMemo(() => packGroups(sections, theme.id), [sections, theme.id]);
+  const [key, setKey] = useState(groups[0]?.sections[0]?.key ?? "");
   const [density, setDensity] = useState<Density>("normal");
   const [aspect, setAspect] = useState<Profile["aspect"]>("16:9");
   const [seed, setSeed] = useState(randomSeed);
@@ -117,10 +129,14 @@ export const GenerateDialog = ({
                 setChosen(0);
               }}
             >
-              {sections.map((each) => (
-                <option key={each.key} value={each.key}>
-                  {each.recipe.label}
-                </option>
+              {groups.map((group) => (
+                <optgroup key={group.name} label={group.name}>
+                  {group.sections.map((each) => (
+                    <option key={each.key} value={each.key}>
+                      {each.recipe.label}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </select>
           </label>

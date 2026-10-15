@@ -1,6 +1,6 @@
 import { catalog, type LintIssue, type Screen, type ShowOverview, type ValidationIssue } from "@interactive-displays/core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { createTestServer } from "../testing/testServer.ts";
+import { createTestServer, nextEvent } from "../testing/testServer.ts";
 
 interface CatalogBody {
   widgets: Array<{ kind: string; props: { properties: object } }>;
@@ -306,6 +306,17 @@ describe("signals, settings and video", () => {
   it("lets the operator allow AI to publish and run the show", async () => {
     const { body } = await server.api<{ settings: object }>("PUT", "/api/show/settings", { aiPublish: true, aiLiveControl: true });
     expect(body.settings).toMatchObject({ aiPublish: true, aiLiveControl: true });
+  });
+
+  it("re-skins the show and re-sends every display its snapshot", async () => {
+    const { client } = await server.display("test");
+    const snapshot = nextEvent(client, "snapshot");
+    const { status, body } = await server.api<{ theme: object }>("PUT", "/api/show/theme", { id: "crt", variant: "ice" });
+    expect(status).toBe(200);
+    expect(body.theme).toEqual({ id: "crt", variant: "ice" });
+    expect(await snapshot).toMatchObject({ show: { theme: { id: "crt", variant: "ice" } } });
+    expect((await server.api("PUT", "/api/show/theme", { id: "holodeck" })).status).toBe(422);
+    expect((await server.api("PUT", "/api/show/theme", { theme: "crt" })).status).toBe(400);
   });
 
   it("changes only the settings a request names", async () => {

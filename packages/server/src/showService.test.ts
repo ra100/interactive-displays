@@ -200,6 +200,22 @@ describe("drafts and publishing", () => {
     expect((await readShowFile("show.json")).settings).toMatchObject({ liveEdit: true });
   });
 
+  it("re-skins the show in another theme and variant", async () => {
+    const service = await open();
+    const events = record(service);
+
+    expect(await service.setTheme({ id: "crt", variant: "amber" })).toEqual({ ok: true, value: { id: "crt", variant: "amber" } });
+    expect(events).toEqual([{ type: "show" }]);
+    expect((await readShowFile("show.json")).theme).toEqual({ id: "crt", variant: "amber" });
+    expect(await service.setTheme({ id: "lcars" })).toEqual({ ok: true, value: { id: "lcars" } });
+  });
+
+  it("refuses an unknown theme or variant", async () => {
+    const service = await open();
+    expect(await service.setTheme({ id: "holodeck" })).toMatchObject({ ok: false, status: 422, message: expect.stringContaining("try base, lcars, crt") });
+    expect(await service.setTheme({ id: "crt", variant: "nemesis" })).toMatchObject({ ok: false, status: 422, message: expect.stringContaining("try amber, ice") });
+  });
+
   it("creates screens as unpublished drafts", async () => {
     const service = await open();
     await service.createScreen({ ...newScreen("helm"), published: 0 });

@@ -148,6 +148,16 @@ describe("screen library", () => {
     ]);
   });
 
+  it("lists sections by content pack", async () => {
+    await open();
+    await userEvent.click(screen.getByRole("button", { name: "Generate" }));
+    const dialog = within(screen.getByRole("dialog", { name: "Generate a screen" }));
+    const groups = [...dialog.getByLabelText("Section").querySelectorAll("optgroup")].map((group) => group.label);
+    expect(groups).toEqual(["Starship", "Deep-space freighter"]);
+    await userEvent.selectOptions(dialog.getByLabelText("Section"), "Reactor room");
+    expect(dialog.getAllByRole("radio", { name: /Take/ })).toHaveLength(3);
+  });
+
   it("generates a linked suite of screens", async () => {
     await open();
     await userEvent.click(screen.getByRole("button", { name: "Generate" }));

@@ -14,6 +14,7 @@ import {
   type Press,
   resolveScreenId,
   type Screen,
+  type Show,
   type ShowSettings,
   type SignalDef,
   SignalListSchema,
@@ -26,6 +27,7 @@ import {
   type RevisionInfo,
   type VideoCommand,
 } from "@interactive-displays/core";
+import { themeManifests } from "@interactive-displays/themes/manifest";
 import type { FastifyBaseLogger } from "fastify";
 import {
   deleteAsset,
@@ -57,7 +59,7 @@ export type ShowEvent =
   | { type: "preview"; displayId: string }
   | { type: "identify"; displayId: string; label: string }
   | { type: "reload"; displayId: string }
-  // Show-wide definitions every display renders with changed: settings or signal definitions.
+  // Show-wide definitions every display renders with changed: settings, theme or signal definitions.
   | { type: "show" }
   // Shared signal values changed; only the changed ones.
   | { type: "signals"; values: SignalValues }
@@ -425,6 +427,24 @@ export const createShowService = ({
         await saveShow(dataDir, loaded.show);
         emit({ type: "show" });
         return { ok: true, value: loaded.show.settings };
+      }),
+
+    // Re-skins the whole show: every display redraws its screens in the theme, and the variant when the theme
+    // has it. Screens keep their meaning; decor of another theme is drawn by a stand-in or hidden.
+    setTheme: (input: { id: string; variant?: string | undefined }): Promise<CommandResult<Show["theme"]>> =>
+      serialize(async () => {
+        if (!loaded) return NO_SHOW;
+        const theme = themeManifests.get(input.id);
+        if (!theme) return { ok: false, status: 422, message: `There is no theme "${input.id}"; try ${[...themeManifests.keys()].join(", ")}` };
+        if (input.variant !== undefined && !Object.hasOwn(theme.variants, input.variant)) {
+          const variants = Object.keys(theme.variants);
+          return { ok: false, status: 422, message: `${theme.name} has no variant "${input.variant}"${variants.length ? `; try ${variants.join(", ")}` : ""}` };
+        }
+        const next: Show["theme"] = input.variant === undefined ? { id: theme.id } : { id: theme.id, variant: input.variant };
+        loaded.show = { ...loaded.show, theme: next };
+        await saveShow(dataDir, loaded.show);
+        emit({ type: "show" });
+        return { ok: true, value: next };
       }),
 
     // Replaces the show's signal definitions. Values of signals that are gone, or no longer manual, are dropped.

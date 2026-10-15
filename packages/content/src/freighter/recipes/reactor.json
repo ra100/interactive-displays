@@ -1,0 +1,259 @@
+{
+  "id": "reactor",
+  "label": "Reactor room",
+  "description": "Fusion reactor, coolant loops and the main power bus.",
+  "code": "RCT",
+  "archetypes": {
+    "sidebar": 2,
+    "dashboard": 3,
+    "header-main": 1
+  },
+  "titles": [
+    "REACTOR ROOM",
+    "FUSION PLANT",
+    "REACTOR CONTROL",
+    "POWER PLANT"
+  ],
+  "nav": [
+    "CORE",
+    "COOLANT",
+    "POWER BUS",
+    "SHIELDING",
+    "CONTROL RODS",
+    "DIAGNOSTICS",
+    "LOG"
+  ],
+  "status": [
+    "REACTOR STABLE · 68% OUTPUT",
+    "COOLANT LOOP B ON STANDBY",
+    "SCHEDULED MAINTENANCE IN 72 H"
+  ],
+  "systems": [
+    {
+      "id": "core",
+      "label": "FUSION CORE",
+      "metrics": [
+        {
+          "id": "output",
+          "label": "CORE OUTPUT",
+          "range": [
+            62,
+            72
+          ],
+          "unit": "%",
+          "alertRange": [
+            94,
+            100
+          ],
+          "prefer": [
+            "gauge"
+          ]
+        },
+        {
+          "id": "temp",
+          "label": "PLASMA TEMP",
+          "range": [
+            140,
+            160
+          ],
+          "unit": "MK",
+          "alertRange": [
+            220,
+            260
+          ],
+          "motion": "wave"
+        },
+        {
+          "id": "rods",
+          "label": "ROD INSERTION",
+          "range": [
+            30,
+            40
+          ],
+          "unit": "%",
+          "prefer": [
+            "readout"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "label": "SCRAM REACTOR",
+          "danger": true,
+          "actions": [
+            {
+              "do": "setState",
+              "state": "red-alert"
+            }
+          ]
+        },
+        {
+          "label": "STABILISE",
+          "actions": [
+            {
+              "do": "setState",
+              "state": "normal"
+            }
+          ]
+        },
+        {
+          "label": "RAISE OUTPUT"
+        }
+      ],
+      "short": "CORE",
+      "notes": [
+        "Magnetic confinement holding",
+        "Fuel pellet feed nominal"
+      ]
+    },
+    {
+      "id": "coolant",
+      "label": "COOLANT LOOPS",
+      "metrics": [
+        {
+          "id": "temp",
+          "label": "COOLANT TEMP",
+          "range": [
+            290,
+            320
+          ],
+          "unit": "K",
+          "alertRange": [
+            360,
+            420
+          ],
+          "motion": "wave",
+          "signal": "coolant.temp"
+        },
+        {
+          "id": "flow",
+          "label": "LOOP FLOW",
+          "range": [
+            40,
+            55
+          ],
+          "unit": "L/s"
+        },
+        {
+          "id": "pressure",
+          "label": "LOOP PRESSURE",
+          "range": [
+            180,
+            220
+          ],
+          "unit": "kPa",
+          "alertRange": [
+            300,
+            340
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "label": "CYCLE PUMPS"
+        },
+        {
+          "label": "OPEN LOOP B"
+        },
+        {
+          "label": "EMERGENCY DUMP",
+          "danger": true
+        }
+      ],
+      "short": "COOLANT",
+      "notes": [
+        "Loop A primary, loop B standby"
+      ]
+    },
+    {
+      "id": "bus",
+      "label": "POWER BUS",
+      "metrics": [
+        {
+          "id": "load",
+          "label": "BUS LOAD",
+          "range": [
+            40,
+            60
+          ],
+          "unit": "%",
+          "alertRange": [
+            88,
+            100
+          ],
+          "prefer": [
+            "gauge"
+          ]
+        },
+        {
+          "id": "draw",
+          "label": "DRAW",
+          "range": [
+            18,
+            26
+          ],
+          "unit": "MW"
+        },
+        {
+          "id": "battery",
+          "label": "BATTERY BANK",
+          "range": [
+            80,
+            95
+          ],
+          "unit": "%",
+          "alertRange": [
+            5,
+            20
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "label": "SHED LOAD",
+          "actions": [
+            {
+              "do": "setState",
+              "state": "yellow-alert"
+            }
+          ]
+        },
+        {
+          "label": "SWITCH TO BATTERY"
+        }
+      ],
+      "notes": [
+        "Non-essential decks on low power"
+      ]
+    }
+  ],
+  "blocks": {
+    "prefer": [
+      "hero-gauge",
+      "gauge-bank",
+      "control-panel"
+    ],
+    "avoid": []
+  },
+  "alert": {
+    "banner": true,
+    "emphasise": [
+      "output",
+      "temp",
+      "load",
+      "pressure"
+    ],
+    "status": [
+      "CORE TEMPERATURE CRITICAL",
+      "CONTAINMENT FAULT · SCRAM ADVISED",
+      "POWER BUS OVERLOAD"
+    ]
+  },
+  "tags": [
+    "reactor",
+    "power",
+    "core",
+    "engine",
+    "fusion"
+  ]
+}

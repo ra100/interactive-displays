@@ -1,0 +1,221 @@
+{
+  "id": "airlock",
+  "label": "Airlock",
+  "description": "Airlock cycle, hull integrity and EVA suits.",
+  "code": "LCK",
+  "archetypes": {
+    "sidebar": 2,
+    "header-main": 2,
+    "dashboard": 1
+  },
+  "titles": [
+    "AIRLOCK",
+    "HULL STATUS",
+    "EVA CONTROL",
+    "OUTER HATCH"
+  ],
+  "nav": [
+    "CYCLE",
+    "HULL",
+    "EVA",
+    "HATCHES",
+    "LOG"
+  ],
+  "status": [
+    "INNER HATCH OPEN",
+    "OUTER HATCH SEALED",
+    "2 SUITS CHARGED"
+  ],
+  "systems": [
+    {
+      "id": "cycle",
+      "label": "AIRLOCK CYCLE",
+      "metrics": [
+        {
+          "id": "pressure",
+          "label": "CHAMBER PRESSURE",
+          "range": [
+            99,
+            101
+          ],
+          "unit": "kPa",
+          "alertRange": [
+            0,
+            10
+          ],
+          "prefer": [
+            "gauge"
+          ]
+        },
+        {
+          "id": "cycle",
+          "label": "CYCLE PROGRESS",
+          "range": [
+            0,
+            100
+          ],
+          "unit": "%",
+          "motion": "wave"
+        }
+      ],
+      "actions": [
+        {
+          "label": "CYCLE AIRLOCK"
+        },
+        {
+          "label": "OPEN OUTER HATCH",
+          "danger": true,
+          "actions": [
+            {
+              "do": "setState",
+              "state": "yellow-alert"
+            }
+          ]
+        },
+        {
+          "label": "EMERGENCY SEAL",
+          "actions": [
+            {
+              "do": "setState",
+              "state": "normal"
+            }
+          ]
+        }
+      ],
+      "short": "CYCLE",
+      "notes": [
+        "Inner hatch interlock armed"
+      ]
+    },
+    {
+      "id": "hull",
+      "label": "HULL",
+      "metrics": [
+        {
+          "id": "integrity",
+          "label": "HULL INTEGRITY",
+          "range": [
+            96,
+            100
+          ],
+          "unit": "%",
+          "alertRange": [
+            40,
+            70
+          ],
+          "prefer": [
+            "gauge"
+          ],
+          "signal": "hull"
+        },
+        {
+          "id": "micro",
+          "label": "MICROMETEOROIDS",
+          "range": [
+            0,
+            4
+          ],
+          "unit": "/h",
+          "precision": 0
+        },
+        {
+          "id": "temp",
+          "label": "SKIN TEMP",
+          "range": [
+            -120,
+            -90
+          ],
+          "unit": "°C",
+          "motion": "wave"
+        }
+      ],
+      "actions": [
+        {
+          "label": "SEAL BREACH",
+          "danger": true
+        },
+        {
+          "label": "SCAN HULL"
+        }
+      ]
+    },
+    {
+      "id": "eva",
+      "label": "EVA SUITS",
+      "metrics": [
+        {
+          "id": "charge",
+          "label": "SUIT CHARGE",
+          "range": [
+            85,
+            100
+          ],
+          "unit": "%",
+          "alertRange": [
+            5,
+            20
+          ],
+          "prefer": [
+            "gauge"
+          ]
+        },
+        {
+          "id": "o2",
+          "label": "SUIT OXYGEN",
+          "range": [
+            6,
+            8
+          ],
+          "unit": "h",
+          "precision": 1
+        }
+      ],
+      "actions": [
+        {
+          "label": "CHARGE SUITS"
+        },
+        {
+          "label": "RECALL CREW",
+          "actions": [
+            {
+              "do": "setState",
+              "state": "yellow-alert"
+            }
+          ]
+        }
+      ],
+      "short": "EVA",
+      "notes": [
+        "Tethers inspected"
+      ]
+    }
+  ],
+  "blocks": {
+    "prefer": [
+      "button-column",
+      "status-board",
+      "control-panel"
+    ],
+    "avoid": []
+  },
+  "alert": {
+    "banner": true,
+    "emphasise": [
+      "pressure",
+      "integrity",
+      "charge"
+    ],
+    "status": [
+      "DECOMPRESSION · AIRLOCK",
+      "HULL BREACH DETECTED",
+      "EVA CREW OUT OF CONTACT"
+    ]
+  },
+  "tags": [
+    "airlock",
+    "hull",
+    "eva",
+    "hatch",
+    "suit"
+  ]
+}
