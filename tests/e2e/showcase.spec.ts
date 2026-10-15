@@ -568,3 +568,134 @@ test.describe("showcase phase 5", () => {
     });
   });
 });
+
+test.describe("showcase phase 6", () => {
+  test.skip(phase !== "phase-6", "set SHOWCASE=phase-6 to capture screenshots");
+
+  const DISPLAY = "showcase-looks";
+  // The set's panels: 4K, seen from a few metres.
+  const K4 = { width: 3840, height: 2160 };
+
+  const look = async (request: APIRequestContext, theme: { id: string; variant?: string }, scale = 0.7) => {
+    expect((await request.put("/api/show/theme", { data: theme })).ok()).toBe(true);
+    expect((await request.put("/api/show/scale", { data: { scale } })).ok()).toBe(true);
+  };
+
+  test.afterEach(async ({ request }) => {
+    await look(request, { id: "lcars" });
+    await setState(request, "normal");
+    await request.post("/api/cues/reset");
+    await request.put("/api/displays/corridor-1", { data: { screen: "standby" } });
+    await request.put(`/api/displays/${DISPLAY}`, { data: { screen: null } });
+    const response = await request.get("/api/screens");
+    const { screens } = (await response.json()) as { screens: { id: string; tags: string[] }[] };
+    for (const screen of screens.filter((each) => each.tags.includes("generated"))) await request.delete(`/api/screens/${screen.id}`);
+  });
+
+  const onDisplay = async (page: Page, name: string, screen: string | null = null, size = K4) => {
+    await page.request.put(`/api/displays/${DISPLAY}`, { data: { screen } });
+    await page.setViewportSize(size);
+    await page.goto(`/d/${DISPLAY}`);
+    await expect(page.locator(".screen")).toBeVisible();
+    await settle(page);
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: out(name) });
+  };
+
+  const generate = async (page: Page, section: string, seed: number) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/builder");
+    await page.getByRole("button", { name: "Generate" }).click();
+    const dialog = page.getByRole("dialog", { name: "Generate a screen" });
+    await dialog.getByLabel("Section").selectOption({ label: section });
+    await dialog.getByRole("textbox", { name: "Seed" }).fill(String(seed));
+    await expect(dialog.locator(".thumbnail")).toHaveCount(3);
+    await dialog.getByRole("button", { name: "Create and edit" }).click();
+    await expect(page.getByRole("button", { name: "Publish" })).toBeEnabled();
+    const id = page.url().split("/").pop() ?? "";
+    await page.getByRole("button", { name: "Publish" }).click();
+    await expect(page.getByText("Published", { exact: true })).toBeVisible();
+    return id;
+  };
+
+  test("one show in three looks on a 4K panel", async ({ page, request }) => {
+    await look(request, { id: "lcars" });
+    await onDisplay(page, "4k-bridge-lcars");
+    await look(request, { id: "hud" });
+    await onDisplay(page, "4k-bridge-hud");
+    await look(request, { id: "crt", variant: "amber" });
+    await onDisplay(page, "4k-bridge-crt-amber");
+    await look(request, { id: "hud" }, 0.5);
+    await onDisplay(page, "4k-bridge-hud-scale-50");
+    await look(request, { id: "hud" }, 1);
+    await onDisplay(page, "4k-bridge-hud-scale-100");
+  });
+
+  test("states in the new looks", async ({ page, request }) => {
+    await look(request, { id: "hud" });
+    await setState(request, "red-alert");
+    await onDisplay(page, "4k-bridge-hud-red-alert");
+    await look(request, { id: "crt" });
+    await setState(request, "damaged");
+    await onDisplay(page, "4k-bridge-crt-damaged");
+  });
+
+  test("screens generated from the packs written for each look", async ({ page, request }) => {
+    await look(request, { id: "hud" });
+    for (const [section, seed] of [
+      ["Cockpit", 11],
+      ["Weapons", 4],
+      ["Sensors", 9],
+    ] as const) {
+      const id = await generate(page, section, seed);
+      await onDisplay(page, `4k-corvette-${id}`, id);
+    }
+    await look(request, { id: "crt" });
+    for (const [section, seed] of [
+      ["Reactor room", 3],
+      ["Airlock", 8],
+    ] as const) {
+      const id = await generate(page, section, seed);
+      await onDisplay(page, `4k-freighter-${id}`, id);
+    }
+  });
+
+  test("operator console: cues, look and sizes", async ({ page, request }) => {
+    await request.post("/api/cues/go");
+    await request.post("/api/cues/go");
+    await page.setViewportSize({ width: 1440, height: 1100 });
+    await page.goto("/operator");
+    await expect(page.getByRole("region", { name: "Cues" })).toBeVisible();
+    await settle(page);
+    await page.screenshot({ path: out("operator-cues-and-look") });
+    await page.setViewportSize({ width: 412, height: 915 });
+    await settle(page);
+    await page.screenshot({ path: out("operator-cues-phone") });
+  });
+
+  test("editor: one part at its own size, and the HUD gallery", async ({ page, request }) => {
+    await look(request, { id: "hud" });
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/builder/bridge");
+    const outline = page.getByRole("tree", { name: "Outline" });
+    await outline.getByRole("treeitem", { name: /Grid · 2×3/ }).click();
+    const size = page.getByRole("tabpanel", { name: "Selection" }).getByRole("combobox", { name: /^Size/ });
+    await size.selectOption({ label: "60%" });
+    await expect(page.getByText("Saved", { exact: true })).toBeVisible();
+    await size.scrollIntoViewIfNeeded();
+    await settle(page);
+    await page.screenshot({ path: out("editor-part-size") });
+    // Put the seeded draft back as it was.
+    await page.getByRole("button", { name: "Undo" }).click();
+    await expect(page.getByText("Saved", { exact: true })).toBeVisible();
+
+    await page.goto("/gallery?theme=hud");
+    await expect(page.locator('.screen[data-theme="hud"]').first()).toBeVisible();
+    await settle(page);
+    await page.screenshot({ path: out("gallery-hud"), fullPage: false });
+    await page.goto("/gallery?theme=crt");
+    await expect(page.locator('.screen[data-theme="crt"]').first()).toBeVisible();
+    await settle(page);
+    await page.screenshot({ path: out("gallery-crt"), fullPage: false });
+  });
+});

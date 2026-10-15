@@ -569,6 +569,31 @@ describe("controls on displays", () => {
     expect(events.filter((event) => event.type === "display")).toHaveLength(3);
   });
 
+  it("runs a cue from a display button while the show lets displays run it", async () => {
+    const service = await open();
+    const screen = {
+      ...newScreen("hits"),
+      root: {
+        id: "root",
+        type: "container",
+        layout: { kind: "stack", direction: "column" },
+        children: [{ node: { id: "hit", type: "widget", kind: "button", props: { label: "HIT" }, actions: [{ do: "cue", cue: "first-hit" }] } }],
+      },
+    };
+    await service.createScreen(screen);
+    await service.publish("hits");
+    await service.updateDisplay("test", { screen: "hits" });
+
+    expect(await service.press("test", { nodeId: "hit" })).toEqual(["cue"]);
+    expect(service.state()).toBe("red-alert");
+    expect(service.lastCue()).toBe("first-hit");
+
+    await service.setState("normal");
+    await service.updateSettings({ displayGlobalActions: false });
+    expect(await service.press("test", { nodeId: "hit" })).toEqual([]);
+    expect(service.state()).toBe("normal");
+  });
+
   it("does nothing for a back with nowhere to go, or a press on another screen's control", async () => {
     const service = await open();
     expect(await service.press("engineering-1", { nodeId: "nav-engineering" })).toEqual([]);
