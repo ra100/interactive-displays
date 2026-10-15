@@ -19,7 +19,8 @@ const resolveProps = (node: WidgetNode, environment: SignalEnvironment | undefin
   const fixed = definition.props.safeParse(node.props);
   if (!fixed.success) return { problem: "Invalid props" };
   if (!node.bind || !environment) return { props: fixed.data };
-  const live = definition.props.safeParse(bindProps(fixed.data, node.bind, node.id, environment));
+  const fits = (props: Record<string, unknown>) => definition.props.safeParse(props).success;
+  const live = definition.props.safeParse(bindProps(fixed.data, node.bind, node.id, environment, fits));
   return { props: live.success ? live.data : fixed.data };
 };
 

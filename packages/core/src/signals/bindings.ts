@@ -53,17 +53,23 @@ export const coerceTo = (value: SignalValue, like: unknown): unknown => {
 };
 
 // Props with their bound values filled in. `fixed` are the node's own props (after per-state overrides).
+// `fits` says whether props are valid for the widget: a bound value that already fits is used as it is and
+// only one that does not is coerced, so a readout taking numbers or text keeps a number a number (and its
+// precision) even when its own value is text, and a stardate keeps its decimals.
 export const bindProps = (
   fixed: Record<string, unknown>,
   bindings: Bindings | undefined,
   nodeId: string,
   environment: SignalEnvironment,
+  fits?: (props: Record<string, unknown>) => boolean,
 ): Record<string, unknown> => {
   if (!bindings) return fixed;
-  const props = { ...fixed };
+  let props = { ...fixed };
   for (const [prop, binding] of Object.entries(bindings)) {
     const value = bindingValue(binding, nodeId, prop, environment);
-    if (value !== undefined) props[prop] = coerceTo(value, fixed[prop]);
+    if (value === undefined) continue;
+    const raw = { ...props, [prop]: value };
+    props = fits?.(raw) ? raw : { ...props, [prop]: coerceTo(value, fixed[prop]) };
   }
   return props;
 };

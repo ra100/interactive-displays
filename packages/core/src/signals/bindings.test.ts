@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
 import { SignalDefSchema } from "../schema/signal.ts";
 import { bindingTicks, bindingValue, bindProps, coerceTo, type SignalEnvironment } from "./bindings.ts";
 import { sampleAmbient, seedOf } from "./sample.ts";
@@ -74,6 +75,17 @@ describe("bindProps", () => {
   it("replaces bound props and keeps the rest", () => {
     const props = bindProps({ label: "SHIELDS", value: 0 }, { value: { signal: "shields" } }, "g", environment({ values: { shields: 65 } }));
     expect(props).toEqual({ label: "SHIELDS", value: 65 });
+  });
+
+  it("uses a bound value as it is when it already fits, and coerces it only when it does not", () => {
+    const readout = z.object({ value: z.union([z.number(), z.string()]) });
+    const fits = (props: Record<string, unknown>) => readout.safeParse(props).success;
+    const x = SignalDefSchema.parse({ id: "x", label: "X", scope: "shared", source: { kind: "manual" } });
+    const live = (value: number | string) => environment({ signals: [x], values: { x: value } });
+    const bound = (fixed: unknown, value: number | string) => bindProps({ value: fixed }, { value: { signal: "x" } }, "r", live(value), fits)["value"];
+    expect(bound("RAISED", 47.38)).toBe(47.38);
+    expect(bound(0, "47787.3")).toBe("47787.3");
+    expect(bindProps({ on: false }, { on: { signal: "x" } }, "t", live(1), () => false)).toEqual({ on: true });
   });
 
   it("keeps the fixed value when the signal is missing", () => {
