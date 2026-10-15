@@ -211,6 +211,14 @@ describe("generateVariants", () => {
   });
 });
 
+describe("layouts on a portrait display", () => {
+  it("leads with the stacked layout most of the time", () => {
+    const firsts = Array.from({ length: 20 }, (_, seed) => generateVariants({ ...base, seed, profile: { aspect: "9:16", fit: "fluid" } })[0]);
+    const stacked = firsts.filter((screen) => screen?.root.type === "container" && screen.root.layout.kind === "frame" && screen.root.layout.archetype === "header-main");
+    expect(stacked.length).toBeGreaterThanOrEqual(12);
+  });
+});
+
 describe("generateSuite", () => {
   it("makes an overview and a screen per system, linked by nav buttons", () => {
     const suite = generateSuite({ ...base, takenIds: new Set(["eng-warp"]) });
@@ -226,6 +234,9 @@ describe("generateSuite", () => {
       for (const target of targets) expect(ids.has(target) || target === "bridge").toBe(true);
     }
     expect(suite[1]?.generator?.system).toBe("warp");
+    const layouts = suite.map((screen) => (screen.root.type === "container" && screen.root.layout.kind === "frame" ? screen.root.layout.archetype : ""));
+    expect(new Set(layouts).size).toBe(1);
+    expect(layouts[0]).not.toBe("dashboard");
     expect(suite[1]?.name).toBe("Engineering: Warp core");
   });
 });

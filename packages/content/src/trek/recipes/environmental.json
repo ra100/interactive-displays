@@ -3,57 +3,220 @@
   "label": "Environmental",
   "description": "Life support, atmosphere, gravity and climate across the decks.",
   "code": "ENV",
-  "archetypes": { "dashboard": 3, "sidebar": 2, "header-main": 1 },
-  "titles": ["ENVIRONMENTAL CONTROL", "LIFE SUPPORT", "ATMOSPHERIC PROCESSING"],
-  "nav": ["LIFE SUPPORT", "ATMOSPHERE", "GRAVITY", "CLIMATE", "WATER", "DECKS", "LOGS"],
-  "status": ["LIFE SUPPORT NOMINAL ON ALL DECKS", "ATMOSPHERIC MIX 21.0% O2", "GRAVITY PLATING CALIBRATED"],
+  "archetypes": {
+    "dashboard": 3,
+    "sidebar": 2,
+    "header-main": 1
+  },
+  "titles": [
+    "ENVIRONMENTAL CONTROL",
+    "LIFE SUPPORT",
+    "ATMOSPHERIC PROCESSING"
+  ],
+  "nav": [
+    "LIFE SUPPORT",
+    "ATMOSPHERE",
+    "GRAVITY",
+    "CLIMATE",
+    "WATER",
+    "DECKS",
+    "LOGS"
+  ],
+  "status": [
+    "LIFE SUPPORT NOMINAL ON ALL DECKS",
+    "ATMOSPHERIC MIX 21.0% O2",
+    "GRAVITY PLATING CALIBRATED"
+  ],
   "systems": [
     {
       "id": "life",
       "label": "LIFE SUPPORT",
       "metrics": [
-        { "id": "oxygen", "label": "OXYGEN", "unit": "%", "range": [20.5, 21.5], "alertRange": [15, 18], "precision": 1, "prefer": ["gauge", "readout"] },
-        { "id": "co2", "label": "CO2 SCRUBBING", "unit": "%", "range": [92, 99], "alertRange": [50, 70] },
-        { "id": "pressure", "label": "CABIN PRESSURE", "unit": "kPa", "range": [100, 102], "precision": 1 }
+        {
+          "id": "oxygen",
+          "label": "OXYGEN",
+          "unit": "%",
+          "range": [
+            20.5,
+            21.5
+          ],
+          "alertRange": [
+            15,
+            18
+          ],
+          "precision": 1,
+          "prefer": [
+            "gauge",
+            "readout"
+          ]
+        },
+        {
+          "id": "co2",
+          "label": "CO2 SCRUBBING",
+          "unit": "%",
+          "range": [
+            92,
+            99
+          ],
+          "alertRange": [
+            50,
+            70
+          ]
+        },
+        {
+          "id": "pressure",
+          "label": "CABIN PRESSURE",
+          "unit": "kPa",
+          "range": [
+            100,
+            102
+          ],
+          "precision": 1
+        }
       ],
-      "actions": [{ "label": "BOOST SCRUBBERS" }, { "label": "EMERGENCY O2", "danger": true }],
-      "notes": ["Atmospheric processors cycling normally"]
+      "actions": [
+        {
+          "label": "BOOST SCRUBBERS"
+        },
+        {
+          "label": "EMERGENCY O2",
+          "danger": true
+        }
+      ],
+      "notes": [
+        "Atmospheric processors cycling normally"
+      ]
     },
     {
       "id": "gravity",
       "label": "GRAVITY PLATING",
       "short": "GRAVITY",
       "metrics": [
-        { "id": "g", "label": "GRAVITY", "unit": "g", "range": [0.98, 1.02], "alertRange": [0.6, 0.85], "precision": 2, "motion": "wave" },
-        { "id": "dampers", "label": "INERTIAL DAMPERS", "unit": "%", "range": [95, 100], "alertRange": [50, 75] }
+        {
+          "id": "g",
+          "label": "GRAVITY",
+          "unit": "g",
+          "range": [
+            0.98,
+            1.02
+          ],
+          "alertRange": [
+            0.6,
+            0.85
+          ],
+          "precision": 2,
+          "motion": "wave"
+        },
+        {
+          "id": "dampers",
+          "label": "INERTIAL DAMPERS",
+          "unit": "%",
+          "range": [
+            95,
+            100
+          ],
+          "alertRange": [
+            50,
+            75
+          ]
+        }
       ],
-      "actions": [{ "label": "RECALIBRATE" }, { "label": "ZERO-G DECK 12", "danger": true }]
+      "actions": [
+        {
+          "label": "RECALIBRATE"
+        },
+        {
+          "label": "ZERO-G DECK 12",
+          "danger": true
+        }
+      ]
     },
     {
       "id": "climate",
       "label": "CLIMATE",
       "metrics": [
-        { "id": "temperature", "label": "TEMPERATURE", "unit": "C", "range": [20, 23], "precision": 1 },
-        { "id": "humidity", "label": "HUMIDITY", "unit": "%", "range": [40, 50], "motion": "wave" }
+        {
+          "id": "temperature",
+          "label": "TEMPERATURE",
+          "unit": "C",
+          "range": [
+            20,
+            23
+          ],
+          "precision": 1
+        },
+        {
+          "id": "humidity",
+          "label": "HUMIDITY",
+          "unit": "%",
+          "range": [
+            40,
+            50
+          ],
+          "motion": "wave"
+        }
       ],
-      "actions": [{ "label": "ADJUST CLIMATE" }]
+      "actions": [
+        {
+          "label": "ADJUST CLIMATE"
+        }
+      ]
     },
     {
       "id": "water",
       "label": "WATER RECLAMATION",
       "short": "WATER",
       "metrics": [
-        { "id": "reserve", "label": "RESERVE", "unit": "%", "range": [70, 85], "prefer": ["gauge"] },
-        { "id": "purity", "label": "PURITY", "unit": "%", "range": [99, 100], "precision": 1 }
+        {
+          "id": "reserve",
+          "label": "RESERVE",
+          "unit": "%",
+          "range": [
+            70,
+            85
+          ],
+          "prefer": [
+            "gauge"
+          ]
+        },
+        {
+          "id": "purity",
+          "label": "PURITY",
+          "unit": "%",
+          "range": [
+            99,
+            100
+          ],
+          "precision": 1
+        }
       ],
       "actions": []
     }
   ],
-  "blocks": { "prefer": ["status-board", "readout-column", "trend-panel"], "avoid": [] },
+  "blocks": {
+    "prefer": [
+      "status-board",
+      "readout-column",
+      "trend-panel"
+    ],
+    "avoid": []
+  },
   "alert": {
     "banner": true,
-    "emphasise": ["oxygen", "g", "dampers"],
-    "status": ["HULL BREACH · DECK 12 VENTING", "LIFE SUPPORT ON RESERVE POWER"]
+    "emphasise": [
+      "oxygen",
+      "g",
+      "dampers"
+    ],
+    "status": [
+      "HULL BREACH · DECK 12 VENTING",
+      "LIFE SUPPORT ON RESERVE POWER"
+    ]
   },
-  "tags": ["air", "atmosphere", "life", "climate"]
+  "tags": [
+    "air",
+    "atmosphere",
+    "life",
+    "climate"
+  ]
 }

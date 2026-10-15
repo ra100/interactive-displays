@@ -3,57 +3,253 @@
   "label": "Helm",
   "description": "Flight control: speed, heading, navigation and thrusters.",
   "code": "CON",
-  "archetypes": { "header-main": 3, "dashboard": 2, "sidebar": 1 },
-  "titles": ["FLIGHT CONTROL", "HELM", "NAVIGATIONAL CONTROL"],
-  "nav": ["COURSE", "SPEED", "THRUSTERS", "NAV DEFLECTOR", "STELLAR CART", "AUTOPILOT", "LOGS"],
-  "status": ["COURSE LAID IN · HEADING 047 MARK 12", "HOLDING POSITION", "AUTOPILOT ENGAGED"],
+  "archetypes": {
+    "header-main": 3,
+    "dashboard": 2,
+    "sidebar": 1
+  },
+  "titles": [
+    "FLIGHT CONTROL",
+    "HELM",
+    "NAVIGATIONAL CONTROL"
+  ],
+  "nav": [
+    "COURSE",
+    "SPEED",
+    "THRUSTERS",
+    "NAV DEFLECTOR",
+    "STELLAR CART",
+    "AUTOPILOT",
+    "LOGS"
+  ],
+  "status": [
+    "COURSE LAID IN · HEADING 047 MARK 12",
+    "HOLDING POSITION",
+    "AUTOPILOT ENGAGED"
+  ],
   "systems": [
     {
       "id": "propulsion",
       "label": "PROPULSION",
       "metrics": [
-        { "id": "warp", "label": "WARP FACTOR", "range": [5, 7], "precision": 1, "prefer": ["readout", "gauge"], "signal": "warp.factor" },
-        { "id": "impulse", "label": "IMPULSE", "unit": "%", "range": [0, 25] },
-        { "id": "velocity", "label": "VELOCITY", "unit": "c", "range": [200, 400], "motion": "wave" }
+        {
+          "id": "warp",
+          "label": "WARP FACTOR",
+          "range": [
+            5,
+            7
+          ],
+          "precision": 1,
+          "prefer": [
+            "readout",
+            "gauge"
+          ],
+          "signal": "warp.factor"
+        },
+        {
+          "id": "impulse",
+          "label": "IMPULSE",
+          "unit": "%",
+          "range": [
+            0,
+            25
+          ]
+        },
+        {
+          "id": "velocity",
+          "label": "VELOCITY",
+          "unit": "c",
+          "range": [
+            200,
+            400
+          ],
+          "motion": "wave"
+        }
       ],
       "actions": [
-        { "label": "ENGAGE", "actions": [{ "do": "setSignal", "signal": "warp.factor", "value": 6 }] },
-        { "label": "FULL STOP", "danger": true, "actions": [{ "do": "setSignal", "signal": "warp.factor", "value": 0 }] },
-        { "label": "WARP 9", "actions": [{ "do": "setSignal", "signal": "warp.factor", "value": 9 }] }
+        {
+          "label": "ENGAGE",
+          "actions": [
+            {
+              "do": "setSignal",
+              "signal": "warp.factor",
+              "value": 6
+            }
+          ]
+        },
+        {
+          "label": "FULL STOP",
+          "danger": true,
+          "actions": [
+            {
+              "do": "setSignal",
+              "signal": "warp.factor",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "label": "WARP 9",
+          "actions": [
+            {
+              "do": "setSignal",
+              "signal": "warp.factor",
+              "value": 9
+            }
+          ]
+        }
       ],
-      "notes": ["Course plotted through the Mutara sector"]
+      "notes": [
+        "Course plotted through the Mutara sector"
+      ]
     },
     {
       "id": "course",
       "label": "COURSE",
       "metrics": [
-        { "id": "heading", "label": "HEADING", "range": [40, 55], "prefer": ["readout"] },
-        { "id": "mark", "label": "MARK", "range": [8, 16], "prefer": ["readout"] },
-        { "id": "eta", "label": "ETA", "unit": "h", "range": [10, 14], "precision": 1, "prefer": ["readout"] }
+        {
+          "id": "heading",
+          "label": "HEADING",
+          "range": [
+            40,
+            55
+          ],
+          "prefer": [
+            "readout"
+          ]
+        },
+        {
+          "id": "mark",
+          "label": "MARK",
+          "range": [
+            8,
+            16
+          ],
+          "prefer": [
+            "readout"
+          ]
+        },
+        {
+          "id": "eta",
+          "label": "ETA",
+          "unit": "h",
+          "range": [
+            10,
+            14
+          ],
+          "precision": 1,
+          "prefer": [
+            "readout"
+          ]
+        }
       ],
-      "actions": [{ "label": "LAY IN COURSE" }, { "label": "EVASIVE", "danger": true }]
+      "actions": [
+        {
+          "label": "LAY IN COURSE"
+        },
+        {
+          "label": "EVASIVE",
+          "danger": true
+        }
+      ]
     },
     {
       "id": "thrusters",
       "label": "THRUSTERS",
       "metrics": [
-        { "id": "port", "label": "PORT RCS", "unit": "%", "range": [0, 20], "motion": "wave" },
-        { "id": "starboard", "label": "STARBOARD RCS", "unit": "%", "range": [0, 20], "motion": "wave" }
+        {
+          "id": "port",
+          "label": "PORT RCS",
+          "unit": "%",
+          "range": [
+            0,
+            20
+          ],
+          "motion": "wave"
+        },
+        {
+          "id": "starboard",
+          "label": "STARBOARD RCS",
+          "unit": "%",
+          "range": [
+            0,
+            20
+          ],
+          "motion": "wave"
+        }
       ],
-      "actions": [{ "label": "HOLD STATION" }, { "label": "DOCKING MODE" }]
+      "actions": [
+        {
+          "label": "HOLD STATION"
+        },
+        {
+          "label": "DOCKING MODE"
+        }
+      ]
     },
     {
       "id": "deflector",
       "label": "NAV DEFLECTOR",
       "short": "DEFLECTOR",
       "metrics": [
-        { "id": "power", "label": "DEFLECTOR POWER", "unit": "%", "range": [70, 85], "alertRange": [95, 100], "prefer": ["gauge"] },
-        { "id": "particles", "label": "PARTICLE DENSITY", "range": [10, 40], "prefer": ["sparkline"] }
+        {
+          "id": "power",
+          "label": "DEFLECTOR POWER",
+          "unit": "%",
+          "range": [
+            70,
+            85
+          ],
+          "alertRange": [
+            95,
+            100
+          ],
+          "prefer": [
+            "gauge"
+          ]
+        },
+        {
+          "id": "particles",
+          "label": "PARTICLE DENSITY",
+          "range": [
+            10,
+            40
+          ],
+          "prefer": [
+            "sparkline"
+          ]
+        }
       ],
-      "actions": [{ "label": "BOOST DEFLECTOR" }]
+      "actions": [
+        {
+          "label": "BOOST DEFLECTOR"
+        }
+      ]
     }
   ],
-  "blocks": { "prefer": ["summary-strip", "control-panel", "telemetry"], "avoid": [] },
-  "alert": { "banner": true, "emphasise": ["velocity", "power"], "status": ["COLLISION ALERT", "HELM NOT RESPONDING"] },
-  "tags": ["flight", "navigation", "speed", "course"]
+  "blocks": {
+    "prefer": [
+      "summary-strip",
+      "control-panel",
+      "telemetry"
+    ],
+    "avoid": []
+  },
+  "alert": {
+    "banner": true,
+    "emphasise": [
+      "velocity",
+      "power"
+    ],
+    "status": [
+      "COLLISION ALERT",
+      "HELM NOT RESPONDING"
+    ]
+  },
+  "tags": [
+    "flight",
+    "navigation",
+    "speed",
+    "course"
+  ]
 }

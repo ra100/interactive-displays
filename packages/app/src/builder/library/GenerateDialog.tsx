@@ -120,18 +120,16 @@ export const GenerateDialog = ({
               ))}
             </select>
           </label>
-          <div className="tool-field">
-            <span className="tool-label" id={`${formId}-density`}>
-              Density
-            </span>
-            <div className="segmented" role="radiogroup" aria-labelledby={`${formId}-density`}>
+          <label className="tool-field">
+            <span className="tool-label">Density</span>
+            <select className="tool-select" value={density} onChange={(event) => setDensity(event.target.value as Density)}>
               {DENSITIES.map((each) => (
-                <button key={each} type="button" role="radio" aria-checked={density === each} onClick={() => setDensity(each)}>
+                <option key={each} value={each}>
                   {DENSITY_LABELS[each]}
-                </button>
+                </option>
               ))}
-            </div>
-          </div>
+            </select>
+          </label>
           <label className="tool-field">
             <span className="tool-label">Aspect</span>
             <select className="tool-select" value={aspect} onChange={(event) => setAspect(event.target.value as Profile["aspect"])}>

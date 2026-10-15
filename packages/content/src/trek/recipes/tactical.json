@@ -3,24 +3,118 @@
   "label": "Tactical",
   "description": "Shields, weapons and targeting.",
   "code": "TAC",
-  "archetypes": { "header-main": 2, "sidebar": 2, "dashboard": 2 },
-  "titles": ["TACTICAL", "WEAPONS CONTROL", "DEFENSIVE SYSTEMS"],
-  "nav": ["SHIELDS", "PHASERS", "TORPEDOES", "TARGETING", "SENSORS", "RED ALERT", "LOGS"],
-  "status": ["WEAPONS ON STANDBY", "SHIELDS AT FULL STRENGTH", "NO CONTACTS IN RANGE"],
+  "archetypes": {
+    "header-main": 2,
+    "sidebar": 2,
+    "dashboard": 2
+  },
+  "titles": [
+    "TACTICAL",
+    "WEAPONS CONTROL",
+    "DEFENSIVE SYSTEMS"
+  ],
+  "nav": [
+    "SHIELDS",
+    "PHASERS",
+    "TORPEDOES",
+    "TARGETING",
+    "SENSORS",
+    "RED ALERT",
+    "LOGS"
+  ],
+  "status": [
+    "WEAPONS ON STANDBY",
+    "SHIELDS AT FULL STRENGTH",
+    "NO CONTACTS IN RANGE"
+  ],
   "systems": [
     {
       "id": "shields",
       "label": "SHIELDS",
       "metrics": [
-        { "id": "strength", "label": "SHIELD STRENGTH", "unit": "%", "range": [95, 100], "alertRange": [20, 60], "prefer": ["gauge"], "signal": "shields" },
-        { "id": "forward", "label": "FORWARD ARRAY", "unit": "%", "range": [90, 100], "alertRange": [10, 50] },
-        { "id": "aft", "label": "AFT ARRAY", "unit": "%", "range": [90, 100], "alertRange": [30, 70] },
-        { "id": "frequency", "label": "MODULATION", "unit": "GHz", "range": [250, 260], "precision": 1, "motion": "wave", "prefer": ["readout"] }
+        {
+          "id": "strength",
+          "label": "SHIELD STRENGTH",
+          "unit": "%",
+          "range": [
+            95,
+            100
+          ],
+          "alertRange": [
+            20,
+            60
+          ],
+          "prefer": [
+            "gauge"
+          ],
+          "signal": "shields"
+        },
+        {
+          "id": "forward",
+          "label": "FORWARD ARRAY",
+          "unit": "%",
+          "range": [
+            90,
+            100
+          ],
+          "alertRange": [
+            10,
+            50
+          ]
+        },
+        {
+          "id": "aft",
+          "label": "AFT ARRAY",
+          "unit": "%",
+          "range": [
+            90,
+            100
+          ],
+          "alertRange": [
+            30,
+            70
+          ]
+        },
+        {
+          "id": "frequency",
+          "label": "MODULATION",
+          "unit": "GHz",
+          "range": [
+            250,
+            260
+          ],
+          "precision": 1,
+          "motion": "wave",
+          "prefer": [
+            "readout"
+          ]
+        }
       ],
       "actions": [
-        { "label": "RAISE SHIELDS", "actions": [{ "do": "setSignal", "signal": "shields", "value": 100 }] },
-        { "label": "REMODULATE" },
-        { "label": "DROP SHIELDS", "danger": true, "actions": [{ "do": "setSignal", "signal": "shields", "value": 0 }] }
+        {
+          "label": "RAISE SHIELDS",
+          "actions": [
+            {
+              "do": "setSignal",
+              "signal": "shields",
+              "value": 100
+            }
+          ]
+        },
+        {
+          "label": "REMODULATE"
+        },
+        {
+          "label": "DROP SHIELDS",
+          "danger": true,
+          "actions": [
+            {
+              "do": "setSignal",
+              "signal": "shields",
+              "value": 0
+            }
+          ]
+        }
       ]
     },
     {
@@ -28,34 +122,168 @@
       "label": "PHASER ARRAYS",
       "short": "PHASERS",
       "metrics": [
-        { "id": "charge", "label": "CHARGE", "unit": "%", "range": [80, 100], "alertRange": [20, 60], "prefer": ["gauge"] },
-        { "id": "emitter", "label": "EMITTER TEMP", "unit": "K", "range": [300, 340], "alertRange": [500, 700] }
+        {
+          "id": "charge",
+          "label": "CHARGE",
+          "unit": "%",
+          "range": [
+            80,
+            100
+          ],
+          "alertRange": [
+            20,
+            60
+          ],
+          "prefer": [
+            "gauge"
+          ]
+        },
+        {
+          "id": "emitter",
+          "label": "EMITTER TEMP",
+          "unit": "K",
+          "range": [
+            300,
+            340
+          ],
+          "alertRange": [
+            500,
+            700
+          ]
+        }
       ],
-      "actions": [{ "label": "FIRE PHASERS", "danger": true }, { "label": "LOCK TARGET" }]
+      "actions": [
+        {
+          "label": "FIRE PHASERS",
+          "danger": true
+        },
+        {
+          "label": "LOCK TARGET"
+        }
+      ]
     },
     {
       "id": "torpedoes",
       "label": "TORPEDO BAYS",
       "short": "TORPEDOES",
       "metrics": [
-        { "id": "loaded", "label": "TUBES LOADED", "range": [2, 4], "precision": 0, "prefer": ["readout"] },
-        { "id": "yield", "label": "YIELD", "unit": "Mt", "range": [40, 60] }
+        {
+          "id": "loaded",
+          "label": "TUBES LOADED",
+          "range": [
+            2,
+            4
+          ],
+          "precision": 0,
+          "prefer": [
+            "readout"
+          ]
+        },
+        {
+          "id": "yield",
+          "label": "YIELD",
+          "unit": "Mt",
+          "range": [
+            40,
+            60
+          ]
+        }
       ],
-      "actions": [{ "label": "ARM TORPEDOES" }, { "label": "FIRE SPREAD", "danger": true }]
+      "actions": [
+        {
+          "label": "ARM TORPEDOES"
+        },
+        {
+          "label": "FIRE SPREAD",
+          "danger": true
+        }
+      ]
     },
     {
       "id": "alert",
       "label": "ALERT STATUS",
       "short": "ALERT",
-      "metrics": [{ "id": "threat", "label": "THREAT LEVEL", "range": [0, 2], "alertRange": [7, 10], "precision": 0, "prefer": ["readout", "gauge"] }],
+      "metrics": [
+        {
+          "id": "threat",
+          "label": "THREAT LEVEL",
+          "range": [
+            0,
+            2
+          ],
+          "alertRange": [
+            7,
+            10
+          ],
+          "precision": 0,
+          "prefer": [
+            "readout",
+            "gauge"
+          ]
+        }
+      ],
       "actions": [
-        { "label": "RED ALERT", "danger": true, "actions": [{ "do": "setState", "state": "red-alert" }, { "do": "sound", "sound": "alert" }] },
-        { "label": "YELLOW ALERT", "actions": [{ "do": "setState", "state": "yellow-alert" }] },
-        { "label": "STAND DOWN", "actions": [{ "do": "setState", "state": "normal" }] }
+        {
+          "label": "RED ALERT",
+          "danger": true,
+          "actions": [
+            {
+              "do": "setState",
+              "state": "red-alert"
+            },
+            {
+              "do": "sound",
+              "sound": "alert"
+            }
+          ]
+        },
+        {
+          "label": "YELLOW ALERT",
+          "actions": [
+            {
+              "do": "setState",
+              "state": "yellow-alert"
+            }
+          ]
+        },
+        {
+          "label": "STAND DOWN",
+          "actions": [
+            {
+              "do": "setState",
+              "state": "normal"
+            }
+          ]
+        }
       ]
     }
   ],
-  "blocks": { "prefer": ["control-panel", "hero-gauge", "button-column"], "avoid": ["chronometer"] },
-  "alert": { "banner": true, "emphasise": ["strength", "forward", "threat"], "status": ["SHIELDS FAILING", "HOSTILE VESSEL ARMING WEAPONS"] },
-  "tags": ["weapons", "shields", "defence", "combat"]
+  "blocks": {
+    "prefer": [
+      "control-panel",
+      "hero-gauge",
+      "button-column"
+    ],
+    "avoid": [
+      "chronometer"
+    ]
+  },
+  "alert": {
+    "banner": true,
+    "emphasise": [
+      "strength",
+      "forward",
+      "threat"
+    ],
+    "status": [
+      "SHIELDS FAILING",
+      "HOSTILE VESSEL ARMING WEAPONS"
+    ]
+  },
+  "tags": [
+    "weapons",
+    "shields",
+    "defence",
+    "combat"
+  ]
 }
