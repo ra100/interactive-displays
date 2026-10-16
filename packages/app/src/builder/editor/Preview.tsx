@@ -1,5 +1,5 @@
 import { useDndMonitor, useDraggable, useDroppable } from "@dnd-kit/core";
-import { applyOps, catalog, type Effect, findNode, type Op, type Profile, type Screen, takenIds } from "@interactive-displays/core";
+import { applyOps, catalog, type Effect, findNode, type Op, orientationOf, type Profile, type Screen, takenIds } from "@interactive-displays/core";
 import { decorCatalog } from "@interactive-displays/themes/manifest";
 import { type PointerEvent as ReactPointerEvent, type RefObject, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ScreenView } from "../../runtime/ScreenView.tsx";
@@ -13,6 +13,11 @@ import { type Drop, findDrop } from "./previewDrop.ts";
 import { SelectionTools } from "./SelectionTools.tsx";
 
 const ratio = (aspect: Profile["aspect"]) => aspect.replace(":", " / ");
+
+// Previewing a screen on a display turned the other way: the parts are rearranged for it, so the layout is changed
+// in the screen's own shape and only how each part turns is changed here.
+export const previewTurned = (screen: Screen, aspect: Profile["aspect"]): boolean =>
+  screen.profile.rearrange && screen.profile.fit !== "contain" && orientationOf(aspect) !== orientationOf(screen.profile.aspect);
 
 const selectorFor = (selection: Selection): string | undefined => {
   if (selection?.kind === "node") return `[data-node-id="${CSS.escape(selection.id)}"]`;
@@ -169,22 +174,25 @@ export const Preview = ({
   const pointerRef = usePointer();
   dropRef.current = drop;
 
+  const turned = previewTurned(screen, aspect);
+  // Layout tools work on the arrangement as designed, so a turned preview only selects.
+  const fixed = readOnly || turned;
   const shown = dragged?.screen ?? screen;
   const version = `${aspect}|${preview.state}|${preview.themeId}|${preview.variant ?? ""}|${effect}|${versionKey(shown)}`;
   const box = useMeasured(stage, (element) => boxOf(element, readOnly ? undefined : selectorFor(selection)), sameBox, null, `${version}|${selectorFor(selection) ?? ""}`);
   const handles = useMeasured(
     stage,
-    (element) => (readOnly ? [] : measureHandles(element, shown, selection)),
+    (element) => (fixed ? [] : measureHandles(element, shown, selection)),
     sameHandles,
     [],
     `${version}|${selectorFor(selection) ?? ""}`,
   );
 
   const location = selection?.kind === "node" ? findNode(screen.root, selection.id) : undefined;
-  const onCanvas = !readOnly && location?.parent?.layout.kind === "canvas" && location.entry ? location : undefined;
-  const movable = !readOnly && !onCanvas && location?.parent !== undefined && location?.parent !== null;
+  const onCanvas = !fixed && location?.parent?.layout.kind === "canvas" && location.entry ? location : undefined;
+  const movable = !fixed && !onCanvas && location?.parent !== undefined && location?.parent !== null;
 
-  const droppable = useDroppable({ id: "preview", disabled: readOnly });
+  const droppable = useDroppable({ id: "preview", disabled: fixed });
   const source: DragSource | undefined = location && movable ? { kind: "node", id: location.node.id, label: nodeLabel(location.node) } : undefined;
   const draggable = useDraggable({ id: "preview-selection", ...(source ? { data: source } : {}), disabled: !source });
 
@@ -281,6 +289,11 @@ export const Preview = ({
 
   return (
     <div className="preview-area">
+      {turned && !readOnly ? (
+        <p className="preview-turned" role="note">
+          Rearranged for a {orientationOf(aspect)} display. Layout edits happen in {screen.profile.aspect}; set how parts turn in the inspector.
+        </p>
+      ) : null}
       <div
         ref={(element) => {
           stage.current = element;
@@ -320,6 +333,7 @@ export const Preview = ({
           scale={overview.show.scale}
           panel={overview.show.panel}
           embedded
+          orientation={orientationOf(aspect)}
           editing={!readOnly}
         />
         <div className="preview-overlay">
@@ -370,7 +384,7 @@ export const Preview = ({
               {dragged.text}
             </span>
           ) : null}
-          {box && !dragged && !drop && !readOnly ? <SelectionTools box={box} width={stage.current?.clientWidth ?? 0} /> : null}
+          {box && !dragged && !drop && !fixed ? <SelectionTools box={box} width={stage.current?.clientWidth ?? 0} /> : null}
           {drop ? (
             <>
               <div className="drop-into" style={{ left: drop.into.left, top: drop.into.top, width: drop.into.width, height: drop.into.height }}>

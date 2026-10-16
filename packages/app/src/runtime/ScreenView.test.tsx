@@ -378,6 +378,52 @@ describe("live values and controls", () => {
     const { container } = render(<ScreenView screen={makeScreen([])} themeId="base" still />);
     expect(container.querySelector(".screen")).toHaveAttribute("data-still", "true");
   });
+
+  describe("on a display turned the other way", () => {
+    const panels = makeScreen([
+      {
+        node: {
+          id: "row",
+          type: "container",
+          layout: { kind: "stack", direction: "row" },
+          children: [widget("a", "gauge", { label: "A" }), widget("b", "gauge", { label: "B" })],
+        },
+      },
+    ]);
+    const row = (container: HTMLElement) => container.querySelector('[data-node-id="row"]');
+
+    it("keeps the design on a display of the same shape", () => {
+      const { container } = render(<ScreenView screen={panels} themeId="base" orientation="landscape" />);
+      expect(row(container)).toHaveAttribute("data-direction", "row");
+      expect(container.querySelector(".screen")).not.toHaveAttribute("data-turned");
+    });
+
+    it("stacks a row of panels on a portrait display", () => {
+      const { container } = render(<ScreenView screen={panels} themeId="base" orientation="portrait" />);
+      expect(row(container)).toHaveAttribute("data-direction", "column");
+      expect(container.querySelector(".screen")).toHaveAttribute("data-orientation", "portrait");
+      expect(container.querySelector(".screen")).toHaveAttribute("data-turned", "true");
+    });
+
+    it("keeps the arrangement when the screen says so", () => {
+      const kept = { ...panels, profile: { ...panels.profile, rearrange: false } };
+      const { container } = render(<ScreenView screen={kept} themeId="base" orientation="portrait" />);
+      expect(row(container)).toHaveAttribute("data-direction", "row");
+    });
+
+    it("draws portrait chrome with the nav column as a band", () => {
+      const { container } = render(<ScreenView screen={sidebar} themeId="base" orientation="portrait" />);
+      expect(container.querySelector(".frame")).toHaveAttribute("data-orientation", "portrait");
+      expect(container.querySelector('.slot[data-slot="nav"]')).toHaveAttribute("data-direction", "row");
+    });
+
+    it("draws a portrait screen in portrait chrome on a portrait display", () => {
+      const tall = { ...sidebar, profile: { ...sidebar.profile, aspect: "9:16" as const } };
+      const { container } = render(<ScreenView screen={tall} themeId="base" embedded />);
+      expect(container.querySelector(".frame")).toHaveAttribute("data-orientation", "portrait");
+      expect(container.querySelector(".screen")).not.toHaveAttribute("data-turned");
+    });
+  });
 });
 
 describe("WidgetErrorBoundary", () => {

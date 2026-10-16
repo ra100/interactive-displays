@@ -24,6 +24,23 @@ test.describe("display", () => {
     await expect(page.getByText(/please stand by/i)).toBeVisible();
   });
 
+  test("rearranges a landscape screen on a portrait display, and back when it turns again", async ({ page }) => {
+    await page.setViewportSize({ width: 900, height: 1600 });
+    await page.goto("/d/test");
+    await expect(page.locator(".screen")).toHaveAttribute("data-turned", "true");
+    await expect(page.locator(".frame").first()).toHaveAttribute("data-orientation", "portrait");
+    await expect(page.locator('.slot[data-slot="nav"]')).toHaveAttribute("data-direction", "row");
+    // The nav blocks sit side by side in a band under the title.
+    const helm = await page.getByRole("button", { name: /helm/i }).boundingBox();
+    const tactical = await page.getByRole("button", { name: /tactical/i }).boundingBox();
+    expect(Math.abs((helm?.y ?? 0) - (tactical?.y ?? 1))).toBeLessThan(2);
+    expect(tactical?.x ?? 0).toBeGreaterThan(helm?.x ?? 0);
+
+    await page.setViewportSize({ width: 1600, height: 900 });
+    await expect(page.locator(".screen")).not.toHaveAttribute("data-turned");
+    await expect(page.locator('.slot[data-slot="nav"]')).toHaveAttribute("data-direction", "column");
+  });
+
   test("renders the same screen in the base theme", async ({ page }) => {
     await page.goto("/d/test?theme=base");
 
