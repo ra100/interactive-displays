@@ -131,6 +131,54 @@
     "status status" var(--hud-foot) / minmax(0, 1fr) minmax(0, 30%);
 }
 
+/*
+ * Portrait displays: the nav column becomes a band of buttons under the header, the side panel moves below the
+ * main area. The frame says which way it is drawn (a landscape screen on a portrait display, or one designed so).
+ */
+.frame[data-orientation="portrait"] > .hud-frame {
+  --hud-band: calc(var(--touch) + 3 * var(--u));
+}
+
+.frame[data-orientation="portrait"] > .hud-frame--sidebar {
+  grid-template:
+    "header" var(--hud-head)
+    "nav" var(--hud-band)
+    "main" minmax(0, 1fr)
+    "status" var(--hud-foot) / minmax(0, 1fr);
+}
+
+.frame[data-orientation="portrait"] > .hud-frame--split {
+  grid-template:
+    "header" var(--hud-head)
+    "aside" minmax(0, 22%)
+    "nav" var(--hud-band)
+    "main" minmax(0, 1fr)
+    "status" var(--hud-foot) / minmax(0, 1fr);
+}
+
+.frame[data-orientation="portrait"] > .hud-frame--console {
+  grid-template:
+    "header" var(--hud-head)
+    "nav" var(--hud-band)
+    "toolbar" var(--hud-band)
+    "main" minmax(0, 1fr)
+    "aside" minmax(0, 24%)
+    "status" var(--hud-foot) / minmax(0, 1fr);
+}
+
+.frame[data-orientation="portrait"] > .hud-frame--dashboard {
+  grid-template:
+    "header" var(--hud-head)
+    "main" minmax(0, 1fr)
+    "aside" minmax(0, 30%)
+    "status" var(--hud-foot) / minmax(0, 1fr);
+}
+
+.frame[data-orientation="portrait"] > .hud-frame .hud-frame__panel[data-area="nav"] {
+  flex-direction: row;
+  padding: calc(0.8 * var(--u)) calc(1.6 * var(--u));
+}
+
 .hud-frame__header {
   position: relative;
   display: flex;

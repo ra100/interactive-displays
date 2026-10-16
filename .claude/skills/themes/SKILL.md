@@ -22,7 +22,7 @@ another theme's decor is drawn by the stand-in named in `decorStandIns`, or hidd
 | Tokens | manifest `tokens` | 8 tone colours, background, foreground, fonts, radius |
 | Variants | manifest `variants` | named token overlays (`nemesis`, `picard`); a show picks one in `theme.variant` |
 | State effects | manifest `effects` + CSS | token overlays per effect (`warning`, `alert`, `damaged`); CSS keyed on `.screen[data-effect=…]` for motion |
-| Frames | `renderers.frames` | one component per archetype; receives `slots` (already rendered) and places them |
+| Frames | `renderers.frames` | one component per archetype; receives `slots` (already rendered) and places them. Give each a portrait form in CSS under `.frame[data-orientation="portrait"] > …`: nav becomes a band (its slot runs as a row), aside moves below main |
 | Widgets | `renderers.widgets` | receive validated `props`, `nodeId` and `slot` (draw a nav button differently from a toolbar one) |
 | Decor | manifest `decor` + `renderers.decor` | `defineDecor({ kind: "<id>.<name>", props, example })`, rendered only in this theme |
 | Stand-ins | manifest `decorStandIns` | `{ "lcars.bar": { kind: "hud.scale", props? } }`: how this theme draws another theme's decor; `tone` carries over when the stand-in takes it. `defineTheme` checks the target and props; `resolveDecor` picks it at render time |

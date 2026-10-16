@@ -3,7 +3,9 @@ import type { FrameRendererProps } from "../contract.ts";
 /*
  * LCARS chrome for each archetype. The frames only draw elbows, bars and caps and place the slot
  * contents; sizes come from --u (1% of the display's shorter side), so the sweep keeps its proportions
- * on any display.
+ * on any display. On a portrait display (the frame's data-orientation) the CSS rearranges the same parts: the
+ * sweep slims to a bracket, the nav column becomes a band of blocks under the title (the portrait arm continues
+ * the bracket beside it) and side panels move below the main area.
  */
 
 const Elbow = ({ corner, tone, part }: { corner: "tl" | "bl"; tone: string; part?: string }) => (
@@ -20,6 +22,7 @@ export const LcarsSidebarFrame = ({ slots }: FrameRendererProps) => (
       {slots.nav}
       <div className="lcars-frame__fill" data-tone="secondary" aria-hidden="true" />
     </div>
+    <div className="lcars-frame__arm lcars-frame__arm--portrait" data-tone="neutral" aria-hidden="true" />
     <div className="lcars-frame__main">{slots.main}</div>
     <Elbow corner="bl" tone="accent" />
     <div className="lcars-frame__status">{slots.status}</div>
@@ -88,6 +91,7 @@ export const LcarsSplitFrame = ({ slots }: FrameRendererProps) => (
       {slots.nav}
       <div className="lcars-frame__fill" data-tone="secondary" aria-hidden="true" />
     </div>
+    <div className="lcars-frame__arm lcars-frame__arm--portrait" data-tone="info" aria-hidden="true" />
     <div className="lcars-frame__main">{slots.main}</div>
     <Elbow corner="bl" tone="neutral" part="foot" />
     <div className="lcars-frame__status">{slots.status}</div>
@@ -106,6 +110,7 @@ export const LcarsConsoleFrame = ({ slots }: FrameRendererProps) => (
       {slots.nav}
       <div className="lcars-frame__fill" data-tone="neutral" aria-hidden="true" />
     </div>
+    <div className="lcars-frame__arm lcars-frame__arm--portrait" data-tone="accent" aria-hidden="true" />
     <div className="lcars-frame__toolbar">{slots.toolbar}</div>
     <div className="lcars-frame__main">{slots.main}</div>
     <div className="lcars-frame__divider" data-tone="info" aria-hidden="true" />

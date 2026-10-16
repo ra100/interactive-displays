@@ -140,6 +140,34 @@
     "status status status" calc(5 * var(--u)) / minmax(0, 18%) minmax(0, 1fr) minmax(0, 24%);
 }
 
+/* Portrait displays: the nav column becomes a band under the title, the side panel moves below the main area. */
+.frame[data-orientation="portrait"] > .base-frame[data-archetype="sidebar"] {
+  grid-template: "title" calc(10 * var(--u)) "nav" calc(var(--touch) + 2 * var(--u)) "main" 1fr "status" calc(5 * var(--u)) / minmax(0, 1fr);
+}
+
+.frame[data-orientation="portrait"] > .base-frame[data-archetype="dashboard"] {
+  grid-template: "title" calc(10 * var(--u)) "main" 1fr "aside" minmax(0, 30%) "status" calc(5 * var(--u)) / minmax(0, 1fr);
+}
+
+.frame[data-orientation="portrait"] > .base-frame[data-archetype="split"] {
+  grid-template:
+    "title" calc(10 * var(--u))
+    "aside" minmax(0, 22%)
+    "nav" calc(var(--touch) + 2 * var(--u))
+    "main" 1fr
+    "status" calc(5 * var(--u)) / minmax(0, 1fr);
+}
+
+.frame[data-orientation="portrait"] > .base-frame[data-archetype="console"] {
+  grid-template:
+    "title" calc(10 * var(--u))
+    "nav" calc(var(--touch) + 2 * var(--u))
+    "toolbar" calc(var(--touch) + 2 * var(--u))
+    "main" 1fr
+    "aside" minmax(0, 24%)
+    "status" calc(5 * var(--u)) / minmax(0, 1fr);
+}
+
 .base-frame__slot {
   display: flex;
   min-width: 0;
