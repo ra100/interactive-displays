@@ -139,6 +139,54 @@
     "status status" var(--crt-foot) / minmax(0, 1fr) minmax(0, 30%);
 }
 
+/*
+ * Portrait displays: the nav column becomes a band of buttons under the header, the side panel moves below the
+ * main area. The frame says which way it is drawn (a landscape screen on a portrait display, or one designed so).
+ */
+.frame[data-orientation="portrait"] > .crt-frame {
+  --crt-band: calc(var(--touch) + 3 * var(--u));
+}
+
+.frame[data-orientation="portrait"] > .crt-frame--sidebar {
+  grid-template:
+    "title" var(--crt-head)
+    "nav" var(--crt-band)
+    "main" minmax(0, 1fr)
+    "status" var(--crt-foot) / minmax(0, 1fr);
+}
+
+.frame[data-orientation="portrait"] > .crt-frame--split {
+  grid-template:
+    "title" var(--crt-head)
+    "aside" minmax(0, 22%)
+    "nav" var(--crt-band)
+    "main" minmax(0, 1fr)
+    "status" var(--crt-foot) / minmax(0, 1fr);
+}
+
+.frame[data-orientation="portrait"] > .crt-frame--console {
+  grid-template:
+    "title" var(--crt-head)
+    "nav" var(--crt-band)
+    "toolbar" var(--crt-band)
+    "main" minmax(0, 1fr)
+    "aside" minmax(0, 24%)
+    "status" var(--crt-foot) / minmax(0, 1fr);
+}
+
+.frame[data-orientation="portrait"] > .crt-frame--dashboard {
+  grid-template:
+    "title" var(--crt-head)
+    "main" minmax(0, 1fr)
+    "aside" minmax(0, 30%)
+    "status" var(--crt-foot) / minmax(0, 1fr);
+}
+
+.frame[data-orientation="portrait"] > .crt-frame .crt-frame__box[data-area="nav"] {
+  flex-direction: row;
+  padding: calc(0.8 * var(--u)) calc(1.4 * var(--u));
+}
+
 .crt-frame__title {
   display: flex;
   grid-area: title;
