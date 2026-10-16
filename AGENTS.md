@@ -111,6 +111,8 @@ and `zod`. The server imports `core`, `content`, `@interactive-displays/themes/m
   Types, validation, JSON Schema, contract tests and the editor's inspector all come from it.
 - Themes are packs: a pure-data manifest (tokens, variants, effects, decor) plus React renderers for widgets,
   frames and decor. Missing renderers fall back to `base`.
+- Archetypes: `sidebar`, `header-main`, `dashboard`, `split` (the LCARS double frame) and `console` (all six
+  slots). LCARS sources and the element inventory are in `docs/reference/lcars.md`.
 - Layout is fluid: stacks with weights, `--u` and container query units. `--u` is 1% of the display's shorter side
   times the scale: the show's (0.7 by default, for 4K panels of 80–100"), a display's own, and any node's `scale`.
 - A display says `hello` and gets a full `snapshot`; reconnecting is just another hello. Show state changes
@@ -142,8 +144,9 @@ In a container without a matching Playwright browser, set `PLAYWRIGHT_CHROMIUM_E
   stripping), and only erasable syntax is allowed (no enums, namespaces or parameter properties).
 - **Zod 4 is the single schema source.** Derive types with `z.infer`; never hand-write a type that mirrors a schema.
 - **No hex colours in documents or renderers**; renderers read CSS variables (`var(--tone)`, `var(--theme-bg)`).
-- **Touch targets ≥ 60 px.** Theme CSS uses `var(--touch)` (60 px on a display, scaled down in previews) for
-  anything pressable; buttons give immediate `:active` feedback.
+- **Buttons are 1–2 cm tall on the real panel.** Theme CSS uses `var(--touch)` for anything pressable: the show's
+  `panel.buttonCm` (1.5 cm) worked out from the panel's diagonal (`panel.inches`, 90" by default, or the display's
+  own) through `--cm`. Never size a button with `--u`; buttons give immediate `:active` feedback.
 - **A broken widget never breaks a display**: props are re-validated in the runtime and each widget has an
   error boundary.
 

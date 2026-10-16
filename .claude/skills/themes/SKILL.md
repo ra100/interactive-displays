@@ -42,7 +42,8 @@ theme; add your own looks on top.
 | `--font-display`, `--font-body` | font stacks (self-host fonts with `@fontsource/*`; displays may be offline) |
 | `--radius` | corner radius (`none`, `small`, `pill`) |
 | `--u` | 1% of the display's shorter side times the scale (show, display, node), set by the runtime; `--u-screen` is the screen's value without node scales |
-| `--touch` | minimum touch target: 60 px on a display, scaled in previews; use it for anything pressable |
+| `--cm` | one real centimetre on the panel (frame diagonal over the show's or display's `panel.inches`) |
+| `--touch` | a button's height: `panel.buttonCm` (1.5) centimetres times any node scale; use it for anything pressable, never `max(var(--touch), N * var(--u))` |
 
 The screen root also carries `data-theme`, `data-variant`, `data-state`, `data-effect` and, in thumbnails,
 `data-still` (animations paused).
