@@ -20,7 +20,7 @@ import {
   TickerContext,
 } from "@interactive-displays/themes/react";
 import { type CSSProperties, type ReactNode, useMemo, useState } from "react";
-import { ShowStateProvider, ThemeIdProvider } from "./context.ts";
+import { EditingProvider, ShowStateProvider, ThemeIdProvider } from "./context.ts";
 import { type Live, LiveContext } from "./live.ts";
 import { NodeView } from "./NodeView.tsx";
 import "./runtime.css";
@@ -47,6 +47,8 @@ interface Props {
   still?: boolean;
   // How big parts are drawn (the show's or the display's scale); 1 sizes them to the display.
   scale?: number | undefined;
+  // The editor's preview: empty frame slots are drawn too, as places to drop into.
+  editing?: boolean;
   // The physical panel (diagonal and button height), so buttons come out in real centimetres.
   panel?: Panel | undefined;
 }
@@ -81,6 +83,7 @@ export const ScreenView = ({
   live: given,
   still = false,
   scale = 1,
+  editing = false,
   panel = DEFAULT_PANEL,
 }: Props) => {
   const theme = getThemeManifest(themeId);
@@ -126,7 +129,9 @@ export const ScreenView = ({
               <LiveContext.Provider value={live}>
                 <MediaBusContext.Provider value={live.media}>
                   <Still still={still}>
-                    <NodeView node={root} />
+                    <EditingProvider value={editing}>
+                      <NodeView node={root} />
+                    </EditingProvider>
                   </Still>
                 </MediaBusContext.Provider>
               </LiveContext.Provider>
