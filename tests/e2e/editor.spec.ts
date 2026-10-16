@@ -131,4 +131,64 @@ test.describe("screen editor", () => {
     await expect(outline.getByRole("treeitem", { name: /Button · / })).toHaveText([/ANALYSE/, /REPORT/, /SCAN/]);
     await deleteScreen(request, "e2e-library");
   });
+  test("builds a layout by dragging onto the preview and resizing in it", async ({ page }) => {
+    await openEditor(page);
+    const outline = page.getByRole("tree", { name: "Outline" });
+    const stage = page.locator(".preview-stage");
+
+    // Drags from a palette item or the selection box to a point, letting dnd-kit see the pointer move.
+    const dragTo = async (from: { x: number; y: number }, to: { x: number; y: number }) => {
+      await page.mouse.move(from.x, from.y);
+      await page.mouse.down();
+      await page.mouse.move(from.x + 20, from.y + 20, { steps: 4 });
+      await page.mouse.move(to.x, to.y, { steps: 12 });
+      await expect(page.locator(".drop-mark")).toBeVisible();
+      await page.mouse.up();
+    };
+    const centre = async (selector: string) => {
+      const box = await page.locator(selector).first().boundingBox();
+      if (!box) throw new Error(`nothing at ${selector}`);
+      return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    };
+    const paletteItem = async (tab: string, name: RegExp) => {
+      await page.getByRole("tab", { name: tab }).click();
+      const item = page.getByRole("tabpanel", { name: tab }).getByRole("button", { name });
+      await item.scrollIntoViewIfNeeded();
+      const box = await item.boundingBox();
+      if (!box) throw new Error("no palette item");
+      return { x: box.x + 30, y: box.y + box.height / 2 };
+    };
+
+    // A row goes in below the note, then two buttons go into it.
+    const note = await page.locator('.preview-stage [data-node-id="note"]').boundingBox();
+    if (!note) throw new Error("no note");
+    await dragTo(await paletteItem("Layouts", /^Row/), { x: note.x + note.width / 2, y: note.y + note.height - 2 });
+    await expect(outline.getByRole("treeitem", { name: "Stack · row" })).toBeVisible();
+    await dragTo(await paletteItem("Widgets", /^Button A touch/), await centre('.preview-stage [data-node-id="stack"]'));
+    await dragTo(await paletteItem("Widgets", /^Button A touch/), await centre('.preview-stage [data-node-id="stack"]'));
+    await expect(outline.getByRole("treeitem", { name: /Button · ENGAGE/ })).toHaveCount(2);
+
+    // Dragging the edge between the two buttons gives the first one more room.
+    await outline.getByRole("treeitem", { name: /Button · ENGAGE/ }).first().click();
+    const edge = page.locator('.resize-handle[data-kind="share"]');
+    await expect(edge).toHaveCount(1);
+    const from = await centre('.resize-handle[data-kind="share"]');
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    await page.mouse.move(from.x + 80, from.y, { steps: 8 });
+    await expect(page.locator(".resize-readout")).toBeVisible();
+    await page.mouse.up();
+    await expect(page.getByRole("tabpanel", { name: "Selection" }).getByLabel("Size share")).not.toHaveValue("");
+
+    // The note moves into the row by dragging its selection box.
+    await stage.locator('[data-node-id="note"]').click();
+    await dragTo(await centre(".selection-box"), await centre('.preview-stage [data-node-id="stack"]'));
+    await expect(outline.getByRole("treeitem", { name: /Text · Nothing to report/ })).toHaveAttribute("aria-level", "3");
+
+    // The quick buttons turn the row into a column.
+    await outline.getByRole("treeitem", { name: "Stack · row" }).click();
+    await page.getByRole("toolbar", { name: "Selection tools" }).getByRole("button", { name: "To column" }).click();
+    await expect(outline.getByRole("treeitem", { name: "Stack · column" })).toHaveCount(2);
+    await expect(page.getByText("Saved", { exact: true })).toBeVisible();
+  });
 });

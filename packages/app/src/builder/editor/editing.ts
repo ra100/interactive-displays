@@ -6,6 +6,7 @@ import {
   type ContainerNode,
   type DecorDefinition,
   findNode,
+  type GridArea,
   type Layout,
   type Node,
   type NormRect,
@@ -22,11 +23,16 @@ import {
 
 export type Selection = { kind: "node"; id: string } | { kind: "slot"; frameId: string; slot: SlotName } | null;
 
-// Where a new or moved node goes: a container, a position in its children and, for frames, a slot.
+// Where a new or moved node goes: a container, a position in its children and, for frames, a slot. A drop on
+// the preview can also name the grid cell or the point on a canvas (in canvas fractions) under the pointer.
 export interface Target {
   parentId: string;
   index: number;
   slot?: SlotName;
+  area?: GridArea;
+  // In a grid: flow into the next free cell, in order, instead of sitting in a cell of its own.
+  flow?: boolean;
+  point?: { x: number; y: number };
 }
 
 const LABEL_LENGTH = 28;
@@ -119,9 +125,14 @@ const cascadeRect = (count: number): NormRect => {
   return clampRect({ ...DEFAULT_RECT, x: DEFAULT_RECT.x + offset, y: DEFAULT_RECT.y + offset });
 };
 
-const placementFor = (parent: ContainerNode, slot: SlotName | undefined): Omit<ChildEntry, "node"> => {
-  if (parent.layout.kind === "frame") return { slot: slot ?? defaultSlot(parent.layout.archetype) };
-  if (parent.layout.kind === "canvas") return { rect: cascadeRect(parent.children.length) };
+// A rect of the given size centred on a point of the canvas, kept inside it.
+export const rectAt = (point: { x: number; y: number }, size: { w: number; h: number } = DEFAULT_RECT): NormRect =>
+  clampRect({ x: point.x - size.w / 2, y: point.y - size.h / 2, w: size.w, h: size.h });
+
+const placementFor = (parent: ContainerNode, target: Target): Omit<ChildEntry, "node"> => {
+  if (parent.layout.kind === "frame") return { slot: target.slot ?? defaultSlot(parent.layout.archetype) };
+  if (parent.layout.kind === "canvas") return { rect: target.point ? rectAt(target.point) : cascadeRect(parent.children.length) };
+  if (parent.layout.kind === "grid" && target.area) return { area: target.area };
   return {};
 };
 
@@ -133,7 +144,7 @@ export const insertOps = (screen: Screen, node: Node, target: Target): Op[] => {
       op: "insert",
       parent: parent.id,
       index: target.index,
-      child: { ...placementFor(parent, target.slot), node },
+      child: { ...placementFor(parent, target), node },
     },
   ];
 };
@@ -188,6 +199,37 @@ const fixPlacement = (id: string, entry: ChildEntry, parent: ContainerNode, slot
   return Object.keys(place).length > 2 ? [place] : [];
 };
 
+// The cell or point a drop on the preview names, as one place op.
+const spotPlacement = (id: string, entry: ChildEntry, parent: ContainerNode, target: Target): Extract<Op, { op: "place" }> | undefined => {
+  if (parent.layout.kind === "grid" && target.area) {
+    const same = entry.area?.col === target.area.col && entry.area.row === target.area.row;
+    // Moving to another cell keeps the spans it had.
+    const area: GridArea = { ...target.area, ...(entry.area?.colSpan ? { colSpan: entry.area.colSpan } : {}), ...(entry.area?.rowSpan ? { rowSpan: entry.area.rowSpan } : {}) };
+    return same ? undefined : { op: "place", id, area: fitArea(area, parent.layout.columns.length, parent.layout.rows.length) };
+  }
+  if (parent.layout.kind === "grid" && target.flow && entry.area) return { op: "place", id, area: null };
+  if (parent.layout.kind === "canvas" && target.point) {
+    const size = entry.rect ?? DEFAULT_RECT;
+    return { op: "place", id, rect: rectAt(target.point, size) };
+  }
+  return undefined;
+};
+
+const mergePlace = (fixes: Op[], spot: Extract<Op, { op: "place" }> | undefined): Op[] => {
+  if (!spot) return fixes;
+  const fix = fixes[0];
+  return fix?.op === "place" ? [{ ...fix, ...spot }] : [spot];
+};
+
+// An area kept inside a grid of the given size: spans shrink before the cell moves.
+export const fitArea = (area: GridArea, columns: number, rows: number): GridArea => {
+  const col = Math.min(area.col, columns);
+  const row = Math.min(area.row, rows);
+  const colSpan = Math.min(area.colSpan ?? 1, columns - col + 1);
+  const rowSpan = Math.min(area.rowSpan ?? 1, rows - row + 1);
+  return { col, row, ...(colSpan > 1 ? { colSpan } : {}), ...(rowSpan > 1 ? { rowSpan } : {}) };
+};
+
 // Moves a node to a target, fixing its placement for the new parent. Undefined when the move is impossible
 // (the root, or into itself); an empty list when nothing would change.
 export const moveOps = (screen: Screen, id: string, target: Target): Op[] | undefined => {
@@ -199,9 +241,10 @@ export const moveOps = (screen: Screen, id: string, target: Target): Op[] | unde
   const sameParent = location.parent.id === parent.id;
   const index = sameParent && location.index < target.index ? target.index - 1 : target.index;
   const placement = fixPlacement(id, location.entry, parent, target.slot);
-  const moved = !sameParent || index !== location.index;
-  if (!moved && placement.length === 0) return [];
-  return [...(moved ? [{ op: "move" as const, id, parent: parent.id, index }] : []), ...placement];
+  const spot = spotPlacement(id, location.entry, parent, target);
+  // A move within a grid or canvas that names a cell or a point keeps the order and only changes the spot.
+  const moved = !sameParent || (index !== location.index && !target.area && !target.point);
+  return [...(moved ? [{ op: "move" as const, id, parent: parent.id, index }] : []), ...mergePlace(placement, spot)];
 };
 
 // Up or down among its siblings; in a frame, among the siblings in the same slot.

@@ -126,7 +126,7 @@ const TABS = { widgets: "Widgets", layouts: "Layouts", decor: "Decor", assets: "
 
 type Tab = keyof typeof TABS;
 
-// Everything that can be added to a screen. Click to add after the selection, or drag into the outline.
+// Everything that can be added to a screen. Click to add after the selection, or drag onto the preview or the outline.
 export const AddPanel = () => {
   const [tab, setTab] = useState<Tab>("widgets");
   return (

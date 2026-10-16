@@ -346,11 +346,9 @@ const Editor = ({ overview, connection, session, screenId }: Tools & { screenId:
                 <div className="editor-panel__body">
                   <Outline />
                 </div>
-                <p className="editor-panel__hint">Drag to move · Del delete · Ctrl+D duplicate · Esc parent</p>
+                <p className="editor-panel__hint">Drag here or onto the preview · Del delete · Ctrl+D duplicate · Esc parent</p>
               </section>
             </aside>
-            <DragOverlay dropAnimation={null}>{dragging ? <div className="drag-chip">{dragging.label}</div> : null}</DragOverlay>
-          </DndContext>
 
           <section className="editor__center" aria-label="Preview">
             <div className="preview-controls">
@@ -418,6 +416,8 @@ const Editor = ({ overview, connection, session, screenId }: Tools & { screenId:
             ) : null}
             <Preview screen={viewing ?? screen} aspect={aspect ?? screen.profile.aspect} effect={effect} readOnly={Boolean(viewing)} />
           </section>
+            <DragOverlay dropAnimation={null}>{dragging ? <div className="drag-chip">{dragging.label}</div> : null}</DragOverlay>
+          </DndContext>
 
           <aside className="editor__right">
             <div className="tabs" role="tablist">

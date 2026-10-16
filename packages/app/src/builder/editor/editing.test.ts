@@ -5,6 +5,7 @@ import {
   clampRect,
   dragRect,
   duplicateOps,
+  fitArea,
   insertOps,
   insertTarget,
   layoutOps,
@@ -251,5 +252,58 @@ describe("per-state overrides", () => {
       { state: "blackout", hidden: true },
     ]);
     expect(setHiddenIn(hidden ?? undefined, "blackout", false)).toEqual([{ state: "damaged", props: { text: "X" } }]);
+  });
+});
+
+describe("drops on the preview", () => {
+  const withGrid: Screen = run([
+    {
+      op: "insert",
+      parent: "root",
+      index: 5,
+      child: {
+        slot: "main",
+        node: {
+          id: "cells",
+          type: "container",
+          layout: { kind: "grid", columns: ["1fr", "1fr"], rows: ["1fr", "1fr"], gap: "medium" },
+          children: [{ area: { col: 2, row: 2, colSpan: 1 }, node: { id: "g1", type: "widget", kind: "text", props: { text: "g1" } } }, { node: { id: "g2", type: "widget", kind: "text", props: { text: "g2" } } }],
+        },
+      },
+    },
+  ]);
+
+  it("puts a new part in the grid cell or at the canvas point under the pointer", () => {
+    const inCell = run(insertOps(withGrid, newWidget("text", new Set()), { parentId: "cells", index: 2, area: { col: 1, row: 2 } }), withGrid);
+    expect(entryOf(inCell, "text")?.area).toEqual({ col: 1, row: 2 });
+
+    const atPoint = run(insertOps(screen, newWidget("text", new Set()), { parentId: "art", index: 1, point: { x: 0.5, y: 0.5 } }));
+    expect(entryOf(atPoint, "text")?.rect).toEqual({ x: 0.35, y: 0.4, w: 0.3, h: 0.2 });
+  });
+
+  it("moves a part to another cell of its grid without reordering, keeping its spans", () => {
+    const ops = moveOps(withGrid, "g1", { parentId: "cells", index: 2, area: { col: 1, row: 1 } });
+    expect(ops).toEqual([{ op: "place", id: "g1", area: { col: 1, row: 1 } }]);
+    expect(moveOps(withGrid, "g1", { parentId: "cells", index: 2, area: { col: 2, row: 2 } })).toEqual([]);
+  });
+
+  it("lets a part flow in order when dropped on a taken cell", () => {
+    const after = run(moveOps(withGrid, "g1", { parentId: "cells", index: 2, flow: true }), withGrid);
+    expect(childIds(after, "cells")).toEqual(["g2", "g1"]);
+    expect(entryOf(after, "g1")?.area).toBeUndefined();
+  });
+
+  it("moves a part onto a canvas at the point, keeping its size", () => {
+    const after = run(moveOps(screen, "a", { parentId: "art", index: 1, point: { x: 0.5, y: 0.5 } }));
+    expect(entryOf(after, "a")?.rect).toEqual({ x: 0.35, y: 0.4, w: 0.3, h: 0.2 });
+    const moved = run(moveOps(screen, "free", { parentId: "art", index: 1, point: { x: 0.9, y: 0.9 } }));
+    expect(entryOf(moved, "free")?.rect).toEqual({ x: 0.8, y: 0.8, w: 0.2, h: 0.2 });
+  });
+});
+
+describe("fitArea", () => {
+  it("shrinks spans, then moves the cell, to stay inside the grid", () => {
+    expect(fitArea({ col: 2, row: 1, colSpan: 3 }, 3, 2)).toEqual({ col: 2, row: 1, colSpan: 2 });
+    expect(fitArea({ col: 4, row: 3 }, 2, 2)).toEqual({ col: 2, row: 2 });
   });
 });
