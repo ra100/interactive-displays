@@ -6,6 +6,34 @@ Docker smoke test); these steps are for a person with real displays.
 Report problems or ideas as a GitHub issue (label `v2`) or in the project thread, with the display type,
 browser, the URL you opened and a photo or screenshot if possible.
 
+## Instruments and panels
+
+### Setup
+
+Start the server on a fresh data directory (or copy the new demo screens `weapons-control`, `conn` and
+`astrometrics` from `packages/server/seed/shows/demo/screens/`) and open `/operator` and a display at `/d/<id>`,
+ideally on a real 4K panel.
+
+### Checks
+
+1. **Demo screens.** Assign **Weapons control**, **Helm control** and **Astrometrics** to a display. Every panel
+   has a title, the sweeps and bars divide the screen into sections, nothing overflows, and buttons are 1–2 cm.
+2. **Live values.** Shields, bank charge, bearings, the star chart's ship, the waveform and spectrum all move on
+   their own. On Helm, the warp buttons set the warp ladder (the `warp.factor` signal) and the operator's slider
+   moves it too.
+3. **Red alert.** Set the state to red alert: shields drop and turn amber or red, banks show ARMED, torpedo
+   tubes load, the target locks (TARGET LOCKED, a name and a closer range) and the status line changes. Back to
+   normal, everything returns.
+4. **Other looks.** Switch the theme to Holo HUD and Terminal in the operator's Look: the same screens redraw
+   in that look, with panel titles visible.
+5. **Gallery.** `/gallery?theme=lcars` (then `hud`, `crt`) shows the eleven new elements in every slot without
+   errors; small slots stay readable or simplify.
+6. **Editor.** In `/builder`, the Add panel has **Scans and graphs**, **Tactical** and **Navigation** groups and a
+   **Panel** layout. Add a panel, drop an element into its main slot and a text into its title, and change its
+   **Shape** in the Inspector: the chrome changes in the preview.
+7. **Generate.** Generate the Tactical, Helm and Science sections (and the corvette and freighter packs): screens
+   now include instruments inside panels, and the same seed gives the same screen.
+
 ## Portrait displays rearrange the screen
 
 ### Setup

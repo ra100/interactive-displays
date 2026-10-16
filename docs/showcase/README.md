@@ -3,6 +3,54 @@
 What each phase of the v2 rebuild looks like. Screenshots are captured by `tests/e2e/showcase.spec.ts`
 against the real server and built app (`pnpm build && SHOWCASE=phase-N pnpm test:e2e showcase`).
 
+## Instruments and panels
+
+Eleven new elements for scans, graphs, tactical and navigation stations, and a nested **panel** layout so the
+LCARS sweeps, bars and brackets run through the screen and divide it into sections instead of only framing its
+edge (the way mewho.com's Project RITOS and Titan.DS screens flow). Sources are in
+[`docs/reference/lcars.md`](../reference/lcars.md). Display shots are full 3840×2160 captures at 70% size
+(reduced to 256 colours); `SHOWCASE=instruments pnpm test:e2e showcase` captures them.
+
+**New elements.** *Scans and graphs*: waveform (sine, pulse, noise or heartbeat traces), spectrum analyser,
+planet scan, scan progress. *Tactical*: shield status by facing, weapon banks and torpedo tubes, targeting
+scanner. *Navigation*: heading (tape or compass rose), warp/speed ladder, star chart with the plotted course and
+the ship on it, and the reactor core column. Each is one catalog widget with live bindings, so values walk on
+their own or follow show signals, and each changes with the show's state (shields drop, banks arm, the target
+locks on red alert).
+
+| Weapons control | Red alert |
+|---|---|
+| ![Weapons control](instruments/4k-weapons.png) | ![Weapons control on red alert](instruments/4k-weapons-red-alert.png) |
+
+| Helm (conn) | Astrometrics |
+|---|---|
+| ![Conn](instruments/4k-conn.png) | ![Astrometrics](instruments/4k-astrometrics.png) |
+
+**Panels.** A `panel` is a small frame with a title, main and status slot that sits inside another layout. In
+LCARS it draws one of eight shapes (sweep, sweep right, top, top right, bottom, bottom right, bracket, rails)
+with tone blocks and reference numbers; the Inspector's **Shape** picks one, or the node id picks one for you.
+The generator uses them through new blocks, so generated screens get them too.
+
+**The other looks.** The same screens re-skin with no changes: the HUD draws panels as glass cards with
+corner ticks and glowing traces; the terminal draws them as boxes with the title cut into the top rule.
+
+| Holo HUD | Holo HUD |
+|---|---|
+| ![Weapons in the HUD](instruments/4k-weapons-hud.png) | ![Astrometrics in the HUD](instruments/4k-astrometrics-hud.png) |
+
+| Terminal | Terminal |
+|---|---|
+| ![Conn on the terminal](instruments/4k-conn-crt.png) | ![Weapons on the terminal](instruments/4k-weapons-crt.png) |
+
+**Gallery.** Every new element in every slot, in each theme (`/gallery?theme=<id>`).
+
+| | LCARS | HUD | Terminal |
+|---|---|---|---|
+| Shields | ![](instruments/gallery-lcars-shield-status.png) | ![](instruments/gallery-hud-shield-status.png) | ![](instruments/gallery-crt-shield-status.png) |
+| Weapons | ![](instruments/gallery-lcars-weapon-banks.png) | ![](instruments/gallery-hud-weapon-banks.png) | ![](instruments/gallery-crt-weapon-banks.png) |
+| Star chart | ![](instruments/gallery-lcars-star-chart.png) | ![](instruments/gallery-hud-star-chart.png) | ![](instruments/gallery-crt-star-chart.png) |
+| Waveform | ![](instruments/gallery-lcars-waveform.png) | ![](instruments/gallery-hud-waveform.png) | ![](instruments/gallery-crt-waveform.png) |
+
 ## Portrait displays rearrange the screen
 
 Turn a panel from landscape to portrait (or show a 16:9 screen on a tall display) and the screen is rebuilt for
