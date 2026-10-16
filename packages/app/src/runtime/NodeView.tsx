@@ -12,7 +12,7 @@ import {
 } from "@interactive-displays/core";
 import { resolveDecor, resolveFrameRenderer } from "@interactive-displays/themes/react";
 import { type CSSProperties, createContext, type ReactNode, useContext } from "react";
-import { SlotProvider, useShowState, useThemeId } from "./context.ts";
+import { SlotProvider, useEditing, useShowState, useThemeId } from "./context.ts";
 import { DecorView } from "./DecorView.tsx";
 import { WidgetErrorBoundary } from "./WidgetErrorBoundary.tsx";
 import { WidgetFallback } from "./WidgetFallback.tsx";
@@ -99,6 +99,7 @@ const SlotView = ({ slot, entries }: { slot: SlotName; entries: ChildEntry[] }) 
 // The theme draws the chrome; the runtime renders each slot's children and hands them over.
 const FrameView = ({ node, archetype }: { node: ContainerNode; archetype: string }) => {
   const themeId = useThemeId();
+  const editing = useEditing();
   const children = useVisibleChildren(node);
   if (!isArchetype(archetype)) return <WidgetFallback kind={archetype} reason="Unknown archetype" />;
   const Frame = resolveFrameRenderer(themeId, archetype);
@@ -107,7 +108,7 @@ const FrameView = ({ node, archetype }: { node: ContainerNode; archetype: string
   const slots: Partial<Record<SlotName, ReactNode>> = {};
   for (const slot of archetypeSlots(archetype)) {
     const entries = children.filter((child) => child.slot === slot);
-    if (entries.length > 0) slots[slot] = <SlotView slot={slot} entries={entries} />;
+    if (entries.length > 0 || editing) slots[slot] = <SlotView slot={slot} entries={entries} />;
   }
 
   return (

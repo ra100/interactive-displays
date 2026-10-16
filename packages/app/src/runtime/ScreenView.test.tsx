@@ -104,6 +104,21 @@ describe("ScreenView", () => {
 });
 
 describe("frames", () => {
+  it("draws empty slots only in the editor, as places to drop into", () => {
+    const titleOnly = withRoot({
+      id: "root",
+      type: "container",
+      layout: { kind: "frame", archetype: "sidebar" },
+      children: [{ slot: "title", node: { id: "t", type: "widget", kind: "title", props: { text: "BRIDGE" } } }],
+    });
+    const slots = (editing: boolean) =>
+      [...render(<ScreenView screen={titleOnly} themeId="lcars" embedded editing={editing} />).container.querySelectorAll("[data-slot]")].map(
+        (slot) => slot.getAttribute("data-slot"),
+      );
+    expect(slots(false)).toEqual(["title"]);
+    expect(slots(true).sort()).toEqual(["main", "nav", "status", "title"]);
+  });
+
   it("hands each slot to the theme's frame and tells widgets their slot", () => {
     const { container } = render(<ScreenView screen={sidebar} themeId="lcars" />);
 

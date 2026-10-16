@@ -8,6 +8,12 @@ const ShowStateContext = createContext("normal");
 // still draws as a nav button.
 const SlotContext = createContext<SlotName | undefined>(undefined);
 
+// In the editor's preview, frames also draw their empty slots, so a part can be dropped into them.
+const EditingContext = createContext(false);
+
+export const EditingProvider = EditingContext;
+export const useEditing = (): boolean => useContext(EditingContext);
+
 export const ThemeIdProvider = ThemeIdContext;
 export const ShowStateProvider = ShowStateContext;
 export const SlotProvider = SlotContext;
