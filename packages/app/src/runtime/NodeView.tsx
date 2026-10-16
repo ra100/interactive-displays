@@ -139,7 +139,7 @@ const NodeScale = ({ scale, children }: { scale: number; children: ReactNode }) 
   const total = useContext(NodeScaleContext) * scale;
   return (
     <NodeScaleContext.Provider value={total}>
-      <div className="node-scale" style={{ "--u": `calc(var(--u-screen) * ${total})` } as CSSProperties}>
+      <div className="node-scale" style={{ "--u": `calc(var(--u-screen) * ${total})`, "--touch": `calc(var(--touch-screen) * ${total})` } as CSSProperties}>
         {children}
       </div>
     </NodeScaleContext.Provider>

@@ -93,7 +93,7 @@ describe("theme contract: decor", () => {
 
   it("hides another theme's piece that has no stand-in", () => {
     expect(resolveDecor("crt", "lcars.cap", {})).toBeUndefined();
-    expect(resolveDecor("lcars", "crt.radar", {})).toBeUndefined();
+    expect(resolveDecor("lcars", "crt.log", {})).toBeUndefined();
     expect(resolveDecor("base", "lcars.bar", {})).toBeUndefined();
   });
 

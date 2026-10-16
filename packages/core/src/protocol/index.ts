@@ -3,7 +3,7 @@ import type { LintIssue } from "../lint/lintScreen.ts";
 import type { VideoCommand } from "../schema/action.ts";
 import { IdSchema } from "../schema/ids.ts";
 import type { Profile, Screen } from "../schema/screen.ts";
-import type { Show, StateDef } from "../schema/show.ts";
+import type { Panel, Show, StateDef } from "../schema/show.ts";
 import type { SignalDef, SignalValue } from "../schema/signal.ts";
 
 // Bumped on any breaking change to events or payloads; a display reloads when the server's differs.
@@ -63,8 +63,9 @@ export interface DisplaySnapshot {
   state: string;
   // Current values of the server-owned shared signals.
   signals: SignalValues;
-  // scale is how big this display draws everything (its own scale, or the show's).
-  display: { id: string; name?: string; scale: number };
+  // scale is how big this display draws everything (its own scale, or the show's); panel is the physical
+  // screen it draws on (its own diagonal or the show's) and how tall buttons are on it.
+  display: { id: string; name?: string; scale: number; panel: Panel };
   screen: Screen | null;
   // True while the display shows a draft sent from the editor instead of the published screen.
   preview: boolean;
@@ -90,6 +91,8 @@ export interface DisplayStatus {
   assigned?: string;
   // The display's own scale, when it does not use the show's.
   scale?: number;
+  // The display's own panel diagonal in inches, when it is not the show's.
+  inches?: number;
   showing: string | null;
   // The screen whose draft the display is previewing, if any.
   preview: string | null;

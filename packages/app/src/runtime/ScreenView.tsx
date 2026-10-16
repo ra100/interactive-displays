@@ -1,6 +1,8 @@
 import {
+  DEFAULT_PANEL,
   type Effect,
   nodeInState,
+  type Panel,
   type Profile,
   resolveTokens,
   type Screen,
@@ -45,6 +47,8 @@ interface Props {
   still?: boolean;
   // How big parts are drawn (the show's or the display's scale); 1 sizes them to the display.
   scale?: number | undefined;
+  // The physical panel (diagonal and button height), so buttons come out in real centimetres.
+  panel?: Panel | undefined;
 }
 
 // Thumbnails freeze at one moment, the same on every render.
@@ -77,6 +81,7 @@ export const ScreenView = ({
   live: given,
   still = false,
   scale = 1,
+  panel = DEFAULT_PANEL,
 }: Props) => {
   const theme = getThemeManifest(themeId);
   // Video commands from this screen's own buttons, when the caller has no bus of its own.
@@ -96,6 +101,8 @@ export const ScreenView = ({
     ...themeCssVariables(resolveTokens(theme, variant, effect)),
     "--aspect-ratio": String(aspectRatio(screen.profile.aspect)),
     "--ui-scale": String(scale),
+    "--panel-inches": String(panel.inches),
+    "--button-cm": String(panel.buttonCm),
   } as CSSProperties;
   const root = nodeInState(screen.root, state);
   const Root = embedded ? "div" : "main";

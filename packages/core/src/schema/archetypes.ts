@@ -30,6 +30,16 @@ export const ARCHETYPES = {
     description: "Large content area with a side panel for secondary readouts.",
     slots: ["title", "main", "aside", "status"],
   },
+  split: {
+    label: "Split frame",
+    description: "A short upper panel for summaries above a large lower panel with a navigation column.",
+    slots: ["title", "aside", "nav", "main", "status"],
+  },
+  console: {
+    label: "Console",
+    description: "Navigation down one side, tools across the top and a side panel around one main area.",
+    slots: ["title", "nav", "toolbar", "main", "aside", "status"],
+  },
 } as const satisfies Record<string, { label: string; description: string; slots: readonly SlotName[] }>;
 
 export type ArchetypeId = keyof typeof ARCHETYPES;

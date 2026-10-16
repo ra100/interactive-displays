@@ -11,6 +11,8 @@ import {
   type LintIssue,
   type Op,
   OpListSchema,
+  type Panel,
+  PanelSchema,
   type Press,
   resolveScreenId,
   type Screen,
@@ -86,6 +88,8 @@ export interface DisplayPatch {
   screen?: string | null;
   // null goes back to the show's scale.
   scale?: number | null;
+  // null goes back to the show's panel size.
+  inches?: number | null;
 }
 
 const NO_SHOW: Failure = { ok: false, status: 503, message: "The server has no active show; check its log" };
@@ -526,6 +530,22 @@ export const createShowService = ({
         return { ok: true, value: parsed.data };
       }),
 
+    // The physical panels: their diagonal (a display can have its own) and how tall buttons are on them.
+    setPanel: (patch: unknown): Promise<CommandResult<Panel>> =>
+      serialize(async () => {
+        if (!loaded) return NO_SHOW;
+        // Keys left out (or undefined) keep their current value.
+        const given = typeof patch === "object" && patch !== null ? Object.entries(patch).filter(([, value]) => value !== undefined) : [];
+        const parsed = PanelSchema.safeParse({ ...loaded.show.panel, ...Object.fromEntries(given) });
+        if (!parsed.success) {
+          return { ok: false, status: 422, message: "Panels are 5–200 inches and buttons 0.8–4 cm tall" };
+        }
+        loaded.show = { ...loaded.show, panel: parsed.data };
+        await saveShow(dataDir, loaded.show);
+        emit({ type: "show" });
+        return { ok: true, value: parsed.data };
+      }),
+
     // Replaces the running order. Every cue must name states, signals, displays' screens that exist.
     defineCues: (input: unknown): Promise<CommandResult<Cue[]>> =>
       serialize(async () => {
@@ -677,6 +697,10 @@ export const createShowService = ({
         if (patch.scale !== undefined) {
           if (patch.scale === null) delete next.scale;
           else next.scale = patch.scale;
+        }
+        if (patch.inches !== undefined) {
+          if (patch.inches === null) delete next.inches;
+          else next.inches = patch.inches;
         }
 
         loaded.show = {

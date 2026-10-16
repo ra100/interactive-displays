@@ -1,6 +1,6 @@
 import { decorRenderer, defineRenderers, type ThemeRenderers } from "../contract.ts";
 import { CrtBrackets, CrtLog, CrtRadar, CrtRule } from "./CrtDecor.tsx";
-import { CrtDashboardFrame, CrtHeaderMainFrame, CrtSidebarFrame } from "./CrtFrames.tsx";
+import { CrtConsoleFrame, CrtDashboardFrame, CrtHeaderMainFrame, CrtSidebarFrame, CrtSplitFrame } from "./CrtFrames.tsx";
 import { CrtAlertBanner, CrtButton, CrtGauge, CrtReadout, CrtStatusLight, CrtText, CrtTitle } from "./CrtWidgets.tsx";
 import { brackets, log, radar, rule } from "./decor.ts";
 import "@fontsource/vt323/latin-400.css";
@@ -22,6 +22,8 @@ export const crtRenderers: ThemeRenderers = defineRenderers({
     sidebar: CrtSidebarFrame,
     "header-main": CrtHeaderMainFrame,
     dashboard: CrtDashboardFrame,
+    split: CrtSplitFrame,
+    console: CrtConsoleFrame,
   },
   decor: {
     ...decorRenderer(rule, CrtRule),

@@ -222,6 +222,17 @@ describe("drafts and publishing", () => {
     expect(service.loaded()?.show.displays.find((display) => display.id === "test")?.scale).toBeUndefined();
   });
 
+  it("keeps the show's panel size, and a display can have a diagonal of its own", async () => {
+    const service = await open();
+    const events = record(service);
+    expect(await service.setPanel({ inches: 98 })).toEqual({ ok: true, value: { inches: 98, buttonCm: 1.5 } });
+    expect(events).toEqual([{ type: "show" }]);
+    expect((await readShowFile("show.json")).panel).toEqual({ inches: 98, buttonCm: 1.5 });
+    expect(await service.setPanel({ buttonCm: 0.2 })).toMatchObject({ ok: false, status: 422 });
+    expect(await service.updateDisplay("test", { inches: 11 })).toMatchObject({ ok: true, value: { inches: 11 } });
+    expect(await service.updateDisplay("test", { inches: null })).toMatchObject({ ok: true, value: { id: "test" } });
+  });
+
   describe("cues", () => {
     it("runs the running order one GO at a time and remembers where it is", async () => {
       const service = await open();

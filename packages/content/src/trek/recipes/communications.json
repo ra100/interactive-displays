@@ -6,7 +6,8 @@
   "archetypes": {
     "sidebar": 3,
     "header-main": 2,
-    "dashboard": 1
+    "dashboard": 1,
+    "split": 2
   },
   "titles": [
     "COMMUNICATIONS",

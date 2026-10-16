@@ -61,7 +61,7 @@ export const hud = defineTheme({
       },
     },
   },
-  archetypes: ["sidebar", "header-main", "dashboard"],
+  archetypes: ["sidebar", "header-main", "dashboard", "split", "console"],
   tones: {
     nav: ["primary", "secondary"],
     panels: ["primary", "info", "secondary", "accent"],
@@ -109,5 +109,7 @@ export const hud = defineTheme({
     "crt.rule": { kind: "hud.scale" },
     "crt.brackets": { kind: "hud.corners" },
     "crt.radar": { kind: "hud.reticle" },
+    "lcars.segments": { kind: "hud.scale" },
+    "lcars.scan": { kind: "hud.reticle" },
   },
 });

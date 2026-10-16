@@ -108,10 +108,12 @@
   gap: var(--lc-gap);
 }
 
-/* Fixed-height blocks, never shorter than a touch target. */
-.lcars-frame__nav > .slot > .slot__item {
+/* Fixed-height blocks: a little taller than a button, so the number and the label both fit (about 2 cm). */
+.lcars-frame__nav > .slot > .slot__item,
+.lcars-frame__nav > .slot > .slot__item:has(> .widget-slot) {
   flex: none;
-  height: max(var(--touch), calc(7.5 * var(--u)));
+  height: calc(1.3 * var(--touch));
+  max-height: none;
 }
 
 .lcars-frame__fill {
@@ -138,7 +140,7 @@
   --lc-side: calc(9 * var(--u));
 
   grid-template-columns: var(--lc-side) minmax(0, 1fr);
-  grid-template-rows: var(--lc-head) max(var(--touch), calc(8 * var(--u))) minmax(0, 1fr) var(--lc-foot);
+  grid-template-rows: var(--lc-head) calc(var(--touch) + var(--u)) minmax(0, 1fr) var(--lc-foot);
 }
 
 .lcars-frame--header-main .lcars-frame__title {
@@ -248,6 +250,177 @@
   grid-column: 3;
 }
 
+/*
+ * Split: the classic double frame. Columns are the side column, the reach of the elbows' sweep beyond it, and
+ * the content; the bars beyond the sweep are runs of coloured segments.
+ */
+.lcars-frame--split {
+  --lc-head: calc(9 * var(--u));
+  --lc-sweep: calc(6 * var(--u));
+  --lc-elbow: calc(7 * var(--u));
+
+  grid-template-columns: var(--lc-side) var(--lc-sweep) minmax(0, 1fr);
+  grid-template-rows: var(--lc-head) minmax(0, 22%) var(--lc-elbow) var(--lc-elbow) minmax(0, 1fr) var(--lc-foot);
+  column-gap: 0;
+}
+
+.lcars-frame__column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lc-gap);
+  grid-row: 1 / 3;
+  grid-column: 1;
+}
+
+.lcars-frame__column > .lcars-frame__fill:first-child {
+  flex: 0 0 35%;
+}
+
+.lcars-frame--split .lcars-frame__title {
+  grid-row: 1;
+  grid-column: 3;
+  padding-left: var(--lc-pad);
+}
+
+.lcars-frame--split .lcars-frame__aside {
+  grid-row: 2;
+  grid-column: 2 / -1;
+  padding: var(--lc-pad) 0 var(--lc-pad) var(--lc-pad);
+}
+
+.lcars-frame--split .lcars-frame__elbow {
+  --lc-sweep-x: min(calc(var(--lc-side) * 0.7), calc(var(--lc-elbow) * 2.2));
+
+  grid-column: 1 / 3;
+}
+
+.lcars-frame--split .lcars-frame__elbow[data-part="upper"] {
+  grid-row: 3;
+  border-bottom-left-radius: var(--lc-sweep-x) var(--lc-elbow);
+}
+
+.lcars-frame--split .lcars-frame__elbow[data-part="lower"] {
+  grid-row: 4;
+  border-top-left-radius: var(--lc-sweep-x) var(--lc-elbow);
+}
+
+.lcars-frame--split .lcars-frame__elbow[data-part="foot"] {
+  grid-row: 6;
+  grid-column: 1 / -1;
+}
+
+.lcars-frame--split .lcars-frame__elbow[data-part="upper"] .lcars-frame__elbow-inner,
+.lcars-frame--split .lcars-frame__elbow[data-part="lower"] .lcars-frame__elbow-inner {
+  border-radius: 0;
+}
+
+.lcars-frame--split .lcars-frame__elbow[data-part="upper"] .lcars-frame__elbow-inner {
+  border-bottom-left-radius: var(--lc-inner);
+}
+
+.lcars-frame--split .lcars-frame__elbow[data-part="lower"] .lcars-frame__elbow-inner {
+  border-top-left-radius: var(--lc-inner);
+}
+
+.lcars-frame__segments {
+  display: flex;
+  grid-column: 3;
+  gap: var(--lc-gap);
+  height: var(--lc-bar);
+  padding-left: var(--lc-gap);
+}
+
+.lcars-frame__segments[data-part="upper"] {
+  grid-row: 3;
+  align-self: end;
+}
+
+.lcars-frame__segments[data-part="lower"] {
+  grid-row: 4;
+  align-self: start;
+}
+
+.lcars-frame__segment {
+  flex: 1;
+  background: var(--tone);
+}
+
+.lcars-frame__segment:nth-child(2) {
+  flex: 0 0 18%;
+}
+
+.lcars-frame__segment:last-child {
+  flex: 0 0 6%;
+  border-radius: 0 999px 999px 0;
+}
+
+.lcars-frame--split .lcars-frame__nav {
+  grid-row: 5;
+}
+
+.lcars-frame--split .lcars-frame__main {
+  grid-row: 5;
+  grid-column: 2 / -1;
+  padding: var(--lc-pad) 0 var(--lc-pad) var(--lc-pad);
+}
+
+.lcars-frame--split .lcars-frame__status {
+  z-index: 1;
+  grid-row: 6;
+  grid-column: 2 / -1;
+  margin: 0 0 calc(var(--lc-bar) + var(--lc-gap)) var(--lc-pad);
+}
+
+/* Console: sweep and nav on the left, tools under the title, an aside behind a capped divider on the right. */
+.lcars-frame--console {
+  --lc-side: calc(17 * var(--u));
+
+  grid-template-columns: var(--lc-side) minmax(0, 1fr) calc(1.4 * var(--u)) minmax(0, 26%);
+  grid-template-rows: var(--lc-head) calc(var(--touch) + var(--u)) minmax(0, 1fr) var(--lc-foot);
+  column-gap: 0;
+}
+
+.lcars-frame--console .lcars-frame__title {
+  z-index: 1;
+  grid-row: 1;
+  grid-column: 2 / -1;
+  margin: calc(var(--lc-bar) + var(--lc-gap)) 0 0 var(--lc-pad);
+}
+
+.lcars-frame--console .lcars-frame__nav {
+  grid-row: 2 / 4;
+}
+
+.lcars-frame--console .lcars-frame__toolbar {
+  grid-row: 2;
+  grid-column: 2;
+  padding: 0 var(--lc-pad);
+}
+
+.lcars-frame--console .lcars-frame__main {
+  grid-row: 3;
+  grid-column: 2;
+  padding: var(--lc-pad);
+}
+
+.lcars-frame--console .lcars-frame__divider {
+  grid-row: 2 / 4;
+  grid-column: 3;
+}
+
+.lcars-frame--console .lcars-frame__aside {
+  grid-row: 2 / 4;
+  grid-column: 4;
+  padding: var(--lc-pad) 0 var(--lc-pad) var(--lc-pad);
+}
+
+.lcars-frame--console .lcars-frame__status {
+  z-index: 1;
+  grid-row: -2;
+  grid-column: 2 / -1;
+  margin: 0 0 calc(var(--lc-bar) + var(--lc-gap)) var(--lc-pad);
+}
+
 /* ── Widgets ────────────────────────────────────────────────────────────── */
 
 .lcars-title {
@@ -351,7 +524,7 @@
   background: var(--tone);
   color: var(--theme-bg);
   font-family: var(--font-display);
-  font-size: min(42cqh, 10cqw, calc(3.8 * var(--u)));
+  font-size: min(50cqh, 10cqw, calc(3.8 * var(--u)));
   letter-spacing: 0.05em;
   text-transform: uppercase;
   cursor: pointer;
@@ -409,7 +582,7 @@
   align-items: center;
   justify-content: space-between;
   gap: calc(1.2 * var(--u));
-  height: min(100%, max(var(--touch), calc(6 * var(--u))));
+  height: min(100%, calc(5 * var(--u)));
   min-width: 0;
   padding: 0 calc(1.6 * var(--u)) 0 calc(2.2 * var(--u));
   border-radius: 999px 0 0 999px;
@@ -613,8 +786,20 @@
   height: 100%;
 }
 
+.lcars-button-group[data-orientation="row"] {
+  align-items: center;
+}
+
 .lcars-button-group[data-orientation="column"] {
   flex-direction: column;
+}
+
+.lcars-button-group[data-orientation="row"] .lcars-button-group__item {
+  height: var(--touch);
+}
+
+.lcars-button-group[data-orientation="column"] .lcars-button-group__item {
+  flex: 0 0 var(--touch);
 }
 
 .lcars-button-group__item {
@@ -628,7 +813,7 @@
   background: var(--tone);
   color: var(--theme-bg);
   font-family: var(--font-display);
-  font-size: min(40cqh, calc(3.6 * var(--u)));
+  font-size: min(calc(0.48 * var(--touch)), calc(3.6 * var(--u)));
   letter-spacing: 0.05em;
   text-align: right;
   text-overflow: ellipsis;
@@ -775,6 +960,148 @@
 .lcars-bracket[data-side="right"] {
   border-left: none;
   border-radius: 0 calc(4 * var(--u)) calc(4 * var(--u)) 0;
+}
+
+/* A row is a bar: never thicker than a frame bar, centred in its box. A column is a strip of blocks. */
+.lcars-segments {
+  display: flex;
+  gap: calc(0.6 * var(--u));
+  width: 100%;
+  height: 100%;
+}
+
+.lcars-segments[data-direction="row"] {
+  position: relative;
+  top: 50%;
+  height: min(100%, calc(2.6 * var(--u)));
+  transform: translateY(-50%);
+}
+
+.lcars-segments[data-direction="column"] {
+  flex-direction: column;
+  width: min(100%, calc(9 * var(--u)));
+}
+
+.lcars-segments__block {
+  display: flex;
+  flex: var(--span) 1 0;
+  align-items: flex-end;
+  justify-content: flex-end;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--tone);
+}
+
+.lcars-segments[data-direction="row"][data-caps="start"] .lcars-segments__block:first-child,
+.lcars-segments[data-direction="row"][data-caps="both"] .lcars-segments__block:first-child {
+  border-radius: 999px 0 0 999px;
+}
+
+.lcars-segments[data-direction="row"][data-caps="end"] .lcars-segments__block:last-child,
+.lcars-segments[data-direction="row"][data-caps="both"] .lcars-segments__block:last-child {
+  border-radius: 0 999px 999px 0;
+}
+
+.lcars-segments[data-direction="column"][data-caps="start"] .lcars-segments__block:first-child,
+.lcars-segments[data-direction="column"][data-caps="both"] .lcars-segments__block:first-child {
+  border-radius: 999px 999px 0 0;
+}
+
+.lcars-segments[data-direction="column"][data-caps="end"] .lcars-segments__block:last-child,
+.lcars-segments[data-direction="column"][data-caps="both"] .lcars-segments__block:last-child {
+  border-radius: 0 0 999px 999px;
+}
+
+/* The number sits in the lower right corner, in black, and only where the block has room for it. */
+.lcars-segments__code {
+  padding: 0 calc(0.6 * var(--u)) calc(0.2 * var(--u));
+  color: var(--theme-bg);
+  font-family: var(--font-display);
+  font-size: min(70cqh, calc(1.8 * var(--u)));
+  letter-spacing: 0.04em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.lcars-segments[data-direction="column"] .lcars-segments__code {
+  font-size: min(9cqw, calc(1.8 * var(--u)));
+}
+
+.lcars-scan {
+  width: 100%;
+  height: 100%;
+  color: var(--tone);
+}
+
+.lcars-scan__scope {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.lcars-scan__ring,
+.lcars-scan__axis,
+.lcars-scan__tick,
+.lcars-scan__arm {
+  fill: none;
+  stroke: currentcolor;
+  vector-effect: non-scaling-stroke;
+}
+
+.lcars-scan__ring {
+  stroke-width: max(1px, calc(0.18 * var(--u)));
+  opacity: 0.7;
+}
+
+.lcars-scan__ring:last-of-type {
+  stroke-width: max(2px, calc(0.45 * var(--u)));
+  opacity: 1;
+}
+
+.lcars-scan__axis {
+  stroke-width: max(1px, calc(0.12 * var(--u)));
+  opacity: 0.35;
+}
+
+.lcars-scan__tick {
+  stroke-width: max(1px, calc(0.2 * var(--u)));
+}
+
+@keyframes lcars-scan-sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.lcars-scan__sweep {
+  transform-origin: 50px 50px;
+  animation: lcars-scan-sweep 6s linear infinite;
+}
+
+.lcars-scan__wedge {
+  fill: currentcolor;
+  opacity: 0.18;
+}
+
+.lcars-scan__arm {
+  stroke-width: max(1px, calc(0.3 * var(--u)));
+}
+
+@keyframes lcars-scan-contact {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.lcars-scan__contact {
+  fill: var(--theme-fg);
+  animation: lcars-scan-contact 2s steps(1) infinite;
+}
+
+/* The status matrix as TNG lamp rows: short pills. */
+.screen[data-theme="lcars"] .base-status-matrix__cell {
+  border-radius: 999px;
 }
 
 /* ── State effects ──────────────────────────────────────────────────────── */

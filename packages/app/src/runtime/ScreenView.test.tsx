@@ -244,6 +244,16 @@ describe("show states", () => {
     expect(root?.style.getPropertyValue("--tone-primary")).toBe("#5c8fd6");
   });
 
+  it("tells the screen how big its panel is, so buttons come out in real centimetres", () => {
+    const { container, rerender } = render(<ScreenView screen={screenWithOverrides} themeId="lcars" />);
+    const root = () => container.querySelector<HTMLElement>(".screen");
+    expect(root()?.style.getPropertyValue("--panel-inches")).toBe("90");
+    expect(root()?.style.getPropertyValue("--button-cm")).toBe("1.5");
+    rerender(<ScreenView screen={screenWithOverrides} themeId="lcars" panel={{ inches: 11, buttonCm: 2 }} />);
+    expect(root()?.style.getPropertyValue("--panel-inches")).toBe("11");
+    expect(root()?.style.getPropertyValue("--button-cm")).toBe("2");
+  });
+
   it("ignores a variant the theme does not have", () => {
     const { container } = render(<ScreenView screen={screenWithOverrides} themeId="lcars" variant="mirror" />);
     expect(container.querySelector(".screen")).not.toHaveAttribute("data-variant");

@@ -699,3 +699,70 @@ test.describe("showcase phase 6", () => {
     await page.screenshot({ path: out("gallery-crt"), fullPage: false });
   });
 });
+
+test.describe("showcase lcars references", () => {
+  test.skip(phase !== "lcars-references", "set SHOWCASE=lcars-references to capture screenshots");
+
+  const K4 = { width: 3840, height: 2160 };
+
+  const look = async (request: APIRequestContext, theme: { id: string; variant?: string }, scale = 0.7) => {
+    expect((await request.put("/api/show/theme", { data: theme })).ok()).toBe(true);
+    expect((await request.put("/api/show/scale", { data: { scale } })).ok()).toBe(true);
+  };
+
+  test.afterEach(async ({ request }) => {
+    await look(request, { id: "lcars" });
+    await setState(request, "normal");
+  });
+
+  const onDisplay = async (page: Page, name: string, display: string, query = "") => {
+    await page.setViewportSize(K4);
+    await page.goto(`/d/${display}${query}`);
+    await expect(page.locator(".screen")).toBeVisible();
+    await settle(page);
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: out(name) });
+  };
+
+  test("new LCARS layouts with buttons at 1.5 cm", async ({ page }) => {
+    await onDisplay(page, "4k-operations-console", "ops-1");
+    await onDisplay(page, "4k-sensors-split", "science-1");
+    await onDisplay(page, "4k-bridge", "test");
+    await onDisplay(page, "4k-engineering", "engineering-1");
+  });
+
+  test("era palettes, states and sizes", async ({ page, request }) => {
+    await onDisplay(page, "4k-operations-ds9", "ops-1", "?variant=ds9");
+    await onDisplay(page, "4k-sensors-voyager", "science-1", "?variant=voyager");
+    await onDisplay(page, "4k-operations-lower-decks", "ops-1", "?variant=lower-decks");
+    await setState(request, "red-alert");
+    await onDisplay(page, "4k-operations-red-alert", "ops-1");
+    await setState(request, "normal");
+    await look(request, { id: "lcars" }, 0.5);
+    await onDisplay(page, "4k-operations-scale-50", "ops-1");
+  });
+
+  test("the new layouts in the other looks", async ({ page, request }) => {
+    await look(request, { id: "hud" });
+    await onDisplay(page, "4k-operations-hud", "ops-1");
+    await look(request, { id: "crt" });
+    await onDisplay(page, "4k-sensors-crt", "science-1");
+  });
+
+  test("gallery and the operator's panel controls", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 900 });
+    await page.goto("/gallery?theme=lcars");
+    await expect(page.locator(".frame").first()).toBeVisible();
+    await settle(page);
+    await page.locator(".gallery section").first().screenshot({ path: out("gallery-frames") });
+    await page.locator(".gallery section").last().screenshot({ path: out("gallery-decor") });
+
+    await page.setViewportSize({ width: 1440, height: 1100 });
+    await page.goto("/operator");
+    const lookRegion = page.getByRole("region", { name: "Look" });
+    await expect(lookRegion.getByLabel("Panel")).toBeVisible();
+    await lookRegion.scrollIntoViewIfNeeded();
+    await settle(page);
+    await lookRegion.screenshot({ path: out("operator-panel-size") });
+  });
+});

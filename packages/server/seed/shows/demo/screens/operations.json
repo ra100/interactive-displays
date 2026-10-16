@@ -1,0 +1,732 @@
+{
+  "schemaVersion": 2,
+  "id": "operations",
+  "name": "Operations",
+  "tags": [
+    "demo",
+    "lcars",
+    "console"
+  ],
+  "profile": {
+    "aspect": "16:9",
+    "fit": "fluid"
+  },
+  "revision": 0,
+  "published": 0,
+  "root": {
+    "id": "root",
+    "type": "container",
+    "layout": {
+      "kind": "frame",
+      "archetype": "console"
+    },
+    "children": [
+      {
+        "slot": "title",
+        "node": {
+          "id": "title",
+          "type": "widget",
+          "kind": "title",
+          "props": {
+            "text": "Operations",
+            "code": "OPS 22-6740"
+          }
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-0",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Sensors",
+            "tone": "info"
+          },
+          "actions": [
+            {
+              "do": "navigate",
+              "screen": "sensors"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-1",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Main power",
+            "tone": "primary"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-2",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Transporters",
+            "tone": "secondary"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-3",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Turbolifts",
+            "tone": "accent"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-4",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Replicators",
+            "tone": "neutral"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-5",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Comms relay",
+            "tone": "info"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-6",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Cargo bays",
+            "tone": "primary"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-7",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Shuttle bay",
+            "tone": "secondary"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "toolbar",
+        "node": {
+          "id": "tool-0",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Allocate",
+            "tone": "primary"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "toolbar",
+        "node": {
+          "id": "tool-1",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Reroute",
+            "tone": "secondary"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "toolbar",
+        "node": {
+          "id": "tool-2",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Priority",
+            "tone": "accent"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "toolbar",
+        "node": {
+          "id": "tool-3",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Log",
+            "tone": "info"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "toolbar",
+        "node": {
+          "id": "tool-4",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Lock out",
+            "tone": "neutral"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "main",
+        "node": {
+          "id": "ops-main",
+          "type": "container",
+          "layout": {
+            "kind": "stack",
+            "direction": "column",
+            "gap": "medium"
+          },
+          "children": [
+            {
+              "weight": 0.22,
+              "node": {
+                "id": "ops-seg-top",
+                "type": "decor",
+                "kind": "lcars.segments",
+                "props": {
+                  "count": 7,
+                  "caps": "end"
+                }
+              }
+            },
+            {
+              "weight": 2,
+              "node": {
+                "id": "ops-upper",
+                "type": "container",
+                "layout": {
+                  "kind": "stack",
+                  "direction": "row",
+                  "gap": "medium"
+                },
+                "children": [
+                  {
+                    "weight": 1.2,
+                    "node": {
+                      "id": "ops-readouts",
+                      "type": "container",
+                      "layout": {
+                        "kind": "stack",
+                        "direction": "column",
+                        "gap": "small"
+                      },
+                      "children": [
+                        {
+                          "node": {
+                            "id": "ops-power",
+                            "type": "widget",
+                            "kind": "readout",
+                            "props": {
+                              "label": "Main power",
+                              "value": 98.2,
+                              "tone": "primary",
+                              "precision": 1,
+                              "unit": "%"
+                            }
+                          }
+                        },
+                        {
+                          "node": {
+                            "id": "ops-eps",
+                            "type": "widget",
+                            "kind": "readout",
+                            "props": {
+                              "label": "EPS load",
+                              "value": 61,
+                              "tone": "secondary",
+                              "precision": 0,
+                              "unit": "%"
+                            },
+                            "bind": {
+                              "value": {
+                                "signal": "eps.load"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "node": {
+                            "id": "ops-crew",
+                            "type": "widget",
+                            "kind": "readout",
+                            "props": {
+                              "label": "Crew aboard",
+                              "value": 1014,
+                              "tone": "accent",
+                              "precision": 0
+                            }
+                          }
+                        },
+                        {
+                          "node": {
+                            "id": "ops-lifts",
+                            "type": "widget",
+                            "kind": "readout",
+                            "props": {
+                              "label": "Turbolifts",
+                              "value": "14 / 16",
+                              "tone": "info",
+                              "precision": 0
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "weight": 1.2,
+                    "node": {
+                      "id": "ops-gauges",
+                      "type": "container",
+                      "layout": {
+                        "kind": "stack",
+                        "direction": "column",
+                        "gap": "small"
+                      },
+                      "children": [
+                        {
+                          "node": {
+                            "id": "ops-g1",
+                            "type": "widget",
+                            "kind": "gauge",
+                            "props": {
+                              "label": "Transporter buffer",
+                              "value": 72,
+                              "unit": "%",
+                              "variant": "segmented",
+                              "tone": "info"
+                            },
+                            "bind": {
+                              "value": {
+                                "ambient": {
+                                  "kind": "walk",
+                                  "min": 60,
+                                  "max": 80,
+                                  "volatility": 0.3
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "node": {
+                            "id": "ops-g2",
+                            "type": "widget",
+                            "kind": "gauge",
+                            "props": {
+                              "label": "Replicator grid",
+                              "value": 44,
+                              "unit": "%",
+                              "variant": "segmented",
+                              "tone": "accent"
+                            },
+                            "bind": {
+                              "value": {
+                                "ambient": {
+                                  "kind": "walk",
+                                  "min": 35,
+                                  "max": 55,
+                                  "volatility": 0.3
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "node": {
+                            "id": "ops-g3",
+                            "type": "widget",
+                            "kind": "gauge",
+                            "props": {
+                              "label": "Subspace relay",
+                              "value": 88,
+                              "unit": "%",
+                              "variant": "segmented",
+                              "tone": "primary"
+                            },
+                            "bind": {
+                              "value": {
+                                "ambient": {
+                                  "kind": "walk",
+                                  "min": 80,
+                                  "max": 95,
+                                  "volatility": 0.3
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "weight": 1,
+                    "node": {
+                      "id": "ops-matrix",
+                      "type": "widget",
+                      "kind": "status-matrix",
+                      "props": {
+                        "label": "Deck relays",
+                        "columns": 10,
+                        "rows": 6,
+                        "activity": "busy",
+                        "tone": "secondary"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "weight": 0.22,
+              "node": {
+                "id": "ops-seg-mid",
+                "type": "decor",
+                "kind": "lcars.segments",
+                "props": {
+                  "count": 5,
+                  "caps": "both",
+                  "tones": [
+                    "info",
+                    "neutral",
+                    "accent"
+                  ]
+                }
+              }
+            },
+            {
+              "weight": 2,
+              "node": {
+                "id": "ops-lower",
+                "type": "container",
+                "layout": {
+                  "kind": "stack",
+                  "direction": "row",
+                  "gap": "medium"
+                },
+                "children": [
+                  {
+                    "weight": 1.4,
+                    "node": {
+                      "id": "ops-bars",
+                      "type": "widget",
+                      "kind": "bar-graph",
+                      "props": {
+                        "label": "Power allocation",
+                        "bars": 16,
+                        "activity": "calm",
+                        "tone": "primary"
+                      }
+                    }
+                  },
+                  {
+                    "weight": 1.4,
+                    "node": {
+                      "id": "ops-cascade",
+                      "type": "widget",
+                      "kind": "data-cascade",
+                      "props": {
+                        "columns": 8,
+                        "speed": "normal",
+                        "tone": "secondary"
+                      }
+                    }
+                  },
+                  {
+                    "weight": 1,
+                    "node": {
+                      "id": "ops-trace",
+                      "type": "widget",
+                      "kind": "sparkline",
+                      "props": {
+                        "label": "Warp field",
+                        "tone": "accent"
+                      },
+                      "bind": {
+                        "value": {
+                          "signal": "warp.output"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "weight": 0.5,
+              "node": {
+                "id": "ops-controls",
+                "type": "container",
+                "layout": {
+                  "kind": "stack",
+                  "direction": "row",
+                  "gap": "medium"
+                },
+                "children": [
+                  {
+                    "weight": 2,
+                    "node": {
+                      "id": "ops-decks",
+                      "type": "widget",
+                      "kind": "button-group",
+                      "props": {
+                        "items": [
+                          "Decks 1-10",
+                          "11-20",
+                          "21-30",
+                          "31-42"
+                        ],
+                        "orientation": "row",
+                        "tone": "info"
+                      }
+                    }
+                  },
+                  {
+                    "weight": 1,
+                    "node": {
+                      "id": "ops-scan",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Internal scan",
+                        "tone": "primary"
+                      },
+                      "actions": [
+                        {
+                          "do": "sound",
+                          "sound": "confirm"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "weight": 1,
+                    "node": {
+                      "id": "ops-alert",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Yellow alert",
+                        "tone": "warning"
+                      },
+                      "actions": [
+                        {
+                          "do": "setState",
+                          "state": "yellow-alert"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slot": "aside",
+        "node": {
+          "id": "ops-aside",
+          "type": "container",
+          "layout": {
+            "kind": "stack",
+            "direction": "column",
+            "gap": "small"
+          },
+          "children": [
+            {
+              "weight": 0.5,
+              "node": {
+                "id": "ops-aside-title",
+                "type": "widget",
+                "kind": "title",
+                "props": {
+                  "text": "Sensor net",
+                  "code": "18-0442",
+                  "tone": "info"
+                }
+              }
+            },
+            {
+              "weight": 3,
+              "node": {
+                "id": "ops-scope",
+                "type": "decor",
+                "kind": "lcars.scan",
+                "props": {
+                  "rings": 4,
+                  "contacts": 5,
+                  "tone": "info"
+                }
+              }
+            },
+            {
+              "node": {
+                "id": "ops-shields",
+                "type": "widget",
+                "kind": "readout",
+                "props": {
+                  "label": "Shields",
+                  "value": 100,
+                  "tone": "info",
+                  "precision": 0,
+                  "unit": "%"
+                },
+                "bind": {
+                  "value": {
+                    "signal": "shields"
+                  }
+                }
+              }
+            },
+            {
+              "node": {
+                "id": "ops-hull",
+                "type": "widget",
+                "kind": "readout",
+                "props": {
+                  "label": "Hull",
+                  "value": 100,
+                  "tone": "secondary",
+                  "precision": 0,
+                  "unit": "%"
+                },
+                "bind": {
+                  "value": {
+                    "signal": "hull"
+                  }
+                }
+              }
+            },
+            {
+              "node": {
+                "id": "ops-stardate",
+                "type": "widget",
+                "kind": "clock",
+                "props": {
+                  "format": "stardate",
+                  "label": "Stardate",
+                  "tone": "primary"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slot": "status",
+        "node": {
+          "id": "status",
+          "type": "widget",
+          "kind": "text",
+          "props": {
+            "text": "Ops station 1 \u00b7 all departments reporting",
+            "size": "small",
+            "tone": "secondary"
+          }
+        }
+      }
+    ]
+  }
+}

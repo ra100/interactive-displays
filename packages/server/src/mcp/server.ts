@@ -11,6 +11,8 @@ import {
   sectionsOf,
   SignalIdSchema,
   UiScaleSchema,
+  PanelInchesSchema,
+  ButtonCmSchema,
   CueListSchema,
   VideoCommandSchema,
 } from "@interactive-displays/core";
@@ -401,6 +403,18 @@ export const createMcpServer = ({ service, generation, connected }: McpDeps): Mc
       annotations: LIVE,
     },
     ({ scale }) => gated("aiLiveControl", async () => result(await service.setScale(scale), (current) => ({ scale: current }))),
+  );
+
+  server.registerTool(
+    "set_panel",
+    {
+      title: "Set the panel size",
+      description:
+        'Tells the displays how big their panels are (diagonal in inches, 5–200) and how tall buttons should be on them in centimetres (0.8–4, 1.5 by default), so buttons come out the same real size on any screen. Needs "AI may run the show".',
+      inputSchema: { inches: PanelInchesSchema.optional(), buttonCm: ButtonCmSchema.optional() },
+      annotations: LIVE,
+    },
+    (panel) => gated("aiLiveControl", async () => result(await service.setPanel(panel), (current) => ({ panel: current }))),
   );
 
   server.registerTool(

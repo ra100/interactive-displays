@@ -58,7 +58,9 @@ describe("ensureSeeded", () => {
     expect([...(loaded?.screens.keys() ?? [])]).toEqual([
       "bridge",
       "engineering",
+      "operations",
       "schematic",
+      "sensors",
       "standby",
       "tactical",
       "viewscreen",

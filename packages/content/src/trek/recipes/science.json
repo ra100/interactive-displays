@@ -6,7 +6,9 @@
   "archetypes": {
     "dashboard": 3,
     "header-main": 2,
-    "sidebar": 1
+    "sidebar": 1,
+    "console": 2,
+    "split": 1
   },
   "titles": [
     "SCIENCE STATION",

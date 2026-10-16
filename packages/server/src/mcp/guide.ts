@@ -35,6 +35,8 @@ decor is theme-only ornament. Documents store meaning; the theme decides the loo
 ## Sizing
 - Target panels are large 4K screens; the show draws everything at its scale (70% by default) and a display can
   have its own. To make one part larger or smaller than the rest, use the set op with scale (0.25–4).
+- Buttons are sized in real centimetres from the show's panel (90" and 1.5 cm by default), not by scale, so they
+  stay fingertip-sized on a 100" panel. Leave room for them rather than making them weight-filled walls of colour.
 
 ## Editing safely
 - Every edit is a list of ops applied all or nothing against the screen's revision (baseRevision). On a 409, call

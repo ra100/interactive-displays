@@ -26,6 +26,8 @@ describe("theme manifests", () => {
       "lcars.bar",
       "lcars.cap",
       "lcars.bracket",
+      "lcars.segments",
+      "lcars.scan",
       "hud.reticle",
       "hud.corners",
       "hud.scale",

@@ -14,6 +14,7 @@ export const ScreenThumbnail = ({
   states,
   live,
   scale,
+  panel,
 }: {
   screen: Screen;
   theme: Show["theme"];
@@ -23,6 +24,8 @@ export const ScreenThumbnail = ({
   live?: Pick<Live, "signals" | "store">;
   // The show's or the display's scale, so the thumbnail matches what the display draws.
   scale?: number | undefined;
+  // The panel the screen is drawn for, so buttons keep their real size relative to everything else.
+  panel?: Show["panel"] | undefined;
 }) => (
   <div className="thumbnail" style={{ aspectRatio: aspectRatio(screen) }} aria-hidden="true">
     <ScreenView
@@ -34,6 +37,7 @@ export const ScreenThumbnail = ({
       states={states}
       live={live}
       scale={scale}
+      panel={panel}
       embedded
       still
     />

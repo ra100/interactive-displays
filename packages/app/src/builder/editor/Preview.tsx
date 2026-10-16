@@ -161,6 +161,7 @@ export const Preview = ({
           states={overview.show.states}
           live={live}
           scale={overview.show.scale}
+          panel={overview.show.panel}
           embedded
         />
         {box ? (

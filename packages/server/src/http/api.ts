@@ -10,6 +10,8 @@ import {
   SignalIdSchema,
   VideoCommandSchema,
   UiScaleSchema,
+  PanelInchesSchema,
+  ButtonCmSchema,
 } from "@interactive-displays/core";
 import type { FastifyInstance, FastifyReply } from "fastify";
 import { z } from "zod";
@@ -46,6 +48,7 @@ const SettingsBody = z
   .strict();
 const ThemeBody = z.object({ id: IdSchema, variant: IdSchema.optional() }).strict();
 const ScaleBody = z.object({ scale: UiScaleSchema }).strict();
+const PanelBody = z.object({ inches: PanelInchesSchema, buttonCm: ButtonCmSchema }).partial().strict();
 const SoundPackBody = z.object({ pack: IdSchema.nullable() }).strict();
 const CuesBody = z.object({ cues: z.unknown() }).strict();
 const SignalsBody = z.object({ signals: z.unknown() }).strict();
@@ -61,6 +64,7 @@ const DisplayBody = z
     name: z.string().min(1).max(60).nullable().optional(),
     screen: IdSchema.nullable().optional(),
     scale: UiScaleSchema.nullable().optional(),
+    inches: PanelInchesSchema.nullable().optional(),
   })
   .strict();
 
@@ -215,6 +219,13 @@ export const registerApi = (
     return send(reply, await service.setScale(body.data.scale), (scale) => ({ scale }));
   });
 
+  // The physical panels: diagonal in inches (a display's own wins) and button height in centimetres.
+  app.put("/api/show/panel", async (request, reply) => {
+    const body = PanelBody.safeParse(request.body);
+    if (!body.success) return badRequest(reply, body.error);
+    return send(reply, await service.setPanel(body.data), (panel) => ({ panel }));
+  });
+
   // Whose sounds the displays play; null for the theme's own.
   app.put("/api/show/sound-pack", async (request, reply) => {
     const body = SoundPackBody.safeParse(request.body);
@@ -366,6 +377,7 @@ export const registerApi = (
       ...(body.data.name !== undefined ? { name: body.data.name } : {}),
       ...(body.data.screen !== undefined ? { screen: body.data.screen } : {}),
       ...(body.data.scale !== undefined ? { scale: body.data.scale } : {}),
+      ...(body.data.inches !== undefined ? { inches: body.data.inches } : {}),
     };
     return send(reply, await service.updateDisplay(params.data.id, patch), (display) => ({ display }));
   });

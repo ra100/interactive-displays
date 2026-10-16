@@ -1,10 +1,10 @@
 import { decorRenderer, defineRenderers, type ThemeRenderers } from "../contract.ts";
-import { bar, bracket, cap, elbow } from "./decor.ts";
+import { bar, bracket, cap, elbow, scan, segments } from "./decor.ts";
 import { LcarsButton } from "./LcarsButton.tsx";
 import { LcarsButtonGroup } from "./LcarsControls.tsx";
 import { LcarsAlertBanner, LcarsDataCascade, LcarsGauge, LcarsReadout } from "./LcarsData.tsx";
-import { LcarsBar, LcarsBracket, LcarsCap, LcarsElbow } from "./LcarsDecor.tsx";
-import { LcarsDashboardFrame, LcarsHeaderMainFrame, LcarsSidebarFrame } from "./LcarsFrames.tsx";
+import { LcarsBar, LcarsBracket, LcarsCap, LcarsElbow, LcarsScan, LcarsSegments } from "./LcarsDecor.tsx";
+import { LcarsConsoleFrame, LcarsDashboardFrame, LcarsHeaderMainFrame, LcarsSidebarFrame, LcarsSplitFrame } from "./LcarsFrames.tsx";
 import { LcarsText } from "./LcarsText.tsx";
 import { LcarsTitle } from "./LcarsTitle.tsx";
 import "@fontsource/antonio/latin-400.css";
@@ -27,11 +27,15 @@ export const lcarsRenderers: ThemeRenderers = defineRenderers({
     sidebar: LcarsSidebarFrame,
     "header-main": LcarsHeaderMainFrame,
     dashboard: LcarsDashboardFrame,
+    split: LcarsSplitFrame,
+    console: LcarsConsoleFrame,
   },
   decor: {
     ...decorRenderer(elbow, LcarsElbow),
     ...decorRenderer(bar, LcarsBar),
     ...decorRenderer(cap, LcarsCap),
     ...decorRenderer(bracket, LcarsBracket),
+    ...decorRenderer(segments, LcarsSegments),
+    ...decorRenderer(scan, LcarsScan),
   },
 });

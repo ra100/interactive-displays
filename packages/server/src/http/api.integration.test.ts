@@ -35,11 +35,11 @@ describe("GET /api/catalog", () => {
     expect(status).toBe(200);
     expect(body.widgets.map((widget) => widget.kind)).toEqual([...catalog.keys()]);
     expect(body.widgets[2]?.props.properties).toHaveProperty("label");
-    expect(Object.keys(body.archetypes)).toEqual(["sidebar", "header-main", "dashboard"]);
+    expect(Object.keys(body.archetypes)).toEqual(["sidebar", "header-main", "dashboard", "split", "console"]);
     expect(body.effects).toContain("blackout");
 
     const lcars = body.themes.find((theme) => theme.id === "lcars");
-    expect(lcars?.variants).toEqual({ nemesis: "Nemesis blue", picard: "Picard grey" });
+    expect(lcars?.variants).toEqual({ nemesis: "Nemesis blue", ds9: "Deep Space Nine", voyager: "Voyager", "lower-decks": "Lower Decks", picard: "Picard grey" });
     expect(lcars?.decor.map((decor) => decor.kind)).toContain("lcars.elbow");
   });
 });
@@ -53,7 +53,9 @@ describe("GET /api/show", () => {
     expect(body.show.settings).toEqual({ liveEdit: false, displayGlobalActions: true, sounds: false, aiPublish: false, aiLiveControl: false });
     expect(body.screens.map((screen) => screen.id)).toEqual([
       "bridge",
+      "sensors",
       "engineering",
+      "operations",
       "schematic",
       "standby",
       "tactical",
@@ -97,7 +99,9 @@ describe("screens", () => {
     const { body } = await server.api<{ screens: Screen[] }>("GET", "/api/screens");
     expect(body.screens.map((screen) => screen.name)).toEqual([
       "Bridge operations",
+      "Long range sensors",
       "Main engineering",
+      "Operations",
       "Ship schematic",
       "Standby",
       "Tactical",
@@ -339,6 +343,17 @@ describe("signals, settings and video", () => {
     expect((await server.api("PUT", "/api/displays/test", { scale: 0.8 })).status).toBe(200);
     expect(await snapshot).toMatchObject({ display: { id: "test", scale: 0.8 } });
     expect((await server.api("PUT", "/api/show/scale", { scale: 3 })).status).toBe(400);
+  });
+
+  it("sends each display the panel it draws on, so buttons come out in real centimetres", async () => {
+    const { client } = await server.display("test");
+    let snapshot = nextEvent(client, "snapshot");
+    expect(await server.api("PUT", "/api/show/panel", { buttonCm: 2 })).toMatchObject({ status: 200, body: { panel: { inches: 90, buttonCm: 2 } } });
+    expect(await snapshot).toMatchObject({ display: { id: "test", panel: { inches: 90, buttonCm: 2 } } });
+    snapshot = nextEvent(client, "snapshot");
+    expect((await server.api("PUT", "/api/displays/test", { inches: 11 })).status).toBe(200);
+    expect(await snapshot).toMatchObject({ display: { id: "test", panel: { inches: 11, buttonCm: 2 } } });
+    expect((await server.api("PUT", "/api/show/panel", { buttonCm: 9 })).status).toBe(400);
   });
 
   it("runs cues with GO and tells the console which ran", async () => {
