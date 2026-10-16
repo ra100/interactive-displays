@@ -12,6 +12,9 @@ const CATEGORY_LABELS: Record<WidgetCategory, string> = {
   text: "Text",
   control: "Controls",
   data: "Data",
+  scan: "Scans and graphs",
+  tactical: "Tactical",
+  navigation: "Navigation",
   media: "Media",
   alert: "Alerts",
   meta: "Other",
@@ -84,6 +87,7 @@ const LAYOUT_HELP: Record<ContainerPreset, string> = {
   row: "Items side by side.",
   grid: "Rows and columns; items take cells.",
   canvas: "Free placement, for art and schematics.",
+  panel: "A titled section with its own sweep or bracket, to divide a screen.",
 };
 
 const Layouts = () => (

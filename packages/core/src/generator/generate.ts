@@ -1,6 +1,6 @@
 import { catalog } from "../catalog/index.ts";
 import type { Op } from "../ops/ops.ts";
-import { ARCHETYPE_IDS, type ArchetypeId, archetypeSlots, isArchetype, type SlotName } from "../schema/archetypes.ts";
+import { type ArchetypeId, archetypeSlots, isArchetype, SCREEN_ARCHETYPE_IDS, type SlotName } from "../schema/archetypes.ts";
 import { BLOCK_SIZES, type ContentPack, type Recipe, type System } from "../schema/content.ts";
 import type { ChildEntry, GridArea, Node, WidgetNode } from "../schema/node.ts";
 import { DEFAULT_PROFILE, type Density, type GeneratorInfo, type Profile, SCREEN_SCHEMA_VERSION, type Screen } from "../schema/screen.ts";
@@ -46,7 +46,7 @@ const PORTRAIT = new Set<Profile["aspect"]>(["9:16"]);
 
 // Layouts the recipe allows and the theme draws, weighted; a portrait display leans towards stacked layouts.
 export const archetypeWeights = (recipe: Recipe, theme: GenerateOptions["theme"], profile: Profile): [ArchetypeId, number][] => {
-  const drawn = theme.archetypes.length > 0 ? theme.archetypes : ARCHETYPE_IDS;
+  const drawn = (theme.archetypes.length > 0 ? theme.archetypes : SCREEN_ARCHETYPE_IDS).filter((id) => id !== "panel");
   const entries = drawn
     .map((id): [ArchetypeId, number] => {
       const weight = recipe.archetypes[id] ?? 0;
@@ -411,7 +411,7 @@ export const generateSuite = (options: Omit<GenerateOptions, "suite" | "from" | 
   }
   const show = { ...options.show, screens: [...(options.show.screens ?? []), ...Object.values(screens)] };
   // Every screen of a suite needs somewhere for its nav buttons.
-  const drawn = options.theme.archetypes.length > 0 ? options.theme.archetypes : ARCHETYPE_IDS;
+  const drawn = (options.theme.archetypes.length > 0 ? options.theme.archetypes : SCREEN_ARCHETYPE_IDS).filter((id) => id !== "panel");
   const navigable = drawn.filter((id) => archetypeSlots(id).some((slot) => slot === "nav" || slot === "toolbar"));
   const theme = { ...options.theme, archetypes: navigable.length > 0 ? navigable : (["sidebar"] as ArchetypeId[]) };
   const { archetype: wanted, ...rest } = options;

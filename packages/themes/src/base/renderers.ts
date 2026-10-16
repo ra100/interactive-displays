@@ -6,7 +6,10 @@ import { BaseButtonGroup, BaseSlider, BaseToggle } from "./BaseControls.tsx";
 import { BaseClock, BaseDataGrid, BaseGauge, BaseReadout, BaseStatusLight } from "./BaseData.tsx";
 import { BaseFrame } from "./BaseFrame.tsx";
 import { BaseImage } from "./BaseImage.tsx";
+import { BaseHeading, BaseReactor, BaseSpeedLadder, BaseStarChart } from "./BaseNavigation.tsx";
 import { BasePlaceholder } from "./BasePlaceholder.tsx";
+import { BaseGlobe, BaseScanProgress, BaseSpectrum, BaseWaveform } from "./BaseScans.tsx";
+import { BaseShieldStatus, BaseTargetLock, BaseWeapons } from "./BaseTactical.tsx";
 import { BaseText } from "./BaseText.tsx";
 import { BaseTitle } from "./BaseTitle.tsx";
 import { BaseVideo } from "./BaseVideo.tsx";
@@ -29,6 +32,17 @@ export const baseRenderers: BaseThemeRenderers = defineRenderers({
     "status-matrix": BaseStatusMatrix,
     "data-cascade": BaseDataCascade,
     "data-grid": BaseDataGrid,
+    reactor: BaseReactor,
+    waveform: BaseWaveform,
+    spectrum: BaseSpectrum,
+    globe: BaseGlobe,
+    "scan-progress": BaseScanProgress,
+    "shield-status": BaseShieldStatus,
+    weapons: BaseWeapons,
+    "target-lock": BaseTargetLock,
+    heading: BaseHeading,
+    "speed-ladder": BaseSpeedLadder,
+    "star-chart": BaseStarChart,
     clock: BaseClock,
     "alert-banner": BaseAlertBanner,
     image: BaseImage,
@@ -41,6 +55,7 @@ export const baseRenderers: BaseThemeRenderers = defineRenderers({
     dashboard: BaseFrame,
     split: BaseFrame,
     console: BaseFrame,
+    panel: BaseFrame,
   },
   decor: {},
 });

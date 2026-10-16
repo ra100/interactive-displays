@@ -40,6 +40,12 @@ export const ARCHETYPES = {
     description: "Navigation down one side, tools across the top and a side panel around one main area.",
     slots: ["title", "nav", "toolbar", "main", "aside", "status"],
   },
+  panel: {
+    label: "Panel",
+    description:
+      "A titled section with chrome of its own, to nest inside another layout so sweeps, bars and brackets run through the screen and divide it into sections.",
+    slots: ["title", "main", "status"],
+  },
 } as const satisfies Record<string, { label: string; description: string; slots: readonly SlotName[] }>;
 
 export type ArchetypeId = keyof typeof ARCHETYPES;
@@ -49,3 +55,19 @@ export const ARCHETYPE_IDS = Object.keys(ARCHETYPES) as ArchetypeId[];
 export const isArchetype = (id: string): id is ArchetypeId => Object.hasOwn(ARCHETYPES, id);
 
 export const archetypeSlots = (id: string): readonly SlotName[] => (isArchetype(id) ? ARCHETYPES[id].slots : []);
+
+// How a panel's chrome runs: a full sweep (elbow, column and foot), only the top or bottom sweep, or a bracket;
+// "-right" mirrors it. Themes read these as hints; without one each panel picks a shape from its id.
+export const PANEL_SHAPES = [
+  "sweep",
+  "sweep-right",
+  "top",
+  "top-right",
+  "bottom",
+  "bottom-right",
+  "bracket",
+  "rails",
+] as const;
+
+// Archetypes that lay out a whole screen; panel is for sections inside one.
+export const SCREEN_ARCHETYPE_IDS = ARCHETYPE_IDS.filter((id) => id !== "panel");

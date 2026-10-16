@@ -1,0 +1,157 @@
+/*
+ * Terminal for panels and the scan, tactical and navigation widgets: one phosphor colour, vector lines, block
+ * characters for bars and type in VT323. Reference: the Nostromo's monitors in Alien (1979) and their vector
+ * approach and trajectory plots.
+ */
+
+.crt-panel {
+  position: relative;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: calc(2.4 * var(--u)) calc(1.4 * var(--u)) calc(1.2 * var(--u));
+  border: var(--crt-line, calc(0.35 * var(--u))) solid var(--tone);
+  color: var(--tone);
+}
+
+.crt-panel[data-line="double"] {
+  border-width: calc(3 * var(--crt-line, calc(0.35 * var(--u))));
+  border-style: double;
+}
+
+.crt-panel[data-shape="bracket"] {
+  border-block-color: transparent;
+}
+
+.crt-panel[data-shape="rails"] {
+  border-inline-color: transparent;
+}
+
+.crt-panel[data-shape="top"] {
+  border-bottom-style: dashed;
+}
+
+.crt-panel[data-shape="bottom"] {
+  border-top-style: dashed;
+}
+
+/* The title sits in a gap cut into the top rule. */
+.crt-panel__title {
+  position: absolute;
+  top: calc(-2.2 * var(--u));
+  left: calc(2 * var(--u));
+  display: flex;
+  width: 60%;
+  height: calc(4.4 * var(--u));
+  padding: 0 calc(0.8 * var(--u));
+  background: var(--theme-bg);
+}
+
+.crt-panel__title > *,
+.crt-panel__main > *,
+.crt-panel__status > * {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.crt-panel__main {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+
+.crt-panel__status {
+  display: flex;
+  height: calc(3 * var(--u));
+  min-width: 0;
+}
+
+/* Instruments: thin vector strokes, no fills, block bars. */
+.screen[data-theme="crt"] :is(.base-waveform__trace path, .base-chart__course, .base-shields__arc) {
+  stroke-linecap: square;
+}
+
+.screen[data-theme="crt"] .base-waveform__trace path {
+  stroke-width: 2;
+}
+
+.screen[data-theme="crt"] .base-waveform__scope,
+.screen[data-theme="crt"] .base-chart {
+  border-style: dashed;
+}
+
+.screen[data-theme="crt"] :is(.base-scan__segment, .base-weapons__cell, .base-ladder__step, .base-reactor__segment) {
+  border-radius: 0;
+}
+
+.screen[data-theme="crt"] :is(.base-scan__segment, .base-weapons__cell):not([data-lit="true"]) {
+  background: repeating-linear-gradient(90deg, var(--tone) 0 1px, transparent 1px 3px);
+  opacity: 0.35;
+}
+
+.screen[data-theme="crt"] .base-spectrum__bar {
+  background: repeating-linear-gradient(to top, var(--tone) 0 calc(0.6 * var(--u)), transparent 0 calc(0.85 * var(--u)));
+}
+
+.screen[data-theme="crt"] .base-reactor__segment {
+  background: repeating-linear-gradient(to bottom, var(--tone) 0 2px, transparent 2px 4px);
+}
+
+.screen[data-theme="crt"] .base-reactor__segment[data-chamber="true"] {
+  box-shadow: none;
+  outline: var(--crt-line, 2px) solid var(--tone);
+}
+
+.screen[data-theme="crt"] .ship-outline,
+.screen[data-theme="crt"] .base-globe__disc {
+  fill: none;
+}
+
+.screen[data-theme="crt"] .ship-outline {
+  stroke: var(--tone);
+}
+
+.screen[data-theme="crt"] :is(.base-globe__line, .base-globe__meridian) {
+  stroke-dasharray: 2 2;
+}
+
+.screen[data-theme="crt"] .base-target__ring {
+  stroke-dasharray: 3 2;
+}
+
+.screen[data-theme="crt"] .base-target__blip rect {
+  fill: none;
+  stroke: var(--tone);
+  stroke-width: 1;
+}
+
+.screen[data-theme="crt"] .base-chart__star {
+  fill: var(--tone);
+}
+
+.screen[data-theme="crt"] .base-chart__star[data-bright="true"] {
+  fill: var(--tone);
+  opacity: 1;
+}
+
+.screen[data-theme="crt"] .base-chart__grid line {
+  stroke-dasharray: 0.5 1.5;
+  opacity: 0.6;
+}
+
+.screen[data-theme="crt"] .base-ladder__step[data-lit="true"] {
+  color: var(--theme-bg);
+}
+
+.screen[data-theme="crt"] .base-weapons__pip {
+  border-radius: 0;
+}
+
+.screen[data-theme="crt"] :is(.base-heading__pointer) {
+  border-top-color: var(--tone);
+}

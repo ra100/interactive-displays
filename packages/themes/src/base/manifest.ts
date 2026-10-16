@@ -30,7 +30,7 @@ export const base = defineTheme({
     alert: { tokens: { palette: { primary: "#ff5c5c", secondary: "#ff9c9c" }, background: "#1a0b0d" } },
     damaged: { tokens: { palette: { primary: "#6b7480", secondary: "#59616b", accent: "#7a6a55" } } },
   },
-  archetypes: ["sidebar", "header-main", "dashboard", "split", "console"],
+  archetypes: ["sidebar", "header-main", "dashboard", "split", "console", "panel"],
   sounds: {
     press: { steps: [{ freq: 1200, ms: 25, wave: "triangle", gain: 0.12 }] },
     confirm: { steps: [{ freq: 660, to: 990, ms: 120, gain: 0.15 }] },

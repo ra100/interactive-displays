@@ -47,6 +47,8 @@ const frame = (archetype: keyof typeof ARCHETYPES, title: string): ChildEntryInp
       return [head, aside, ...buttons("nav", ["SYSTEMS", "DIAGNOSTICS", "LOGS"]), main, status];
     case "console":
       return [head, ...buttons("nav", ["SYSTEMS", "DIAGNOSTICS", "LOGS"]), ...buttons("toolbar", ["SCAN", "ANALYSE", "REPORT"]), main, aside, status];
+    case "panel":
+      return [head, main];
   }
 };
 

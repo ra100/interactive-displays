@@ -35,7 +35,7 @@ describe("GET /api/catalog", () => {
     expect(status).toBe(200);
     expect(body.widgets.map((widget) => widget.kind)).toEqual([...catalog.keys()]);
     expect(body.widgets[2]?.props.properties).toHaveProperty("label");
-    expect(Object.keys(body.archetypes)).toEqual(["sidebar", "header-main", "dashboard", "split", "console"]);
+    expect(Object.keys(body.archetypes)).toEqual(["sidebar", "header-main", "dashboard", "split", "console", "panel"]);
     expect(body.effects).toContain("blackout");
 
     const lcars = body.themes.find((theme) => theme.id === "lcars");

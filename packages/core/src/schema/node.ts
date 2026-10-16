@@ -43,6 +43,8 @@ export const TrackSchema = z.string().regex(/^(\d{1,2}(\.\d{1,2})?fr|auto)$/, 'T
 export const FrameLayoutSchema = z.object({
   kind: z.literal("frame"),
   archetype: IdSchema,
+  // A shape hint for the theme's chrome, such as a panel's "sweep-right" (see PANEL_SHAPES).
+  variant: z.string().regex(/^[a-z][a-z-]{0,23}$/).optional(),
 });
 
 export const StackLayoutSchema = z.object({
