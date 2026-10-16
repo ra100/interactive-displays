@@ -100,7 +100,7 @@ const SlotView = ({ slot, entries, orientation }: { slot: SlotName; entries: Chi
 
 // The theme draws the chrome, for a portrait or a landscape display; the runtime renders each slot's children and
 // hands them over.
-const FrameView = ({ node, archetype }: { node: ContainerNode; archetype: string }) => {
+const FrameView = ({ node, archetype, variant }: { node: ContainerNode; archetype: string; variant: string | undefined }) => {
   const themeId = useThemeId();
   const editing = useEditing();
   const turn = useTurn();
@@ -118,7 +118,7 @@ const FrameView = ({ node, archetype }: { node: ContainerNode; archetype: string
 
   return (
     <div className="frame" data-node-id={node.id} data-archetype={archetype} data-orientation={orientation}>
-      <Frame archetype={archetype} nodeId={node.id} slots={slots} />
+      {variant ? <Frame archetype={archetype} nodeId={node.id} variant={variant} slots={slots} /> : <Frame archetype={archetype} nodeId={node.id} slots={slots} />}
     </div>
   );
 };
@@ -133,7 +133,7 @@ const ContainerView = ({ node }: { node: ContainerNode }) => {
     case "canvas":
       return <CanvasView node={node} />;
     case "frame":
-      return <FrameView node={node} archetype={layout.archetype} />;
+      return <FrameView node={node} archetype={layout.archetype} variant={layout.variant} />;
   }
 };
 

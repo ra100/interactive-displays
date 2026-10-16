@@ -1258,3 +1258,303 @@
 .screen[data-effect="alert"] .lcars-bar {
   animation: lcars-alert-pulse 1.4s ease-in-out infinite;
 }
+
+/* ── Panels: sections with their own sweep, nested inside a frame ─────────── */
+
+.lcars-panel {
+  --p-arm: calc(4.2 * var(--u));
+  --p-in: calc(1 * var(--u));
+  --p-head: calc(4.4 * var(--u));
+  --p-bar: calc(1.8 * var(--u));
+  --p-foot: calc(2.6 * var(--u));
+  --p-footbar: calc(1.1 * var(--u));
+  --p-cap: calc(2 * var(--u));
+  --p-radius: calc(var(--p-arm) * 1.1);
+  --p-inner: calc(1.4 * var(--u));
+
+  display: grid;
+  grid-template-columns: var(--p-arm) var(--p-in) minmax(0, 1fr) minmax(0, 42%) var(--p-cap);
+  grid-template-rows: var(--p-head) var(--p-in) minmax(0, 1fr) var(--p-in) var(--p-foot);
+  column-gap: 0;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Mirrored panels sweep from the right: the grid runs right to left, the contents still left to right. */
+.lcars-panel[data-side="right"] {
+  direction: rtl;
+}
+
+.lcars-panel > * {
+  direction: ltr;
+  min-width: 0;
+  min-height: 0;
+}
+
+.lcars-panel__corner {
+  position: relative;
+  grid-column: 1 / 3;
+  background: var(--tone);
+}
+
+.lcars-panel__corner::after {
+  position: absolute;
+  inset-inline: var(--p-arm) 0;
+  background: var(--theme-bg);
+  content: "";
+}
+
+.lcars-panel__corner[data-at="top"] {
+  grid-row: 1 / 3;
+  border-start-start-radius: var(--p-radius) min(var(--p-radius), 100%);
+}
+
+.lcars-panel__corner[data-at="top"]::after {
+  inset-block: var(--p-bar) 0;
+  border-start-start-radius: var(--p-inner);
+}
+
+.lcars-panel__corner[data-at="bottom"] {
+  grid-row: 4 / 6;
+  border-end-start-radius: var(--p-radius) min(var(--p-radius), 100%);
+}
+
+.lcars-panel__corner[data-at="bottom"]::after {
+  inset-block: 0 var(--p-footbar);
+  border-end-start-radius: var(--p-inner);
+}
+
+.lcars-panel__bar,
+.lcars-panel__cap {
+  background: var(--tone);
+}
+
+.lcars-panel__bar[data-at="top"],
+.lcars-panel__cap[data-at="top"] {
+  grid-row: 1;
+  align-self: start;
+  height: var(--p-bar);
+}
+
+/* The top bar runs under the title, which cuts a gap into it with its black background. */
+.lcars-panel__bar[data-at="top"] {
+  grid-column: 3 / 5;
+}
+
+.lcars-panel__title {
+  z-index: 1;
+}
+
+.lcars-panel .lcars-title--header {
+  align-items: flex-start;
+}
+
+.lcars-panel .lcars-title--header .lcars-title__text {
+  padding-inline: calc(0.8 * var(--u));
+  background: var(--theme-bg);
+}
+
+/* The title sits by the cap at the far end of the bar, or by the column when there is no top bar. */
+.lcars-panel[data-side="right"] .lcars-title--header,
+.lcars-panel:is([data-shape="bottom"], [data-shape="bracket"]) .lcars-title--header {
+  justify-content: flex-start;
+}
+
+.lcars-panel[data-side="right"]:is([data-shape="bottom"], [data-shape="bracket"]) .lcars-title--header {
+  justify-content: flex-end;
+}
+
+.lcars-panel:not(:has(.lcars-panel__status > *)) .lcars-panel__bar[data-at="bottom"] {
+  grid-column: 3 / 5;
+}
+
+.lcars-panel__cap[data-at="top"],
+.lcars-panel__cap[data-at="bottom"] {
+  grid-column: 5;
+  border-start-end-radius: 999px;
+  border-end-end-radius: 999px;
+}
+
+.lcars-panel__bar[data-at="bottom"],
+.lcars-panel__cap[data-at="bottom"] {
+  grid-row: 5;
+  align-self: end;
+  height: var(--p-footbar);
+}
+
+.lcars-panel__bar[data-at="bottom"] {
+  grid-column: 3;
+}
+
+.lcars-panel__title {
+  display: flex;
+  grid-row: 1;
+  grid-column: 4;
+  align-items: stretch;
+  justify-content: flex-end;
+  height: var(--p-head);
+  padding-inline: calc(0.8 * var(--u));
+}
+
+.lcars-panel__status {
+  display: flex;
+  grid-row: 5;
+  grid-column: 4;
+  align-items: stretch;
+  height: var(--p-foot);
+  padding-inline: calc(0.8 * var(--u));
+}
+
+.lcars-panel__arm[data-at="start"] {
+  display: flex;
+  grid-row: 3;
+  grid-column: 1;
+  flex-direction: column;
+  gap: calc(0.5 * var(--u));
+}
+
+.lcars-panel__block {
+  position: relative;
+  flex: var(--p-split);
+  background: var(--tone);
+}
+
+.lcars-panel__block + .lcars-panel__block {
+  flex: calc(1 - var(--p-split));
+}
+
+.lcars-panel__block {
+  overflow: hidden;
+}
+
+.lcars-panel__code {
+  position: absolute;
+  inset-inline-end: calc(0.3 * var(--u));
+  bottom: calc(0.2 * var(--u));
+  color: var(--theme-bg);
+  font-family: var(--font-display);
+  font-size: calc(1.1 * var(--u));
+  white-space: nowrap;
+}
+
+.lcars-panel__title > *,
+.lcars-panel__status > *,
+.lcars-panel__main > * {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.lcars-panel__arm[data-at="end"] {
+  display: none;
+}
+
+.lcars-panel__main {
+  display: flex;
+  grid-row: 2 / 5;
+  grid-column: 3 / 6;
+  padding-block: calc(0.6 * var(--u));
+}
+
+/* Only the top sweep: the column runs down and ends in a rounded foot. */
+.lcars-panel[data-shape="top"] :is(.lcars-panel__corner[data-at="bottom"], .lcars-panel__bar[data-at="bottom"], .lcars-panel__cap[data-at="bottom"]) {
+  display: none;
+}
+
+.lcars-panel[data-shape="top"] .lcars-panel__arm[data-at="start"] {
+  grid-row: 3 / 6;
+}
+
+.lcars-panel[data-shape="top"] .lcars-panel__arm .lcars-panel__block:last-child {
+  border-end-start-radius: calc(var(--p-arm) / 2);
+  border-end-end-radius: calc(var(--p-arm) / 2);
+}
+
+.lcars-panel[data-shape="top"] .lcars-panel__main {
+  grid-row: 2 / 6;
+}
+
+/* Only the foot: the column starts with a rounded top and sweeps into a bar at the bottom. */
+.lcars-panel[data-shape="bottom"] :is(.lcars-panel__corner[data-at="top"], .lcars-panel__bar[data-at="top"], .lcars-panel__cap[data-at="top"]) {
+  display: none;
+}
+
+.lcars-panel[data-shape="bottom"] .lcars-panel__arm[data-at="start"] {
+  grid-row: 1 / 4;
+}
+
+.lcars-panel[data-shape="bottom"] .lcars-panel__arm .lcars-panel__block:first-child {
+  border-start-start-radius: calc(var(--p-arm) / 2);
+  border-start-end-radius: calc(var(--p-arm) / 2);
+}
+
+.lcars-panel[data-shape="bottom"] .lcars-panel__title {
+  grid-column: 3 / 6;
+  justify-content: flex-start;
+}
+
+.lcars-panel[data-shape="bottom"] .lcars-panel__main {
+  grid-row: 2 / 5;
+}
+
+/* A bracket on each side, as around a group of readouts. */
+.lcars-panel[data-shape="bracket"] :is(.lcars-panel__corner, .lcars-panel__bar, .lcars-panel__cap) {
+  display: none;
+}
+
+.lcars-panel[data-shape="bracket"] .lcars-panel__arm[data-at="start"],
+.lcars-panel[data-shape="bracket"] .lcars-panel__arm[data-at="end"] {
+  grid-row: 1 / 6;
+}
+
+.lcars-panel[data-shape="bracket"] .lcars-panel__arm[data-at="start"] .lcars-panel__block:first-child {
+  border-start-start-radius: var(--p-radius);
+}
+
+.lcars-panel[data-shape="bracket"] .lcars-panel__arm[data-at="start"] .lcars-panel__block:last-child {
+  border-end-start-radius: var(--p-radius);
+}
+
+.lcars-panel[data-shape="bracket"] .lcars-panel__arm[data-at="end"] {
+  display: block;
+  grid-column: 5;
+  width: calc(var(--p-cap) * 0.8);
+  justify-self: end;
+  border-start-end-radius: var(--p-cap);
+  border-end-end-radius: var(--p-cap);
+  background: var(--tone);
+}
+
+.lcars-panel[data-shape="bracket"] .lcars-panel__title {
+  grid-column: 3 / 5;
+  justify-content: flex-start;
+}
+
+.lcars-panel[data-shape="bracket"] .lcars-panel__main {
+  grid-column: 3 / 5;
+}
+
+.lcars-panel[data-shape="bracket"] .lcars-panel__status {
+  grid-column: 3 / 5;
+}
+
+/* Rails: a capped bar over the section and a thin one under it, no column. */
+.lcars-panel[data-shape="rails"] :is(.lcars-panel__corner, .lcars-panel__arm) {
+  display: none;
+}
+
+.lcars-panel[data-shape="rails"] .lcars-panel__bar {
+  grid-column: 1 / 5;
+  border-start-start-radius: 999px;
+  border-end-start-radius: 999px;
+}
+
+.lcars-panel[data-shape="rails"] .lcars-panel__main {
+  grid-column: 1 / 6;
+}
+
+.screen[data-effect="alert"] :is(.lcars-panel__corner, .lcars-panel__bar, .lcars-panel__cap, .lcars-panel__block) {
+  animation: lcars-alert-pulse 1.4s ease-in-out infinite;
+}

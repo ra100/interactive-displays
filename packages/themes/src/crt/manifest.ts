@@ -62,7 +62,7 @@ export const crt = defineTheme({
       },
     },
   },
-  archetypes: ["sidebar", "header-main", "dashboard", "split", "console"],
+  archetypes: ["sidebar", "header-main", "dashboard", "split", "console", "panel"],
   // Mostly the bright phosphor; panels alternate with a dimmer shade rather than new colours.
   tones: {
     nav: ["primary"],

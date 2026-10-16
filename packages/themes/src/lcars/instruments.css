@@ -1,0 +1,244 @@
+/*
+ * LCARS for the scan, tactical and navigation widgets. The base renderers draw the instruments; LCARS turns
+ * their labels into capped tags with black type, closes tracks and scopes with rounded caps and brackets, and
+ * draws rungs, cells and lamps as pills, the way Okuda's panels do.
+ */
+
+.screen[data-theme="lcars"] {
+  --lc-tag-height: calc(3.6 * var(--u));
+}
+
+/* Labels as tags: a tone block, rounded on the left, black type. */
+.screen[data-theme="lcars"] :is(
+    .base-waveform__label,
+    .base-spectrum__label,
+    .base-globe__label,
+    .base-shields__label,
+    .base-weapons__label,
+    .base-target__label,
+    .base-heading__label,
+    .base-ladder__label,
+    .base-chart__label,
+    .base-reactor__label,
+    .base-scan__label
+  ) {
+  align-self: start;
+  justify-self: start;
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.12em 1.2em 0.08em 0.9em;
+  border-radius: 999px 0 0 999px;
+  background: var(--tone);
+  color: var(--theme-bg);
+  font-size: min(12cqh, 6cqw, calc(2.3 * var(--u)));
+  letter-spacing: 0.08em;
+}
+
+.screen[data-theme="lcars"] .base-reactor__label {
+  align-self: center;
+  justify-self: center;
+  border-radius: 999px;
+}
+
+/* Scopes sit between two rounded brackets instead of inside a box. */
+.screen[data-theme="lcars"] .base-waveform__scope {
+  border: 0;
+  border-inline: calc(1.2 * var(--u)) solid var(--tone);
+  border-radius: calc(2.2 * var(--u));
+  padding-inline: calc(0.6 * var(--u));
+}
+
+.screen[data-theme="lcars"] .base-waveform__trace path {
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.screen[data-theme="lcars"] .base-spectrum__bands {
+  border-bottom: 0;
+}
+
+.screen[data-theme="lcars"] .base-spectrum__ruler {
+  padding: calc(0.4 * var(--u)) calc(1.4 * var(--u)) 0;
+  border-top: calc(0.9 * var(--u)) solid var(--tone);
+  border-radius: 0 0 calc(1.4 * var(--u)) calc(1.4 * var(--u));
+  background: none;
+}
+
+.screen[data-theme="lcars"] .base-spectrum__band:nth-child(4n + 2) {
+  --tone: var(--tone-secondary);
+}
+
+.screen[data-theme="lcars"] .base-spectrum__band:nth-child(7n + 5) {
+  --tone: var(--tone-info);
+}
+
+/* Tracks of blocks close with rounded caps. */
+.screen[data-theme="lcars"] :is(.base-scan__segment, .base-weapons__cell):first-child {
+  border-radius: 999px 0 0 999px;
+}
+
+.screen[data-theme="lcars"] :is(.base-scan__segment, .base-weapons__cell):last-child {
+  border-radius: 0 999px 999px 0;
+}
+
+.screen[data-theme="lcars"] .base-scan__value {
+  color: var(--tone);
+}
+
+/* Weapons: each bank's name is its own tag, armed banks light their state block. */
+.screen[data-theme="lcars"] .base-weapons__bank .base-weapons__name,
+.screen[data-theme="lcars"] .base-weapons__tubes .base-weapons__name {
+  padding: 0.15em 0.8em;
+  border-radius: 999px 0 0 999px;
+  background: color-mix(in srgb, var(--tone) 30%, transparent);
+  color: var(--tone);
+}
+
+.screen[data-theme="lcars"] .base-weapons__bank[data-state="armed"] .base-weapons__name,
+.screen[data-theme="lcars"] .base-weapons[data-armed="true"] .base-weapons__tubes .base-weapons__name {
+  background: var(--tone);
+  color: var(--theme-bg);
+}
+
+.screen[data-theme="lcars"] .base-weapons__bank[data-state="armed"] .base-weapons__state {
+  padding: 0.15em 0.8em;
+  border-radius: 0 999px 999px 0;
+  background: var(--tone);
+  color: var(--theme-bg);
+}
+
+.screen[data-theme="lcars"] .base-weapons__bank[data-state="ready"] {
+  --tone: var(--tone-success);
+}
+
+.screen[data-theme="lcars"] .base-weapons__bank[data-state="charging"] {
+  --tone: var(--tone-warning);
+}
+
+.screen[data-theme="lcars"] .base-weapons__pip {
+  border-width: calc(0.3 * var(--u));
+}
+
+/* The warp scale: rungs as half pills, the number in black on the lit ones. */
+.screen[data-theme="lcars"] .base-ladder__step {
+  border-radius: 0 999px 999px 0;
+  font-weight: 700;
+}
+
+.screen[data-theme="lcars"] .base-ladder[data-direction="row"] .base-ladder__step {
+  border-radius: 999px 999px 0 0;
+}
+
+.screen[data-theme="lcars"] .base-ladder__step:nth-child(3n + 2)[data-lit="true"] {
+  background: var(--tone-secondary);
+}
+
+.screen[data-theme="lcars"] .base-ladder__step[data-current="true"] {
+  background: var(--theme-fg);
+}
+
+/* The reactor's chamber: the core column in pills with a capped housing around the chamber. */
+.screen[data-theme="lcars"] .base-reactor__segment {
+  border-radius: 999px;
+}
+
+.screen[data-theme="lcars"] .base-reactor__segment[data-chamber="true"] {
+  outline: calc(0.5 * var(--u)) solid var(--tone-neutral);
+  outline-offset: calc(0.4 * var(--u));
+}
+
+/* Heading: the tape hangs from a bar with caps. */
+.screen[data-theme="lcars"] .base-heading__tape {
+  border-top: calc(1 * var(--u)) solid var(--tone);
+  border-radius: calc(1.2 * var(--u)) calc(1.2 * var(--u)) 0 0;
+}
+
+.screen[data-theme="lcars"] .base-heading__pointer {
+  top: calc(-0.2 * var(--u));
+  border-top-color: var(--theme-fg);
+}
+
+.screen[data-theme="lcars"] .base-heading__needle {
+  fill: var(--theme-fg);
+  stroke: var(--theme-fg);
+}
+
+/* Shield arcs are thick and rounded, the ship a fine line. */
+.screen[data-theme="lcars"] .ship-outline {
+  fill: none;
+  stroke: var(--tone-neutral);
+  stroke-width: 1.2;
+}
+
+.screen[data-theme="lcars"] .base-shields__arc {
+  stroke-linecap: round;
+}
+
+.screen[data-theme="lcars"] .base-shields__facing-name {
+  padding: 0 0.6em;
+  border-radius: 999px;
+  background: var(--tone);
+  color: var(--theme-bg);
+}
+
+/* Targeting: solid range rings and fat corner brackets. */
+.screen[data-theme="lcars"] .base-target__ring {
+  stroke-dasharray: none;
+  stroke-width: 1.4;
+  animation: none;
+}
+
+.screen[data-theme="lcars"] .base-target__ring--inner {
+  stroke-dasharray: 2 3;
+}
+
+.screen[data-theme="lcars"] .base-target__brackets path {
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.screen[data-theme="lcars"] .base-target__status {
+  padding: 0.12em 1em 0.08em;
+  border-radius: 0 999px 999px 0;
+  background: var(--tone);
+  color: var(--theme-bg);
+}
+
+.screen[data-theme="lcars"] .base-target[data-locked="false"] .base-target__status {
+  background: none;
+  color: var(--tone);
+}
+
+.screen[data-theme="lcars"] .base-target__row dt {
+  color: var(--tone-neutral);
+  opacity: 1;
+}
+
+/* Star chart: no box, a bracket down the left side as on astrometrics panels. */
+.screen[data-theme="lcars"] .base-chart {
+  border: 0;
+  border-left: calc(1.2 * var(--u)) solid var(--tone);
+  border-radius: calc(2 * var(--u)) 0 0 calc(2 * var(--u));
+}
+
+.screen[data-theme="lcars"] .base-chart__label {
+  left: calc(1.4 * var(--u));
+}
+
+.screen[data-theme="lcars"] .base-chart__grid line {
+  stroke: var(--tone-info);
+}
+
+.screen[data-theme="lcars"] .base-chart__ship {
+  fill: var(--theme-fg);
+}
+
+/* Planet scan: a lilac surface grid with an orange scan line. */
+.screen[data-theme="lcars"] .base-globe__scan {
+  fill: var(--tone-primary);
+  opacity: 0.6;
+}
+
+.screen[data-theme="lcars"] .base-globe__rim {
+  stroke-width: 3;
+}

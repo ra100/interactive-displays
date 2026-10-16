@@ -28,6 +28,17 @@ describe("catalog", () => {
       "status-matrix",
       "data-cascade",
       "data-grid",
+      "reactor",
+      "waveform",
+      "spectrum",
+      "globe",
+      "scan-progress",
+      "shield-status",
+      "weapons",
+      "target-lock",
+      "heading",
+      "speed-ladder",
+      "star-chart",
       "clock",
       "alert-banner",
       "image",
@@ -143,5 +154,79 @@ describe("controls", () => {
 
   it("slider rejects a step that does not move", () => {
     expect(slider.props.safeParse({ label: "IMPULSE", step: 0 }).success).toBe(false);
+  });
+});
+
+describe("scans, tactical and navigation widgets", () => {
+  it("draws a waveform with two sine traces by default", () => {
+    expect(widgets.waveform.props.parse({})).toEqual({ shape: "sine", traces: 2, level: 70, speed: "normal", grid: true, tone: "info" });
+    expect(widgets.waveform.props.safeParse({ traces: 5 }).success).toBe(false);
+    expect(widgets.waveform.props.safeParse({ shape: "square" }).success).toBe(false);
+  });
+
+  it("keeps a spectrum between 8 and 64 bands", () => {
+    expect(widgets.spectrum.props.parse({}).bands).toBe(32);
+    expect(widgets.spectrum.props.safeParse({ bands: 4 }).success).toBe(false);
+    expect(widgets.spectrum.props.safeParse({ bands: 65 }).success).toBe(false);
+  });
+
+  it("repeats a scan on its own until it is given a value", () => {
+    expect(widgets["scan-progress"].props.parse({})).toEqual({ label: "SCANNING", done: "COMPLETE", seconds: 12, tone: "info" });
+    expect(widgets["scan-progress"].props.parse({ value: 40 }).value).toBe(40);
+  });
+
+  it("starts shields at full on every facing", () => {
+    const shields = widgets["shield-status"].props.parse({});
+    expect([shields.forward, shields.aft, shields.port, shields.starboard]).toEqual([100, 100, 100, 100]);
+    expect(shields.warningBelow).toBeGreaterThan(shields.dangerBelow);
+    expect(widgets["shield-status"].bindable).toEqual(["forward", "aft", "port", "starboard"]);
+  });
+
+  it("names four phaser banks and two tubes unless told otherwise", () => {
+    const banks = widgets.weapons.props.parse({});
+    expect(banks.banks).toHaveLength(4);
+    expect(banks.tubes).toBe(2);
+    expect(widgets.weapons.props.safeParse({ banks: [] }).success).toBe(false);
+    expect(widgets.weapons.props.safeParse({ tubes: 7 }).success).toBe(false);
+  });
+
+  it("aims a target lock at a bearing and mark, not locked yet", () => {
+    expect(widgets["target-lock"].props.parse({})).toMatchObject({ locked: false, bearing: 127, mark: 4, unit: "KM" });
+  });
+
+  it("shows heading as a tape unless asked for a rose", () => {
+    expect(widgets.heading.props.parse({}).variant).toBe("tape");
+    expect(widgets.heading.props.safeParse({ variant: "dial" }).success).toBe(false);
+  });
+
+  it("ladders warp factor in nine steps", () => {
+    expect(widgets["speed-ladder"].props.parse({})).toMatchObject({ label: "WARP", value: 6, steps: 9, direction: "column" });
+    expect(widgets["speed-ladder"].props.safeParse({ steps: 2 }).success).toBe(false);
+  });
+
+  it("plots a course through two to eight waypoints", () => {
+    expect(widgets["star-chart"].props.parse({}).waypoints).toBe(4);
+    expect(widgets["star-chart"].props.safeParse({ waypoints: 1 }).success).toBe(false);
+    expect(widgets["star-chart"].props.safeParse({ waypoints: 9 }).success).toBe(false);
+  });
+
+  it("pulses a reactor column at its level", () => {
+    expect(widgets.reactor.props.parse({})).toEqual({ level: 70, segments: 14, direction: "column", tone: "info" });
+  });
+
+  it("files the new widgets under scans, tactical and navigation", () => {
+    const categories = Object.fromEntries([...catalog.values()].map((definition) => [definition.kind, definition.category]));
+    expect(categories).toMatchObject({
+      waveform: "scan",
+      spectrum: "scan",
+      globe: "scan",
+      "scan-progress": "scan",
+      "shield-status": "tactical",
+      weapons: "tactical",
+      "target-lock": "tactical",
+      heading: "navigation",
+      "speed-ladder": "navigation",
+      "star-chart": "navigation",
+    });
   });
 });

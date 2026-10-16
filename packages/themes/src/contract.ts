@@ -34,6 +34,8 @@ export type WidgetRendererMap = { [Kind in WidgetKind]: WidgetRenderer<Kind> };
 export interface FrameRendererProps {
   archetype: ArchetypeId;
   nodeId: string;
+  // The layout's shape hint (a panel's "sweep-right"); a frame that has no such shapes ignores it.
+  variant?: string;
   slots: Partial<Record<SlotName, ReactNode>>;
 }
 

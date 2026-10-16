@@ -83,7 +83,7 @@ export const lcars = defineTheme({
       },
     },
   },
-  archetypes: ["sidebar", "header-main", "dashboard", "split", "console"],
+  archetypes: ["sidebar", "header-main", "dashboard", "split", "console", "panel"],
   // Flush blocks of colour: the nav column runs through the whole palette, panels never repeat their neighbour.
   tones: {
     nav: ["primary", "secondary", "accent", "info", "neutral"],

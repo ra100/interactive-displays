@@ -1,5 +1,5 @@
 import {
-  ARCHETYPE_IDS,
+  SCREEN_ARCHETYPE_IDS,
   type ArchetypeId,
   DENSITIES,
   ProfileSchema,
@@ -77,7 +77,7 @@ export const GenerateBody = z
     seed: z.number().int().min(0).max(0xffffffff).optional().describe("The same seed gives the same screen; random when left out"),
     density: z.enum(DENSITIES).optional(),
     aspect: ProfileSchema.shape.aspect.unwrap().optional(),
-    archetype: z.enum(ARCHETYPE_IDS as [ArchetypeId, ...ArchetypeId[]]).optional().describe("Layout; picked from the recipe's weights when left out"),
+    archetype: z.enum(SCREEN_ARCHETYPE_IDS as [ArchetypeId, ...ArchetypeId[]]).optional().describe("Layout; picked from the recipe's weights when left out"),
     suite: z.boolean().optional().describe("Also one screen per system, linked by nav buttons"),
   })
   .strict();

@@ -1,6 +1,6 @@
 import type { z } from "zod";
 
-export type WidgetCategory = "text" | "control" | "data" | "media" | "alert" | "meta";
+export type WidgetCategory = "text" | "control" | "data" | "scan" | "tactical" | "navigation" | "media" | "alert" | "meta";
 
 export interface WidgetDefinition<Props extends z.ZodType = z.ZodType> {
   readonly kind: string;

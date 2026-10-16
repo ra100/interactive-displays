@@ -15,7 +15,7 @@ describe("generation in the builder", () => {
       ],
     });
     const base = generationBase(show, ["bridge"]);
-    expect(base.theme.archetypes).toEqual(["sidebar", "header-main", "dashboard", "split", "console"]);
+    expect(base.theme.archetypes).toEqual(["sidebar", "header-main", "dashboard", "split", "console", "panel"]);
     expect(base.theme.tones.nav).toContain("primary");
     expect(base.show.states.map((state) => state.id)).toEqual(["normal", "red-alert"]);
     expect(base.show.screens).toEqual(["bridge"]);

@@ -166,13 +166,14 @@ export const newDecor = (definition: DecorDefinition, taken: ReadonlySet<string>
   props: structuredClone(definition.example as Record<string, unknown>),
 });
 
-export type ContainerPreset = "column" | "row" | "grid" | "canvas";
+export type ContainerPreset = "column" | "row" | "grid" | "canvas" | "panel";
 
 export const CONTAINER_PRESETS: Record<ContainerPreset, { label: string; layout: Layout }> = {
   column: { label: "Column", layout: { kind: "stack", direction: "column", gap: "medium" } },
   row: { label: "Row", layout: { kind: "stack", direction: "row", gap: "medium" } },
   grid: { label: "Grid 2×2", layout: { kind: "grid", columns: ["1fr", "1fr"], rows: ["1fr", "1fr"], gap: "medium" } },
   canvas: { label: "Canvas", layout: { kind: "canvas" } },
+  panel: { label: "Panel", layout: { kind: "frame", archetype: "panel" } },
 };
 
 export const newContainer = (preset: ContainerPreset, taken: ReadonlySet<string>): Node => ({

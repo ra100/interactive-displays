@@ -61,7 +61,7 @@ export const hud = defineTheme({
       },
     },
   },
-  archetypes: ["sidebar", "header-main", "dashboard", "split", "console"],
+  archetypes: ["sidebar", "header-main", "dashboard", "split", "console", "panel"],
   tones: {
     nav: ["primary", "secondary"],
     panels: ["primary", "info", "secondary", "accent"],

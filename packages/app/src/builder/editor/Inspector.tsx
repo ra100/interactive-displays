@@ -1,5 +1,6 @@
 import {
   ARCHETYPE_IDS,
+  PANEL_SHAPES,
   ARCHETYPES,
   archetypeSlots,
   catalog,
@@ -45,6 +46,17 @@ import { NumberBox, Section } from "./inspectorParts.tsx";
 import { ActionsEditor, LiveValues } from "./LiveSection.tsx";
 
 // Sizes a part can take relative to the rest of the screen.
+const PANEL_SHAPE_NAMES: Record<(typeof PANEL_SHAPES)[number], string> = {
+  sweep: "Sweep, left",
+  "sweep-right": "Sweep, right",
+  top: "Top sweep, left",
+  "top-right": "Top sweep, right",
+  bottom: "Bottom sweep, left",
+  "bottom-right": "Bottom sweep, right",
+  bracket: "Brackets",
+  rails: "Rails",
+};
+
 const NODE_SCALES = [0.5, 0.6, 0.75, 0.9, 1, 1.25, 1.5, 2, 3];
 
 const fieldsCache = new Map<string, Field[]>();
@@ -234,6 +246,25 @@ const LayoutEditor = ({ container }: { container: ContainerNode }) => {
             {ARCHETYPE_IDS.map((id) => (
               <option key={id} value={id}>
                 {ARCHETYPES[id].label}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
+      {layout.kind === "frame" && layout.archetype === "panel" ? (
+        <label className="tool-field">
+          <span className="field__label">Shape</span>
+          <select
+            className="tool-select"
+            value={layout.variant ?? ""}
+            onChange={(event) =>
+              set(event.target.value ? { kind: "frame", archetype: "panel", variant: event.target.value } : { kind: "frame", archetype: "panel" })
+            }
+          >
+            <option value="">Picked for this panel</option>
+            {PANEL_SHAPES.map((shape) => (
+              <option key={shape} value={shape}>
+                {PANEL_SHAPE_NAMES[shape]}
               </option>
             ))}
           </select>

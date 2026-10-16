@@ -1,0 +1,196 @@
+/*
+ * Holo HUD for panels and the scan, tactical and navigation widgets: hairlines with a glow, a mono face for
+ * numbers, glassy fills, no solid blocks. Reference: the translucent ship displays of The Expanse and Oblivion.
+ */
+
+.hud-frame__tick[data-corner="tr"] {
+  top: calc(-1 * var(--hud-line));
+  right: calc(-1 * var(--hud-line));
+  border-top-width: calc(2 * var(--hud-line));
+  border-right-width: calc(2 * var(--hud-line));
+}
+
+.hud-frame__tick[data-corner="bl"] {
+  bottom: calc(-1 * var(--hud-line));
+  left: calc(-1 * var(--hud-line));
+  border-bottom-width: calc(2 * var(--hud-line));
+  border-left-width: calc(2 * var(--hud-line));
+}
+
+.hud-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: calc(0.6 * var(--u));
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.hud-panel__head {
+  position: relative;
+  display: flex;
+  height: calc(4 * var(--u));
+  min-width: 0;
+  padding-bottom: calc(0.4 * var(--u));
+}
+
+.hud-panel[data-side="right"] .hud-panel__head {
+  justify-content: flex-end;
+}
+
+.hud-panel__title {
+  display: flex;
+  width: 70%;
+  min-width: 0;
+}
+
+.hud-panel__rule {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: var(--hud-line);
+  background: linear-gradient(to right, var(--tone) 0 18%, color-mix(in srgb, var(--tone) 35%, transparent) 18%);
+  box-shadow: 0 0 var(--hud-glow) var(--tone);
+}
+
+.hud-panel[data-side="right"] .hud-panel__rule {
+  background: linear-gradient(to left, var(--tone) 0 18%, color-mix(in srgb, var(--tone) 35%, transparent) 18%);
+}
+
+.hud-panel__body {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  padding: calc(1.2 * var(--u));
+  border: var(--hud-line) solid color-mix(in srgb, var(--tone) 28%, transparent);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--tone) 7%, transparent), color-mix(in srgb, var(--tone) 2%, transparent));
+}
+
+.hud-panel__body > *:not(.hud-frame__tick),
+.hud-panel__title > *,
+.hud-panel__status > * {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.hud-panel[data-shape="top"] .hud-panel__body,
+.hud-panel[data-shape="rails"] .hud-panel__body {
+  border-inline: 0;
+  background: none;
+}
+
+.hud-panel[data-shape="bracket"] .hud-panel__body {
+  border-block: 0;
+}
+
+.hud-panel[data-shape="bottom"] .hud-panel__body {
+  border-top: 0;
+}
+
+.hud-panel__status {
+  display: flex;
+  height: calc(3 * var(--u));
+  min-width: 0;
+}
+
+.screen[data-theme="hud"][data-effect="alert"] .hud-panel__body {
+  animation: hud-pulse 1.2s ease-in-out infinite;
+}
+
+/* Instruments: glow on every line, numbers in the mono face. */
+.screen[data-theme="hud"] :is(
+    .base-waveform__trace path,
+    .base-shields__arc,
+    .base-target__ring,
+    .base-target__brackets path,
+    .base-heading__dial,
+    .base-chart__course,
+    .base-globe__rim
+  ) {
+  filter: drop-shadow(0 0 calc(0.4 * var(--u)) var(--tone));
+}
+
+.screen[data-theme="hud"] :is(
+    .base-scan__value,
+    .base-shields__overall,
+    .base-shields__facing-value,
+    .base-weapons__count,
+    .base-target__row dd,
+    .base-heading__value,
+    .base-ladder__value
+  ) {
+  font-family: "Share Tech Mono", monospace;
+  text-shadow: 0 0 var(--hud-glow) var(--tone);
+}
+
+.screen[data-theme="hud"] .base-waveform__scope,
+.screen[data-theme="hud"] .base-chart {
+  border-color: color-mix(in srgb, var(--tone) 30%, transparent);
+  background-color: color-mix(in srgb, var(--tone) 4%, transparent);
+}
+
+.screen[data-theme="hud"] .base-waveform__trace path {
+  stroke-width: 1.6;
+}
+
+/* Bars and cells become outlined glass, lit ones filled faintly. */
+.screen[data-theme="hud"] :is(.base-scan__segment, .base-weapons__cell, .base-spectrum__bar, .base-ladder__step, .base-reactor__segment) {
+  border: var(--hud-line) solid var(--tone);
+  background: color-mix(in srgb, var(--tone) 12%, transparent);
+  opacity: 1;
+}
+
+.screen[data-theme="hud"] :is(.base-scan__segment, .base-weapons__cell)[data-lit="true"],
+.screen[data-theme="hud"] .base-ladder__step[data-lit="true"] {
+  background: color-mix(in srgb, var(--tone) 55%, transparent);
+  box-shadow: 0 0 calc(0.6 * var(--u)) var(--tone);
+  color: var(--theme-fg);
+}
+
+.screen[data-theme="hud"] :is(.base-scan__segment, .base-weapons__cell):not([data-lit="true"]) {
+  border-color: color-mix(in srgb, var(--tone) 35%, transparent);
+  background: none;
+}
+
+.screen[data-theme="hud"] .base-spectrum__bar {
+  border-bottom: 0;
+}
+
+.screen[data-theme="hud"] .base-spectrum__peak {
+  box-shadow: 0 0 calc(0.5 * var(--u)) var(--tone);
+}
+
+.screen[data-theme="hud"] .base-reactor__segment {
+  border-radius: 0;
+  box-shadow: 0 0 calc(1.2 * var(--u)) color-mix(in srgb, var(--tone) 60%, transparent);
+}
+
+.screen[data-theme="hud"] .base-ladder__step {
+  width: calc(50% + var(--rung) * 50%);
+  clip-path: polygon(0 0, calc(100% - 1.2 * var(--u)) 0, 100% 50%, calc(100% - 1.2 * var(--u)) 100%, 0 100%);
+}
+
+.screen[data-theme="hud"] .ship-outline {
+  fill: color-mix(in srgb, var(--tone-neutral) 10%, transparent);
+  stroke-width: 0.6;
+}
+
+.screen[data-theme="hud"] .base-shields__arc {
+  stroke-linecap: butt;
+}
+
+.screen[data-theme="hud"] .base-target__brackets path {
+  stroke-width: 1.2;
+}
+
+.screen[data-theme="hud"] .base-chart__grid line {
+  stroke-dasharray: 0.6 1.2;
+}
+
+.screen[data-theme="hud"] .base-globe__disc {
+  fill: color-mix(in srgb, var(--tone) 14%, transparent);
+}

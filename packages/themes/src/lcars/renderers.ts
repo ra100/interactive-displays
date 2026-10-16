@@ -5,11 +5,13 @@ import { LcarsButtonGroup } from "./LcarsControls.tsx";
 import { LcarsAlertBanner, LcarsDataCascade, LcarsGauge, LcarsReadout } from "./LcarsData.tsx";
 import { LcarsBar, LcarsBracket, LcarsCap, LcarsElbow, LcarsScan, LcarsSegments } from "./LcarsDecor.tsx";
 import { LcarsConsoleFrame, LcarsDashboardFrame, LcarsHeaderMainFrame, LcarsSidebarFrame, LcarsSplitFrame } from "./LcarsFrames.tsx";
+import { LcarsPanelFrame } from "./LcarsPanel.tsx";
 import { LcarsText } from "./LcarsText.tsx";
 import { LcarsTitle } from "./LcarsTitle.tsx";
 import "@fontsource/antonio/latin-400.css";
 import "@fontsource/antonio/latin-700.css";
 import "./lcars.css";
+import "./instruments.css";
 
 export const lcarsRenderers: ThemeRenderers = defineRenderers({
   id: "lcars",
@@ -29,6 +31,7 @@ export const lcarsRenderers: ThemeRenderers = defineRenderers({
     dashboard: LcarsDashboardFrame,
     split: LcarsSplitFrame,
     console: LcarsConsoleFrame,
+    panel: LcarsPanelFrame,
   },
   decor: {
     ...decorRenderer(elbow, LcarsElbow),

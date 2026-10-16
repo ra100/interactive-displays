@@ -834,3 +834,908 @@
 .base-placeholder[data-size="large"] {
   font-size: calc(3.2 * var(--u));
 }
+
+/* ---- Scans and graphs ---- */
+
+.base-waveform,
+.base-spectrum,
+.base-globe,
+.base-scan,
+.base-shields,
+.base-weapons,
+.base-target,
+.base-heading,
+.base-ladder,
+.base-chart,
+.base-reactor {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  color: var(--tone);
+  font-family: var(--font-display);
+  text-transform: uppercase;
+}
+
+.base-waveform__label,
+.base-spectrum__label,
+.base-globe__label,
+.base-scan__label,
+.base-shields__label,
+.base-weapons__label,
+.base-target__label,
+.base-heading__label,
+.base-ladder__label,
+.base-chart__label,
+.base-reactor__label {
+  overflow: hidden;
+  font-size: min(14cqh, 7cqw, calc(2.4 * var(--u)));
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.base-waveform,
+.base-spectrum {
+  display: flex;
+  flex-direction: column;
+  gap: calc(0.6 * var(--u));
+}
+
+.base-waveform__scope {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  border: calc(0.12 * var(--u)) solid color-mix(in srgb, var(--tone) 35%, transparent);
+}
+
+.base-waveform[data-grid="true"] .base-waveform__scope {
+  background:
+    linear-gradient(to right, color-mix(in srgb, var(--tone) 18%, transparent) calc(0.1 * var(--u)), transparent 0) 0 0 / 10% 100%,
+    linear-gradient(to bottom, color-mix(in srgb, var(--tone) 18%, transparent) calc(0.1 * var(--u)), transparent 0) 0 0 / 100% 25%,
+    linear-gradient(to bottom, transparent calc(50% - 0.1 * var(--u)), color-mix(in srgb, var(--tone) 40%, transparent) 0 calc(50% + 0.1 * var(--u)), transparent 0);
+}
+
+@keyframes base-wave-run {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.base-waveform__trace {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 200%;
+  animation: base-wave-run linear infinite;
+}
+
+.base-waveform__trace svg {
+  width: 100%;
+  height: 100%;
+}
+
+.base-waveform__trace path {
+  fill: none;
+  stroke: var(--tone);
+  stroke-linejoin: round;
+  stroke-width: 2.5;
+}
+
+.base-waveform__trace:not([data-trace="0"]) path {
+  stroke-width: 1.5;
+  opacity: 0.55;
+}
+
+.base-spectrum__bands {
+  display: flex;
+  flex: 1;
+  align-items: stretch;
+  gap: max(1px, calc(0.2 * var(--u)));
+  min-height: 0;
+  border-bottom: calc(0.15 * var(--u)) solid var(--tone);
+}
+
+.base-spectrum__band {
+  position: relative;
+  flex: 1;
+  animation: base-spectrum-band ease-in-out infinite alternate;
+  --now: var(--level);
+}
+
+@property --now {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+@keyframes base-spectrum-band {
+  from {
+    --now: var(--lo);
+  }
+  to {
+    --now: var(--hi);
+  }
+}
+
+.base-spectrum[data-activity="still"] .base-spectrum__band {
+  animation: none;
+}
+
+.base-spectrum__bar {
+  position: absolute;
+  inset: auto 0 0;
+  height: calc(var(--now) * 100%);
+  background: var(--tone);
+}
+
+/* Each band's peak holds at the highest it swings to. */
+.base-spectrum__peak {
+  position: absolute;
+  right: 0;
+  bottom: calc(var(--hi) * 100% + max(1px, 0.25 * var(--u)));
+  left: 0;
+  height: max(1px, calc(0.3 * var(--u)));
+  background: var(--tone);
+  opacity: 0.8;
+}
+
+.base-spectrum__ruler {
+  display: flex;
+  flex: none;
+  justify-content: space-between;
+  min-height: calc(1.6 * var(--u));
+  padding-top: calc(0.9 * var(--u));
+  background: repeating-linear-gradient(to right, color-mix(in srgb, var(--tone) 70%, transparent) 0 max(1px, calc(0.12 * var(--u))), transparent 0 6.25%) top / 100% calc(0.7 * var(--u)) no-repeat;
+  font-size: min(10cqh, 4cqw, calc(1.8 * var(--u)));
+  letter-spacing: 0.06em;
+}
+
+.base-globe {
+  display: flex;
+  flex-direction: column;
+  gap: calc(0.4 * var(--u));
+}
+
+.base-globe__planet {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  overflow: visible;
+}
+
+.base-globe__disc {
+  fill: color-mix(in srgb, var(--tone) 8%, transparent);
+}
+
+.base-globe__line,
+.base-globe__meridian,
+.base-globe__rim {
+  fill: none;
+  stroke: var(--tone);
+  stroke-width: 0.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.base-globe__line,
+.base-globe__meridian {
+  opacity: 0.6;
+}
+
+.base-globe__rim {
+  stroke-width: 1.5;
+}
+
+/* Meridians swing from one edge to the other: a cosine, near enough, so the globe reads as turning. */
+@keyframes base-globe-turn {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(-1);
+  }
+}
+
+.base-globe__meridian {
+  transform-origin: 50px 50px;
+  animation: base-globe-turn ease-in-out infinite alternate;
+}
+
+@keyframes base-globe-scan {
+  from {
+    transform: translateY(-44px);
+  }
+  to {
+    transform: translateY(44px);
+  }
+}
+
+.base-globe__scan {
+  fill: var(--tone);
+  opacity: 0.45;
+  animation: base-globe-scan ease-in-out infinite alternate;
+}
+
+@keyframes base-blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.base-globe__site {
+  fill: var(--tone-warning, var(--tone));
+  animation: base-blink 1.6s steps(2, jump-none) infinite;
+}
+
+.base-scan {
+  display: grid;
+  grid-template: "label value" auto "track track" minmax(calc(1 * var(--u)), calc(3.5 * var(--u))) / minmax(0, 1fr) auto;
+  align-content: center;
+  align-items: end;
+  gap: calc(0.6 * var(--u)) calc(1.5 * var(--u));
+}
+
+.base-scan__value {
+  font-size: min(30cqh, 9cqw, calc(4 * var(--u)));
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.base-scan__track {
+  display: flex;
+  grid-area: track;
+  align-self: stretch;
+  gap: calc(0.3 * var(--u));
+  max-height: calc(3.5 * var(--u));
+  min-height: calc(1 * var(--u));
+}
+
+.base-scan__segment {
+  flex: 1;
+  background: var(--tone);
+  opacity: 0.18;
+}
+
+.base-scan__segment[data-lit="true"] {
+  opacity: 1;
+}
+
+.base-scan__segment[data-head="true"] {
+  animation: base-blink 0.5s steps(2, jump-none) infinite;
+  opacity: 0.7;
+}
+
+.base-scan[data-done="true"] .base-scan__label {
+  animation: base-blink 0.9s steps(2, jump-none) infinite;
+}
+
+/* ---- Tactical ---- */
+
+.base-shields {
+  display: grid;
+  grid-template:
+    "label   forward overall" auto
+    "port    view    starboard" minmax(0, 1fr)
+    ".       aft     ." auto / minmax(min-content, 1fr) minmax(0, 3fr) minmax(min-content, 1fr);
+  align-items: center;
+  gap: calc(0.4 * var(--u));
+}
+
+.base-shields__label {
+  grid-area: label;
+  align-self: start;
+}
+
+.base-shields__overall {
+  grid-area: overall;
+  align-self: start;
+  justify-self: end;
+  font-size: min(12cqh, 7cqw, calc(3 * var(--u)));
+  font-variant-numeric: tabular-nums;
+}
+
+.base-shields__view {
+  grid-area: view;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: visible;
+}
+
+.base-shields__facing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--tone);
+  font-size: min(8cqh, 5cqw, calc(1.9 * var(--u)));
+  letter-spacing: 0.06em;
+  line-height: 1.1;
+}
+
+.base-shields__facing[data-facing="forward"] {
+  grid-area: forward;
+}
+
+.base-shields__facing[data-facing="aft"] {
+  grid-area: aft;
+}
+
+.base-shields__facing[data-facing="port"] {
+  grid-area: port;
+}
+
+.base-shields__facing[data-facing="starboard"] {
+  grid-area: starboard;
+}
+
+.base-shields__facing-value {
+  font-size: 1.6em;
+  font-variant-numeric: tabular-nums;
+}
+
+.ship-outline {
+  fill: color-mix(in srgb, var(--tone-neutral, currentColor) 22%, transparent);
+  stroke: var(--tone-neutral, currentColor);
+  stroke-width: 0.8;
+  vector-effect: non-scaling-stroke;
+}
+
+.base-shields__track,
+.base-shields__arc {
+  fill: none;
+  stroke: var(--tone);
+  stroke-linecap: round;
+}
+
+.base-shields__track {
+  stroke-width: 0.6;
+  stroke-dasharray: 1.5 1.5;
+  opacity: 0.4;
+}
+
+.base-shields__arc {
+  transition: stroke-width 400ms, opacity 400ms;
+}
+
+.base-shields [data-down="true"] .base-shields__arc {
+  display: none;
+}
+
+.base-weapons {
+  display: flex;
+  flex-direction: column;
+  gap: calc(0.6 * var(--u));
+}
+
+.base-weapons__banks {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-evenly;
+  gap: calc(0.4 * var(--u));
+  min-height: 0;
+}
+
+.base-weapons__bank,
+.base-weapons__tubes {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr) minmax(0, 1fr);
+  align-items: center;
+  gap: calc(1 * var(--u));
+  min-height: 0;
+  font-size: min(10cqh, 4.5cqw, calc(2.2 * var(--u)));
+  letter-spacing: 0.05em;
+}
+
+.base-weapons__name,
+.base-weapons__state {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.base-weapons__state {
+  text-align: right;
+}
+
+.base-weapons__charge,
+.base-weapons__pips {
+  display: flex;
+  gap: calc(0.25 * var(--u));
+  height: min(60cqh, calc(1.4 * var(--u)));
+}
+
+.base-weapons__cell {
+  flex: 1;
+  background: var(--tone);
+  opacity: 0.18;
+}
+
+.base-weapons__cell[data-lit="true"] {
+  opacity: 1;
+}
+
+.base-weapons__bank[data-state="offline"] {
+  color: var(--tone-neutral, currentColor);
+  opacity: 0.6;
+}
+
+.base-weapons__bank[data-state="charging"] .base-weapons__state {
+  animation: base-blink 1.2s steps(2, jump-none) infinite;
+}
+
+.base-weapons__bank[data-state="armed"] .base-weapons__state {
+  font-weight: 700;
+}
+
+.base-weapons__pip {
+  width: calc(2.6 * var(--u));
+  border: calc(0.15 * var(--u)) solid var(--tone);
+  border-radius: 999px;
+}
+
+.base-weapons__pip[data-loaded="true"] {
+  background: var(--tone);
+}
+
+.base-weapons__count {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.base-target {
+  display: grid;
+  grid-template:
+    "label status" auto
+    "scope data" minmax(0, 1fr) / minmax(0, 1.4fr) minmax(min-content, 1fr);
+  gap: calc(0.6 * var(--u)) calc(1.5 * var(--u));
+}
+
+.base-target__status {
+  grid-area: status;
+  justify-self: end;
+  font-size: min(10cqh, 5cqw, calc(2.4 * var(--u)));
+  letter-spacing: 0.1em;
+}
+
+.base-target[data-locked="false"] .base-target__status {
+  animation: base-blink 0.8s steps(2, jump-none) infinite;
+}
+
+.base-target__scope {
+  grid-area: scope;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: visible;
+}
+
+.base-target__ring,
+.base-target__cross,
+.base-target__brackets path {
+  fill: none;
+  stroke: var(--tone);
+  stroke-width: 0.7;
+  vector-effect: non-scaling-stroke;
+}
+
+.base-target__ring {
+  stroke-dasharray: 14 3 2 3;
+  transform-origin: 50px 50px;
+  animation: base-spin 18s linear infinite;
+}
+
+.base-target__ring--inner {
+  opacity: 0.5;
+  animation-direction: reverse;
+}
+
+@keyframes base-spin {
+  to {
+    rotate: 1turn;
+  }
+}
+
+.base-target__brackets path {
+  stroke-width: 2;
+}
+
+.base-target__brackets {
+  transform-origin: 50px 50px;
+  transition: transform 300ms ease-out;
+}
+
+/* Hunting: the brackets breathe and the blip drifts; locked: brackets close on a still target. */
+@keyframes base-target-hunt {
+  50% {
+    transform: scale(1.35);
+  }
+}
+
+@keyframes base-target-drift {
+  25% {
+    transform: translate(9px, -6px);
+  }
+  50% {
+    transform: translate(-4px, 7px);
+  }
+  75% {
+    transform: translate(-8px, -3px);
+  }
+}
+
+.base-target[data-locked="false"] .base-target__brackets {
+  animation: base-target-hunt 1.4s ease-in-out infinite;
+}
+
+.base-target[data-locked="false"] .base-target__blip {
+  animation: base-target-drift 5s ease-in-out infinite;
+}
+
+.base-target[data-locked="true"] .base-target__brackets {
+  transform: scale(0.55);
+}
+
+.base-target__blip rect {
+  fill: var(--tone);
+}
+
+.base-target__data {
+  display: flex;
+  grid-area: data;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(0.5 * var(--u));
+  min-width: 0;
+  margin: 0;
+}
+
+.base-target__row {
+  display: flex;
+  justify-content: space-between;
+  gap: calc(1 * var(--u));
+  font-size: min(9cqh, 4.5cqw, calc(2.2 * var(--u)));
+  letter-spacing: 0.05em;
+}
+
+.base-target__row dt {
+  opacity: 0.75;
+}
+
+.base-target__row dd {
+  overflow: hidden;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.base-target__row--name {
+  flex-direction: column;
+  gap: 0;
+}
+
+.base-target__unit {
+  margin-left: 0.2em;
+  font-size: 0.7em;
+}
+
+/* ---- Navigation ---- */
+
+.base-heading {
+  display: grid;
+  grid-template: "label value" auto "tape tape" minmax(calc(3 * var(--u)), calc(7 * var(--u))) / minmax(0, 1fr) auto;
+  align-content: center;
+  align-items: end;
+  gap: calc(0.6 * var(--u)) calc(1.5 * var(--u));
+}
+
+.base-heading[data-variant="rose"] {
+  grid-template: "label" auto "rose" minmax(0, 1fr) "value" auto / 100%;
+  justify-items: center;
+}
+
+.base-heading__value {
+  display: flex;
+  grid-area: value;
+  align-items: baseline;
+  gap: 0.3em;
+  font-size: min(26cqh, 9cqw, calc(4 * var(--u)));
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.base-heading__mark-word {
+  font-size: 0.5em;
+  opacity: 0.8;
+}
+
+.base-heading__tape {
+  position: relative;
+  grid-area: tape;
+  align-self: stretch;
+  max-height: calc(7 * var(--u));
+  min-height: calc(3 * var(--u));
+  overflow: hidden;
+  border-top: calc(0.15 * var(--u)) solid var(--tone);
+}
+
+.base-heading__notch {
+  position: absolute;
+  top: 0;
+  width: max(1px, calc(0.12 * var(--u)));
+  height: 25%;
+  background: var(--tone);
+  opacity: 0.6;
+}
+
+.base-heading__notch[data-major="true"] {
+  height: 45%;
+  opacity: 1;
+}
+
+.base-heading__notch-label {
+  position: absolute;
+  top: 110%;
+  left: 50%;
+  font-size: min(30cqh, calc(1.8 * var(--u)));
+  transform: translateX(-50%);
+}
+
+.base-heading__pointer {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  border: calc(1 * var(--u)) solid transparent;
+  border-top-color: var(--tone-warning, var(--tone));
+  transform: translateX(-50%);
+}
+
+.base-heading__rose {
+  grid-area: rose;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.base-heading__dial,
+.base-heading__tick,
+.base-heading__needle {
+  fill: none;
+  stroke: var(--tone);
+  stroke-width: 0.8;
+  vector-effect: non-scaling-stroke;
+}
+
+.base-heading__tick[data-major="true"] {
+  stroke-width: 2;
+}
+
+.base-heading__card {
+  transform-origin: 50px 50px;
+  transition: transform 400ms linear;
+}
+
+.base-heading__rose-label {
+  fill: var(--tone);
+  font-size: 6px;
+  text-anchor: middle;
+}
+
+.base-heading__needle {
+  fill: var(--tone-warning, var(--tone));
+  stroke: var(--tone-warning, var(--tone));
+}
+
+.base-heading__hub {
+  fill: var(--tone);
+}
+
+.base-ladder {
+  display: grid;
+  grid-template: "label value" auto "steps steps" minmax(0, 1fr) / minmax(0, 1fr) auto;
+  align-items: end;
+  gap: calc(0.6 * var(--u)) calc(1.5 * var(--u));
+}
+
+.base-ladder__value {
+  font-size: min(18cqh, 9cqw, calc(4.5 * var(--u)));
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.base-ladder__steps {
+  display: flex;
+  grid-area: steps;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  align-self: stretch;
+  gap: calc(0.3 * var(--u));
+  min-height: 0;
+}
+
+.base-ladder[data-direction="row"] .base-ladder__steps {
+  flex-direction: row;
+  align-items: flex-end;
+}
+
+/* Rungs widen (or grow taller in a row) as the speed climbs. */
+.base-ladder__step {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  width: calc(35% + var(--rung) * 65%);
+  min-height: 0;
+  max-height: calc(4 * var(--u));
+  padding: 0 calc(0.8 * var(--u));
+  background: color-mix(in srgb, var(--tone) 18%, transparent);
+  color: var(--tone);
+  font-size: min(5cqh, 4cqw, calc(2 * var(--u)));
+}
+
+.base-ladder[data-direction="row"] .base-ladder__step {
+  justify-content: center;
+  width: auto;
+  height: calc(35% + var(--rung) * 65%);
+  max-height: none;
+  padding: 0;
+  font-size: min(12cqh, 3cqw, calc(2 * var(--u)));
+}
+
+.base-ladder__step[data-lit="true"] {
+  background: var(--tone);
+  color: var(--theme-bg);
+}
+
+.base-ladder__step[data-current="true"] {
+  animation: base-blink 1.4s ease-in-out infinite;
+}
+
+.base-chart {
+  overflow: hidden;
+  border: calc(0.12 * var(--u)) solid color-mix(in srgb, var(--tone) 35%, transparent);
+}
+
+.base-chart__label {
+  position: absolute;
+  top: calc(0.6 * var(--u));
+  left: calc(1 * var(--u));
+  z-index: 1;
+}
+
+.base-chart__map {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.base-chart__grid line {
+  stroke: var(--tone);
+  stroke-width: 0.15;
+  opacity: 0.35;
+}
+
+.base-chart__star {
+  fill: var(--tone-neutral, currentColor);
+  opacity: 0.7;
+}
+
+.base-chart__star[data-bright="true"] {
+  fill: var(--tone-accent, currentColor);
+  opacity: 1;
+}
+
+.base-chart__course {
+  fill: none;
+  stroke: var(--tone);
+  stroke-width: 2;
+}
+
+.base-chart__course[data-part="ahead"] {
+  stroke-dasharray: 6 5;
+  opacity: 0.7;
+}
+
+.base-chart__waypoint rect {
+  fill: var(--theme-bg);
+  stroke: var(--tone);
+  stroke-width: 0.4;
+}
+
+.base-chart__waypoint[data-passed="true"] rect {
+  fill: var(--tone);
+}
+
+.base-chart__waypoint text {
+  fill: var(--tone);
+  font-family: var(--font-display);
+  font-size: 1.9px;
+  letter-spacing: 0.05em;
+}
+
+.base-chart__target {
+  fill: none;
+  stroke: var(--tone-warning, var(--tone));
+  stroke-width: 0.4;
+  stroke-dasharray: 1.5 1;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: base-spin 12s linear infinite;
+}
+
+.base-chart__ship {
+  fill: var(--tone-warning, var(--tone));
+}
+
+.base-reactor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(0.5 * var(--u));
+}
+
+.base-reactor[data-direction="row"] {
+  align-items: stretch;
+}
+
+.base-reactor__column {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: calc(0.3 * var(--u));
+  width: min(100%, calc(9 * var(--u)));
+  min-height: 0;
+}
+
+.base-reactor[data-direction="row"] .base-reactor__column {
+  flex-direction: row;
+  width: 100%;
+  max-height: calc(9 * var(--u));
+}
+
+@keyframes base-reactor-pulse {
+  0%,
+  100% {
+    opacity: calc(var(--glow) * 0.35);
+  }
+  30% {
+    opacity: var(--glow);
+  }
+}
+
+.base-reactor__segment {
+  flex: 1;
+  border-radius: calc(0.4 * var(--u));
+  background: var(--tone);
+  animation: base-reactor-pulse ease-in-out infinite;
+}
+
+.base-reactor__segment[data-chamber="true"] {
+  flex: 1.8;
+  margin: 0 calc(-0.8 * var(--u));
+  box-shadow: 0 0 calc(2 * var(--u)) color-mix(in srgb, var(--tone) 70%, transparent);
+}
+
+.base-reactor[data-direction="row"] .base-reactor__segment[data-chamber="true"] {
+  margin: calc(-0.8 * var(--u)) 0;
+}
+
+/* A panel nested in another layout: a title over a ruled section. */
+.base-frame[data-archetype="panel"] {
+  grid-template: "title" auto "main" minmax(0, 1fr) "status" auto / minmax(0, 1fr);
+  gap: calc(0.8 * var(--u));
+  padding-left: calc(1 * var(--u));
+  border-left: calc(0.3 * var(--u)) solid var(--tone-neutral);
+}
+
+.base-frame[data-archetype="panel"] .base-frame__slot[data-slot="title"] {
+  height: calc(4.5 * var(--u));
+}
+
+.base-frame[data-archetype="panel"] .base-frame__slot[data-slot="status"] {
+  height: calc(3 * var(--u));
+  border-top: 0;
+}
