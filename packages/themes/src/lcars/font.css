@@ -1,0 +1,26 @@
+/*
+ * Antonio, self-hosted, with its vertical metrics evened out. As shipped its ascent (1.155em) is far taller than
+ * its capitals (0.88em) and its descent is small, so all-caps labels sat low in their line and a tight line
+ * height cut off the bottom of the letters. These overrides put the capitals in the middle of the line.
+ */
+@font-face {
+  font-family: "Antonio";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url("../../node_modules/@fontsource/antonio/files/antonio-latin-400-normal.woff2") format("woff2");
+  ascent-override: 97%;
+  descent-override: 9%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Antonio";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url("../../node_modules/@fontsource/antonio/files/antonio-latin-700-normal.woff2") format("woff2");
+  ascent-override: 97%;
+  descent-override: 9%;
+  line-gap-override: 0%;
+}
