@@ -35,9 +35,9 @@ export const sampleOverview = (overrides: Partial<ShowOverview> = {}): ShowOverv
   cue: null,
   signals: {},
   screens: [
-    { id: "bridge", name: "Bridge", tags: [], profile: { aspect: "16:9", fit: "fluid" }, revision: 0, published: 0 },
-    { id: "engineering", name: "Engineering", tags: [], profile: { aspect: "16:9", fit: "fluid" }, revision: 2, published: 1 },
-    { id: "draft", name: "Draft only", tags: [], profile: { aspect: "16:9", fit: "fluid" }, revision: 0, published: null },
+    { id: "bridge", name: "Bridge", tags: [], profile: { aspect: "16:9", fit: "fluid", rearrange: true }, revision: 0, published: 0 },
+    { id: "engineering", name: "Engineering", tags: [], profile: { aspect: "16:9", fit: "fluid", rearrange: true }, revision: 2, published: 1 },
+    { id: "draft", name: "Draft only", tags: [], profile: { aspect: "16:9", fit: "fluid", rearrange: true }, revision: 0, published: null },
   ],
   displays: [
     {

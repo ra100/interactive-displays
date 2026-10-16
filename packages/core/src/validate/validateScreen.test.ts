@@ -32,7 +32,7 @@ describe("validateScreen", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.value.tags).toEqual([]);
-    expect(result.value.profile).toEqual({ aspect: "16:9", fit: "fluid" });
+    expect(result.value.profile).toEqual({ aspect: "16:9", fit: "fluid", rearrange: true });
     expect(result.value.revision).toBe(0);
 
     const root = result.value.root;
@@ -58,6 +58,17 @@ describe("validateScreen", () => {
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.issues).toEqual([{ path: "root.children.1.node.id", message: 'Duplicate node id "a"' }]);
+  });
+
+  it("lets only stacks and grids turn into a row or a column", () => {
+    const turned = (kind: string, arrange: string) => ({ node: { id: kind, type: "widget", kind, props: { text: "A" }, turned: { arrange } } });
+    expect(validateScreen(screen([turned("text", "keep")]), catalog).ok).toBe(true);
+    const result = validateScreen(screen([turned("text", "row")]), catalog);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.issues).toEqual([{ path: "root.children.0.node.turned.arrange", message: "Only stacks and grids can turn into a row" }]);
+    const stack = screen([]);
+    expect(validateScreen({ ...stack, root: { ...stack.root, turned: { arrange: "column" } } }, catalog).ok).toBe(true);
   });
 
   it("reports unknown widget kinds", () => {

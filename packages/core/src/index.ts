@@ -14,6 +14,7 @@ export * from "./catalog/defineDecor.ts";
 export * from "./catalog/index.ts";
 export * from "./tree/tree.ts";
 export * from "./tree/when.ts";
+export * from "./tree/turn.ts";
 export * from "./tree/ids.ts";
 export * from "./signals/sample.ts";
 export * from "./signals/bindings.ts";

@@ -65,6 +65,11 @@ export const validateScreen = (input: unknown, catalog: Catalog, decor?: DecorCa
     }
     seen.add(node.id);
 
+    const arrange = node.turned?.arrange;
+    if ((arrange === "row" || arrange === "column") && !(node.type === "container" && (node.layout.kind === "stack" || node.layout.kind === "grid"))) {
+      issues.push({ path: formatPath([...path, "turned", "arrange"]), message: `Only stacks and grids can turn into a ${arrange}` });
+    }
+
     if (node.type === "container") {
       if (node.layout.kind === "frame" && !isArchetype(node.layout.archetype)) {
         issues.push({
