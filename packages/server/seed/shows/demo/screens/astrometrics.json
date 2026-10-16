@@ -1,0 +1,431 @@
+{
+  "schemaVersion": 2,
+  "id": "astrometrics",
+  "name": "Astrometrics",
+  "tags": [
+    "demo",
+    "lcars",
+    "header-main",
+    "science"
+  ],
+  "profile": {
+    "aspect": "16:9",
+    "fit": "fluid"
+  },
+  "revision": 0,
+  "published": 0,
+  "root": {
+    "id": "root",
+    "type": "container",
+    "layout": {
+      "kind": "frame",
+      "archetype": "header-main"
+    },
+    "children": [
+      {
+        "slot": "title",
+        "node": {
+          "id": "title",
+          "type": "widget",
+          "kind": "title",
+          "props": {
+            "text": "Astrometrics",
+            "code": "SCI 47-0812",
+            "tone": "info"
+          }
+        }
+      },
+      {
+        "slot": "toolbar",
+        "node": {
+          "id": "tool-0",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Survey",
+            "tone": "info"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "toolbar",
+        "node": {
+          "id": "tool-1",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Spectral",
+            "tone": "accent"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "toolbar",
+        "node": {
+          "id": "tool-2",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Life signs",
+            "tone": "primary"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "toolbar",
+        "node": {
+          "id": "tool-3",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Probes",
+            "tone": "secondary"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "toolbar",
+        "node": {
+          "id": "tool-4",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Archive",
+            "tone": "neutral"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "main",
+        "node": {
+          "id": "as-grid",
+          "type": "container",
+          "layout": {
+            "kind": "grid",
+            "columns": [
+              "1.4fr",
+              "1fr",
+              "1fr"
+            ],
+            "rows": [
+              "1fr",
+              "1fr"
+            ],
+            "gap": "large"
+          },
+          "children": [
+            {
+              "area": {
+                "col": 1,
+                "row": 1,
+                "rowSpan": 2
+              },
+              "node": {
+                "id": "as-planet",
+                "type": "container",
+                "layout": {
+                  "kind": "frame",
+                  "archetype": "panel",
+                  "variant": "sweep"
+                },
+                "children": [
+                  {
+                    "slot": "title",
+                    "node": {
+                      "id": "as-planet-title",
+                      "type": "widget",
+                      "kind": "title",
+                      "props": {
+                        "text": "Planetary survey",
+                        "tone": "info"
+                      }
+                    }
+                  },
+                  {
+                    "slot": "main",
+                    "node": {
+                      "id": "as-planet-body",
+                      "type": "container",
+                      "layout": {
+                        "kind": "stack",
+                        "direction": "column",
+                        "gap": "medium"
+                      },
+                      "children": [
+                        {
+                          "weight": 5,
+                          "node": {
+                            "id": "as-globe",
+                            "type": "widget",
+                            "kind": "globe",
+                            "props": {
+                              "label": "Class M, Kepler 452b",
+                              "sites": 4,
+                              "tone": "info"
+                            }
+                          }
+                        },
+                        {
+                          "weight": 1,
+                          "node": {
+                            "id": "as-survey",
+                            "type": "widget",
+                            "kind": "scan-progress",
+                            "props": {
+                              "label": "Surface survey",
+                              "seconds": 18,
+                              "tone": "primary"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "slot": "status",
+                    "node": {
+                      "id": "as-planet-status",
+                      "type": "widget",
+                      "kind": "text",
+                      "props": {
+                        "text": "Orbit stable",
+                        "size": "small",
+                        "tone": "neutral"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "area": {
+                "col": 2,
+                "row": 1,
+                "colSpan": 2
+              },
+              "node": {
+                "id": "as-carrier",
+                "type": "container",
+                "layout": {
+                  "kind": "frame",
+                  "archetype": "panel",
+                  "variant": "top-right"
+                },
+                "children": [
+                  {
+                    "slot": "title",
+                    "node": {
+                      "id": "as-carrier-title",
+                      "type": "widget",
+                      "kind": "title",
+                      "props": {
+                        "text": "Subspace carrier",
+                        "tone": "accent"
+                      }
+                    }
+                  },
+                  {
+                    "slot": "main",
+                    "node": {
+                      "id": "as-wave",
+                      "type": "widget",
+                      "kind": "waveform",
+                      "props": {
+                        "label": "Carrier and sidebands",
+                        "shape": "noise",
+                        "traces": 3,
+                        "tone": "accent"
+                      },
+                      "when": [
+                        {
+                          "state": "red-alert",
+                          "props": {
+                            "speed": "fast"
+                          }
+                        },
+                        {
+                          "state": "damaged",
+                          "props": {
+                            "speed": "fast"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "area": {
+                "col": 2,
+                "row": 2
+              },
+              "node": {
+                "id": "as-em",
+                "type": "container",
+                "layout": {
+                  "kind": "frame",
+                  "archetype": "panel",
+                  "variant": "bottom"
+                },
+                "children": [
+                  {
+                    "slot": "title",
+                    "node": {
+                      "id": "as-em-title",
+                      "type": "widget",
+                      "kind": "title",
+                      "props": {
+                        "text": "Spectral analysis",
+                        "tone": "primary"
+                      }
+                    }
+                  },
+                  {
+                    "slot": "main",
+                    "node": {
+                      "id": "as-spectrum",
+                      "type": "widget",
+                      "kind": "spectrum",
+                      "props": {
+                        "label": "EM spectrum",
+                        "bands": 32,
+                        "from": "400 THz",
+                        "to": "790 THz",
+                        "tone": "primary"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "area": {
+                "col": 3,
+                "row": 2
+              },
+              "node": {
+                "id": "as-life",
+                "type": "container",
+                "layout": {
+                  "kind": "frame",
+                  "archetype": "panel",
+                  "variant": "bracket"
+                },
+                "children": [
+                  {
+                    "slot": "title",
+                    "node": {
+                      "id": "as-life-title",
+                      "type": "widget",
+                      "kind": "title",
+                      "props": {
+                        "text": "Life signs",
+                        "tone": "secondary"
+                      }
+                    }
+                  },
+                  {
+                    "slot": "main",
+                    "node": {
+                      "id": "as-life-body",
+                      "type": "container",
+                      "layout": {
+                        "kind": "stack",
+                        "direction": "column",
+                        "gap": "medium"
+                      },
+                      "children": [
+                        {
+                          "weight": 2,
+                          "node": {
+                            "id": "as-pulse",
+                            "type": "widget",
+                            "kind": "waveform",
+                            "props": {
+                              "label": "Biosignature",
+                              "shape": "heartbeat",
+                              "traces": 1,
+                              "grid": false,
+                              "tone": "success"
+                            }
+                          }
+                        },
+                        {
+                          "weight": 1,
+                          "node": {
+                            "id": "as-count",
+                            "type": "widget",
+                            "kind": "readout",
+                            "props": {
+                              "label": "Lifeforms",
+                              "value": 1012,
+                              "tone": "secondary"
+                            },
+                            "bind": {
+                              "value": {
+                                "ambient": {
+                                  "kind": "walk",
+                                  "min": 1008,
+                                  "max": 1015,
+                                  "volatility": 0.2
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slot": "status",
+        "node": {
+          "id": "status",
+          "type": "widget",
+          "kind": "text",
+          "props": {
+            "text": "Survey under way. No anomalies.",
+            "size": "small",
+            "tone": "neutral"
+          }
+        }
+      }
+    ]
+  }
+}

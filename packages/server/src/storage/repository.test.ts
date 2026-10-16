@@ -56,7 +56,9 @@ describe("ensureSeeded", () => {
     expect(loaded?.show.id).toBe("demo");
     expect(loaded?.show.theme.id).toBe("lcars");
     expect([...(loaded?.screens.keys() ?? [])]).toEqual([
+      "astrometrics",
       "bridge",
+      "conn",
       "engineering",
       "operations",
       "schematic",
@@ -64,6 +66,7 @@ describe("ensureSeeded", () => {
       "standby",
       "tactical",
       "viewscreen",
+      "weapons-control",
     ]);
     expect([...(loaded?.published.keys() ?? [])]).toEqual([...(loaded?.screens.keys() ?? [])]);
     expect(await listAssets(dataDir, "demo")).toMatchObject([

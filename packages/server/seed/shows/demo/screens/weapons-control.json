@@ -1,0 +1,806 @@
+{
+  "schemaVersion": 2,
+  "id": "weapons-control",
+  "name": "Weapons control",
+  "tags": [
+    "demo",
+    "lcars",
+    "console",
+    "tactical"
+  ],
+  "profile": {
+    "aspect": "16:9",
+    "fit": "fluid"
+  },
+  "revision": 0,
+  "published": 0,
+  "root": {
+    "id": "root",
+    "type": "container",
+    "layout": {
+      "kind": "frame",
+      "archetype": "console"
+    },
+    "children": [
+      {
+        "slot": "title",
+        "node": {
+          "id": "title",
+          "type": "widget",
+          "kind": "title",
+          "props": {
+            "text": "Weapons control",
+            "code": "TAC 74-2291",
+            "tone": "danger"
+          }
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-0",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Phasers",
+            "tone": "danger"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-1",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Torpedoes",
+            "tone": "primary"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-2",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Shields",
+            "tone": "info"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-3",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Targeting",
+            "tone": "accent"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-4",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Red alert",
+            "tone": "danger"
+          },
+          "actions": [
+            {
+              "do": "setState",
+              "state": "red-alert"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-5",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Stand down",
+            "tone": "neutral"
+          },
+          "actions": [
+            {
+              "do": "setState",
+              "state": "normal"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-6",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Bridge",
+            "tone": "secondary"
+          },
+          "actions": [
+            {
+              "do": "navigate",
+              "screen": "bridge"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "toolbar",
+        "node": {
+          "id": "tool-0",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Lock",
+            "tone": "accent"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "toolbar",
+        "node": {
+          "id": "tool-1",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Fire",
+            "tone": "danger"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "toolbar",
+        "node": {
+          "id": "tool-2",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Spread",
+            "tone": "primary"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "toolbar",
+        "node": {
+          "id": "tool-3",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Evasive",
+            "tone": "secondary"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "main",
+        "node": {
+          "id": "wc-grid",
+          "type": "container",
+          "layout": {
+            "kind": "grid",
+            "columns": [
+              "1fr",
+              "1fr"
+            ],
+            "rows": [
+              "1fr",
+              "1fr"
+            ],
+            "gap": "large"
+          },
+          "children": [
+            {
+              "area": {
+                "col": 1,
+                "row": 1
+              },
+              "node": {
+                "id": "wc-shields",
+                "type": "container",
+                "layout": {
+                  "kind": "frame",
+                  "archetype": "panel",
+                  "variant": "sweep"
+                },
+                "children": [
+                  {
+                    "slot": "title",
+                    "node": {
+                      "id": "wc-shields-title",
+                      "type": "widget",
+                      "kind": "title",
+                      "props": {
+                        "text": "Shield grid",
+                        "tone": "info"
+                      }
+                    }
+                  },
+                  {
+                    "slot": "main",
+                    "node": {
+                      "id": "wc-shield",
+                      "type": "widget",
+                      "kind": "shield-status",
+                      "props": {
+                        "label": "Deflectors",
+                        "tone": "info"
+                      },
+                      "bind": {
+                        "forward": {
+                          "ambient": {
+                            "kind": "walk",
+                            "min": 90,
+                            "max": 100,
+                            "volatility": 0.25
+                          },
+                          "byState": {
+                            "red-alert": {
+                              "min": 15,
+                              "max": 60,
+                              "volatility": 0.85
+                            },
+                            "damaged": {
+                              "min": 15,
+                              "max": 60,
+                              "volatility": 0.85
+                            }
+                          }
+                        },
+                        "aft": {
+                          "ambient": {
+                            "kind": "walk",
+                            "min": 90,
+                            "max": 100,
+                            "volatility": 0.25
+                          },
+                          "byState": {
+                            "red-alert": {
+                              "min": 15,
+                              "max": 60,
+                              "volatility": 0.85
+                            },
+                            "damaged": {
+                              "min": 15,
+                              "max": 60,
+                              "volatility": 0.85
+                            }
+                          }
+                        },
+                        "port": {
+                          "ambient": {
+                            "kind": "walk",
+                            "min": 90,
+                            "max": 100,
+                            "volatility": 0.25
+                          },
+                          "byState": {
+                            "red-alert": {
+                              "min": 15,
+                              "max": 60,
+                              "volatility": 0.85
+                            },
+                            "damaged": {
+                              "min": 15,
+                              "max": 60,
+                              "volatility": 0.85
+                            }
+                          }
+                        },
+                        "starboard": {
+                          "ambient": {
+                            "kind": "walk",
+                            "min": 90,
+                            "max": 100,
+                            "volatility": 0.25
+                          },
+                          "byState": {
+                            "red-alert": {
+                              "min": 15,
+                              "max": 60,
+                              "volatility": 0.85
+                            },
+                            "damaged": {
+                              "min": 15,
+                              "max": 60,
+                              "volatility": 0.85
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "area": {
+                "col": 2,
+                "row": 1
+              },
+              "node": {
+                "id": "wc-banks",
+                "type": "container",
+                "layout": {
+                  "kind": "frame",
+                  "archetype": "panel",
+                  "variant": "sweep-right"
+                },
+                "children": [
+                  {
+                    "slot": "title",
+                    "node": {
+                      "id": "wc-banks-title",
+                      "type": "widget",
+                      "kind": "title",
+                      "props": {
+                        "text": "Phaser banks",
+                        "tone": "danger"
+                      }
+                    }
+                  },
+                  {
+                    "slot": "main",
+                    "node": {
+                      "id": "wc-weapons",
+                      "type": "widget",
+                      "kind": "weapons",
+                      "props": {
+                        "label": "Type X arrays",
+                        "banks": [
+                          "Dorsal array",
+                          "Ventral array",
+                          "Port array",
+                          "Stbd array"
+                        ],
+                        "tubes": 3,
+                        "ordnance": 247,
+                        "ordnanceLabel": "Photon torpedoes",
+                        "tone": "danger"
+                      },
+                      "bind": {
+                        "charge": {
+                          "ambient": {
+                            "kind": "walk",
+                            "min": 78,
+                            "max": 100,
+                            "volatility": 0.4
+                          },
+                          "byState": {
+                            "red-alert": {
+                              "min": 35,
+                              "max": 100,
+                              "volatility": 0.85
+                            },
+                            "damaged": {
+                              "min": 35,
+                              "max": 100,
+                              "volatility": 0.85
+                            }
+                          }
+                        }
+                      },
+                      "when": [
+                        {
+                          "state": "red-alert",
+                          "props": {
+                            "armed": true
+                          }
+                        },
+                        {
+                          "state": "damaged",
+                          "props": {
+                            "armed": true
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "area": {
+                "col": 1,
+                "row": 2
+              },
+              "node": {
+                "id": "wc-target",
+                "type": "container",
+                "layout": {
+                  "kind": "frame",
+                  "archetype": "panel",
+                  "variant": "bottom"
+                },
+                "children": [
+                  {
+                    "slot": "title",
+                    "node": {
+                      "id": "wc-target-title",
+                      "type": "widget",
+                      "kind": "title",
+                      "props": {
+                        "text": "Targeting scanner",
+                        "tone": "accent"
+                      }
+                    }
+                  },
+                  {
+                    "slot": "main",
+                    "node": {
+                      "id": "wc-lock",
+                      "type": "widget",
+                      "kind": "target-lock",
+                      "props": {
+                        "label": "Target",
+                        "bearing": 127,
+                        "mark": 4,
+                        "range": 42000,
+                        "tone": "danger"
+                      },
+                      "bind": {
+                        "bearing": {
+                          "ambient": {
+                            "kind": "walk",
+                            "min": 121,
+                            "max": 133,
+                            "volatility": 0.1
+                          }
+                        },
+                        "range": {
+                          "ambient": {
+                            "kind": "walk",
+                            "min": 30000,
+                            "max": 52000,
+                            "volatility": 0.3
+                          },
+                          "byState": {
+                            "red-alert": {
+                              "min": 2000,
+                              "max": 9000,
+                              "volatility": 0.85
+                            },
+                            "damaged": {
+                              "min": 2000,
+                              "max": 9000,
+                              "volatility": 0.85
+                            }
+                          }
+                        }
+                      },
+                      "when": [
+                        {
+                          "state": "red-alert",
+                          "props": {
+                            "locked": true,
+                            "target": "Warbird"
+                          }
+                        },
+                        {
+                          "state": "damaged",
+                          "props": {
+                            "locked": true,
+                            "target": "Warbird"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "area": {
+                "col": 2,
+                "row": 2
+              },
+              "node": {
+                "id": "wc-em",
+                "type": "container",
+                "layout": {
+                  "kind": "frame",
+                  "archetype": "panel",
+                  "variant": "bottom-right"
+                },
+                "children": [
+                  {
+                    "slot": "title",
+                    "node": {
+                      "id": "wc-em-title",
+                      "type": "widget",
+                      "kind": "title",
+                      "props": {
+                        "text": "EM signature",
+                        "tone": "primary"
+                      }
+                    }
+                  },
+                  {
+                    "slot": "main",
+                    "node": {
+                      "id": "wc-em-body",
+                      "type": "container",
+                      "layout": {
+                        "kind": "stack",
+                        "direction": "column",
+                        "gap": "medium"
+                      },
+                      "children": [
+                        {
+                          "weight": 3,
+                          "node": {
+                            "id": "wc-spectrum",
+                            "type": "widget",
+                            "kind": "spectrum",
+                            "props": {
+                              "label": "Subspace bands",
+                              "bands": 40,
+                              "from": "0.1 THz",
+                              "to": "40 THz",
+                              "tone": "accent"
+                            },
+                            "when": [
+                              {
+                                "state": "red-alert",
+                                "props": {
+                                  "activity": "busy"
+                                }
+                              },
+                              {
+                                "state": "damaged",
+                                "props": {
+                                  "activity": "busy"
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "weight": 1,
+                          "node": {
+                            "id": "wc-scan",
+                            "type": "widget",
+                            "kind": "scan-progress",
+                            "props": {
+                              "label": "Target analysis",
+                              "seconds": 14,
+                              "tone": "primary"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slot": "aside",
+        "node": {
+          "id": "wc-aside",
+          "type": "container",
+          "layout": {
+            "kind": "stack",
+            "direction": "column",
+            "gap": "large"
+          },
+          "children": [
+            {
+              "weight": 2,
+              "node": {
+                "id": "wc-tubes",
+                "type": "container",
+                "layout": {
+                  "kind": "frame",
+                  "archetype": "panel",
+                  "variant": "bracket"
+                },
+                "children": [
+                  {
+                    "slot": "title",
+                    "node": {
+                      "id": "wc-tubes-title",
+                      "type": "widget",
+                      "kind": "title",
+                      "props": {
+                        "text": "Launchers",
+                        "tone": "primary"
+                      }
+                    }
+                  },
+                  {
+                    "slot": "main",
+                    "node": {
+                      "id": "wc-tubes-body",
+                      "type": "container",
+                      "layout": {
+                        "kind": "stack",
+                        "direction": "column",
+                        "gap": "small"
+                      },
+                      "children": [
+                        {
+                          "node": {
+                            "id": "wc-yield",
+                            "type": "widget",
+                            "kind": "gauge",
+                            "props": {
+                              "label": "Yield",
+                              "value": 48,
+                              "unit": "MT",
+                              "min": 0,
+                              "max": 60,
+                              "variant": "segmented",
+                              "tone": "primary"
+                            }
+                          }
+                        },
+                        {
+                          "node": {
+                            "id": "wc-loaded",
+                            "type": "widget",
+                            "kind": "readout",
+                            "props": {
+                              "label": "Loaded",
+                              "value": 4,
+                              "tone": "secondary"
+                            }
+                          }
+                        },
+                        {
+                          "node": {
+                            "id": "wc-lamps",
+                            "type": "widget",
+                            "kind": "status-matrix",
+                            "props": {
+                              "label": "Tube status",
+                              "columns": 6,
+                              "rows": 2,
+                              "tone": "primary"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "weight": 1,
+              "node": {
+                "id": "wc-hull",
+                "type": "container",
+                "layout": {
+                  "kind": "frame",
+                  "archetype": "panel",
+                  "variant": "rails"
+                },
+                "children": [
+                  {
+                    "slot": "title",
+                    "node": {
+                      "id": "wc-hull-title",
+                      "type": "widget",
+                      "kind": "title",
+                      "props": {
+                        "text": "Hull",
+                        "tone": "neutral"
+                      }
+                    }
+                  },
+                  {
+                    "slot": "main",
+                    "node": {
+                      "id": "wc-hull-gauge",
+                      "type": "widget",
+                      "kind": "gauge",
+                      "props": {
+                        "label": "Integrity",
+                        "value": 100,
+                        "unit": "%",
+                        "dangerBelow": 40,
+                        "tone": "secondary"
+                      },
+                      "bind": {
+                        "value": {
+                          "signal": "hull"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slot": "status",
+        "node": {
+          "id": "status",
+          "type": "widget",
+          "kind": "text",
+          "props": {
+            "text": "Weapons on standby. Shields at full strength.",
+            "size": "small",
+            "tone": "neutral"
+          },
+          "when": [
+            {
+              "state": "red-alert",
+              "props": {
+                "text": "Weapons armed. Target locked.",
+                "tone": "danger"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

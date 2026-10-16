@@ -1,0 +1,463 @@
+{
+  "schemaVersion": 2,
+  "id": "conn",
+  "name": "Helm control",
+  "tags": [
+    "demo",
+    "lcars",
+    "split",
+    "navigation"
+  ],
+  "profile": {
+    "aspect": "16:9",
+    "fit": "fluid"
+  },
+  "revision": 0,
+  "published": 0,
+  "root": {
+    "id": "root",
+    "type": "container",
+    "layout": {
+      "kind": "frame",
+      "archetype": "split"
+    },
+    "children": [
+      {
+        "slot": "title",
+        "node": {
+          "id": "title",
+          "type": "widget",
+          "kind": "title",
+          "props": {
+            "text": "Helm control",
+            "code": "CON 01-1701",
+            "tone": "primary"
+          }
+        }
+      },
+      {
+        "slot": "aside",
+        "node": {
+          "id": "hm-upper",
+          "type": "container",
+          "layout": {
+            "kind": "stack",
+            "direction": "row",
+            "gap": "large"
+          },
+          "children": [
+            {
+              "weight": 3,
+              "node": {
+                "id": "hm-heading",
+                "type": "widget",
+                "kind": "heading",
+                "props": {
+                  "label": "Course",
+                  "bearing": 47,
+                  "mark": 12,
+                  "tone": "primary"
+                },
+                "bind": {
+                  "bearing": {
+                    "ambient": {
+                      "kind": "walk",
+                      "min": 45,
+                      "max": 49,
+                      "volatility": 0.05
+                    }
+                  },
+                  "mark": {
+                    "ambient": {
+                      "kind": "walk",
+                      "min": 11,
+                      "max": 13,
+                      "volatility": 0.05
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "weight": 2,
+              "node": {
+                "id": "hm-warp",
+                "type": "widget",
+                "kind": "speed-ladder",
+                "props": {
+                  "label": "Warp factor",
+                  "value": 6.2,
+                  "steps": 9,
+                  "direction": "row",
+                  "dangerAbove": 9,
+                  "tone": "accent"
+                },
+                "bind": {
+                  "value": {
+                    "signal": "warp.factor"
+                  }
+                }
+              }
+            },
+            {
+              "weight": 1,
+              "node": {
+                "id": "hm-eta",
+                "type": "widget",
+                "kind": "readout",
+                "props": {
+                  "label": "ETA",
+                  "value": "04:17",
+                  "tone": "secondary"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-0",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "All stop",
+            "tone": "danger"
+          },
+          "actions": [
+            {
+              "do": "setSignal",
+              "signal": "warp.factor",
+              "value": 0
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-1",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Warp 5",
+            "tone": "primary"
+          },
+          "actions": [
+            {
+              "do": "setSignal",
+              "signal": "warp.factor",
+              "value": 5
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-2",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Warp 9",
+            "tone": "accent"
+          },
+          "actions": [
+            {
+              "do": "setSignal",
+              "signal": "warp.factor",
+              "value": 9
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-3",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Impulse",
+            "tone": "secondary"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-4",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Plot course",
+            "tone": "info"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-5",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Bridge",
+            "tone": "neutral"
+          },
+          "actions": [
+            {
+              "do": "navigate",
+              "screen": "bridge"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "main",
+        "node": {
+          "id": "hm-main",
+          "type": "container",
+          "layout": {
+            "kind": "stack",
+            "direction": "row",
+            "gap": "large"
+          },
+          "children": [
+            {
+              "weight": 3,
+              "node": {
+                "id": "hm-chart",
+                "type": "container",
+                "layout": {
+                  "kind": "frame",
+                  "archetype": "panel",
+                  "variant": "sweep"
+                },
+                "children": [
+                  {
+                    "slot": "title",
+                    "node": {
+                      "id": "hm-chart-title",
+                      "type": "widget",
+                      "kind": "title",
+                      "props": {
+                        "text": "Navigational chart",
+                        "tone": "info"
+                      }
+                    }
+                  },
+                  {
+                    "slot": "main",
+                    "node": {
+                      "id": "hm-map",
+                      "type": "widget",
+                      "kind": "star-chart",
+                      "props": {
+                        "label": "Sector 21503",
+                        "destination": "Starbase 74",
+                        "waypoints": 5,
+                        "stars": 90,
+                        "tone": "primary"
+                      },
+                      "bind": {
+                        "progress": {
+                          "ambient": {
+                            "kind": "walk",
+                            "min": 30,
+                            "max": 45,
+                            "volatility": 0.05
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "slot": "status",
+                    "node": {
+                      "id": "hm-chart-status",
+                      "type": "widget",
+                      "kind": "text",
+                      "props": {
+                        "text": "Course laid in",
+                        "size": "small",
+                        "tone": "neutral"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "weight": 1.3,
+              "node": {
+                "id": "hm-side",
+                "type": "container",
+                "layout": {
+                  "kind": "stack",
+                  "direction": "column",
+                  "gap": "large"
+                },
+                "children": [
+                  {
+                    "weight": 3,
+                    "node": {
+                      "id": "hm-rose",
+                      "type": "container",
+                      "layout": {
+                        "kind": "frame",
+                        "archetype": "panel",
+                        "variant": "top-right"
+                      },
+                      "children": [
+                        {
+                          "slot": "title",
+                          "node": {
+                            "id": "hm-rose-title",
+                            "type": "widget",
+                            "kind": "title",
+                            "props": {
+                              "text": "Attitude",
+                              "tone": "accent"
+                            }
+                          }
+                        },
+                        {
+                          "slot": "main",
+                          "node": {
+                            "id": "hm-compass",
+                            "type": "widget",
+                            "kind": "heading",
+                            "props": {
+                              "label": "Heading",
+                              "bearing": 47,
+                              "mark": 12,
+                              "variant": "rose",
+                              "tone": "accent"
+                            },
+                            "bind": {
+                              "bearing": {
+                                "ambient": {
+                                  "kind": "walk",
+                                  "min": 45,
+                                  "max": 49,
+                                  "volatility": 0.05
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "weight": 2,
+                    "node": {
+                      "id": "hm-core",
+                      "type": "container",
+                      "layout": {
+                        "kind": "frame",
+                        "archetype": "panel",
+                        "variant": "bracket"
+                      },
+                      "children": [
+                        {
+                          "slot": "title",
+                          "node": {
+                            "id": "hm-core-title",
+                            "type": "widget",
+                            "kind": "title",
+                            "props": {
+                              "text": "Warp core",
+                              "tone": "info"
+                            }
+                          }
+                        },
+                        {
+                          "slot": "main",
+                          "node": {
+                            "id": "hm-core-body",
+                            "type": "container",
+                            "layout": {
+                              "kind": "stack",
+                              "direction": "row",
+                              "gap": "medium"
+                            },
+                            "children": [
+                              {
+                                "node": {
+                                  "id": "hm-reactor",
+                                  "type": "widget",
+                                  "kind": "reactor",
+                                  "props": {
+                                    "label": "Matter stream",
+                                    "segments": 12,
+                                    "tone": "info"
+                                  },
+                                  "bind": {
+                                    "level": {
+                                      "signal": "warp.output"
+                                    }
+                                  }
+                                }
+                              },
+                              {
+                                "node": {
+                                  "id": "hm-output",
+                                  "type": "widget",
+                                  "kind": "gauge",
+                                  "props": {
+                                    "label": "Output",
+                                    "value": 92,
+                                    "unit": "%",
+                                    "variant": "arc",
+                                    "tone": "info"
+                                  },
+                                  "bind": {
+                                    "value": {
+                                      "signal": "warp.output"
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slot": "status",
+        "node": {
+          "id": "status",
+          "type": "widget",
+          "kind": "text",
+          "props": {
+            "text": "Course laid in. Warp drive ready.",
+            "size": "small",
+            "tone": "neutral"
+          }
+        }
+      }
+    ]
+  }
+}
