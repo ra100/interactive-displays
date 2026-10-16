@@ -6,7 +6,8 @@
   "archetypes": {
     "sidebar": 2,
     "dashboard": 2,
-    "header-main": 1
+    "header-main": 1,
+    "split": 2
   },
   "titles": [
     "SECURITY",

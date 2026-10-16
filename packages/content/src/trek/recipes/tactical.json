@@ -6,7 +6,8 @@
   "archetypes": {
     "header-main": 2,
     "sidebar": 2,
-    "dashboard": 2
+    "dashboard": 2,
+    "console": 2
   },
   "titles": [
     "TACTICAL",

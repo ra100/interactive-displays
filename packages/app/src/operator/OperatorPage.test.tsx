@@ -251,6 +251,23 @@ describe("live values and display controls", () => {
     ]);
   });
 
+  it("tells the displays how big their panels are and how tall buttons should be", async () => {
+    await open();
+    const look = screen.getByRole("region", { name: "Look" });
+    expect(within(look).getByRole("combobox", { name: "Panel" })).toHaveValue("90");
+    expect(within(look).getByRole("combobox", { name: "Buttons" })).toHaveValue("1.5");
+    await userEvent.selectOptions(within(look).getByRole("combobox", { name: "Panel" }), "98″");
+    await userEvent.selectOptions(within(look).getByRole("combobox", { name: "Buttons" }), "2 cm");
+    const card = within(screen.getByRole("listitem", { name: "Engineering 1" })).getByRole("combobox", { name: "Panel" });
+    expect(card).toHaveValue("");
+    await userEvent.selectOptions(card, "13″");
+    expect(writes().map((call) => [call.path, call.body])).toEqual([
+      ["/api/show/panel", { inches: 98 }],
+      ["/api/show/panel", { buttonCm: 2 }],
+      ["/api/displays/eng-1", { inches: 13 }],
+    ]);
+  });
+
   describe("cues", () => {
     const withCues = (cue: string | null = null) =>
       sampleOverview({

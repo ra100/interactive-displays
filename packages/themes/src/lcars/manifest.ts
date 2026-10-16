@@ -1,5 +1,5 @@
 import { defineTheme } from "@interactive-displays/core";
-import { bar, bracket, cap, elbow } from "./decor.ts";
+import { bar, bracket, cap, elbow, scan, segments } from "./decor.ts";
 
 // Star Trek: The Next Generation style LCARS. Self-hosted Antonio for the condensed display type.
 export const lcars = defineTheme({
@@ -33,6 +33,26 @@ export const lcars = defineTheme({
         foreground: "#9fc3f2",
       },
     },
+    ds9: {
+      name: "Deep Space Nine",
+      tokens: {
+        palette: { primary: "#ff9966", secondary: "#ffcc99", accent: "#cc6699", info: "#9999cc", neutral: "#cc9999" },
+      },
+    },
+    voyager: {
+      name: "Voyager",
+      tokens: {
+        palette: { primary: "#ffcc66", secondary: "#cc99cc", accent: "#9999ff", info: "#99ccff", neutral: "#cc6666" },
+        foreground: "#ffcc99",
+      },
+    },
+    "lower-decks": {
+      name: "Lower Decks",
+      tokens: {
+        palette: { primary: "#ff7700", secondary: "#ffb375", accent: "#c87cff", info: "#5c7cff", neutral: "#d6a07a" },
+        foreground: "#ffb375",
+      },
+    },
     picard: {
       name: "Picard grey",
       tokens: {
@@ -63,7 +83,7 @@ export const lcars = defineTheme({
       },
     },
   },
-  archetypes: ["sidebar", "header-main", "dashboard"],
+  archetypes: ["sidebar", "header-main", "dashboard", "split", "console"],
   // Flush blocks of colour: the nav column runs through the whole palette, panels never repeat their neighbour.
   tones: {
     nav: ["primary", "secondary", "accent", "info", "neutral"],
@@ -93,10 +113,13 @@ export const lcars = defineTheme({
       repeat: 3,
     },
   },
-  decor: [elbow, bar, cap, bracket],
+  decor: [elbow, bar, cap, bracket, segments, scan],
   // Terminal ornament re-skinned: rules become capped bars, corner brackets a bracket. Radar and log go.
   decorStandIns: {
     "crt.rule": { kind: "lcars.bar", props: { caps: "both" } },
     "crt.brackets": { kind: "lcars.bracket" },
+    "crt.radar": { kind: "lcars.scan" },
+    "hud.reticle": { kind: "lcars.scan" },
+    "hud.scale": { kind: "lcars.segments" },
   },
 });

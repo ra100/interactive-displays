@@ -111,9 +111,25 @@
 .crt-frame--header-main {
   grid-template:
     "title" var(--crt-head)
-    "toolbar" max(calc(var(--touch) + 3 * var(--u)), calc(10 * var(--u)))
+    "toolbar" calc(var(--touch) + 3 * var(--u))
     "main" minmax(0, 1fr)
     "status" var(--crt-foot) / minmax(0, 1fr);
+}
+
+.crt-frame--split {
+  grid-template:
+    "title title" var(--crt-head)
+    "aside aside" minmax(0, 24%)
+    "nav main" minmax(0, 1fr)
+    "status status" var(--crt-foot) / minmax(0, 22%) minmax(0, 1fr);
+}
+
+.crt-frame--console {
+  grid-template:
+    "title title title" var(--crt-head)
+    "nav toolbar aside" calc(var(--touch) + 3 * var(--u))
+    "nav main aside" minmax(0, 1fr)
+    "status status status" var(--crt-foot) / minmax(0, 18%) minmax(0, 1fr) minmax(0, 24%);
 }
 
 .crt-frame--dashboard {

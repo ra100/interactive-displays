@@ -15,14 +15,16 @@ const generate = async (page: Page, section: string, seed: number, suite = false
   await dialog.getByRole("button", { name: suite ? /Create \d+ screens/ : "Create and edit" }).click();
 };
 
-// Every pressable thing on a display is at least 60 px in both directions (AGENTS.md: touch targets).
+// Every pressable thing on a display is at least 1 cm in both directions on the show's 90" panel (AGENTS.md:
+// touch targets); the viewport stands in for the whole panel, so a centimetre is its diagonal over 228.6.
 const smallTargets = async (page: Page) =>
-  page.locator(".screen button").evaluateAll((buttons) =>
-    buttons
+  page.locator(".screen button").evaluateAll((buttons) => {
+    const cm = Math.hypot(window.innerWidth, window.innerHeight) / (90 * 2.54);
+    return buttons
       .map((button) => ({ text: button.textContent ?? "", rect: button.getBoundingClientRect() }))
-      .filter(({ rect }) => rect.width > 0 && (rect.width < 60 || rect.height < 60))
-      .map(({ text, rect }) => `${text} ${Math.round(rect.width)}×${Math.round(rect.height)}`),
-  );
+      .filter(({ rect }) => rect.width > 0 && (rect.width < cm - 0.5 || rect.height < cm - 0.5))
+      .map(({ text, rect }) => `${text} ${Math.round(rect.width)}×${Math.round(rect.height)}`);
+  });
 
 test.describe("generating screens", () => {
   test.afterEach(async ({ request }) => {

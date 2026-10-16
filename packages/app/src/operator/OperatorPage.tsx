@@ -48,6 +48,7 @@ const OperatorConsole = ({ overview, connection, session }: Tools) => {
       assign: (screen: string | null) => void run(api("PUT", path, { screen })),
       rename: (name: string | null) => void run(api("PUT", path, { name })),
       resize: (scale: number | null) => void run(api("PUT", path, { scale })),
+      setInches: (inches: number | null) => void run(api("PUT", path, { inches })),
       identify: () => void run(api("POST", `${path}/identify`)),
       reload: () => void run(api("POST", `${path}/reload`), `Reloading ${display.name ?? display.id}`),
       endPreview: () => void run(api("DELETE", `${path}/preview`)),
@@ -113,9 +114,11 @@ const OperatorConsole = ({ overview, connection, session }: Tools) => {
             <LookPicker
               theme={overview.show.theme}
               scale={overview.show.scale}
+              panel={overview.show.panel}
               soundPack={overview.show.soundPack}
               onChange={(theme) => void run(api("PUT", "/api/show/theme", theme))}
               onScale={(scale) => void run(api("PUT", "/api/show/scale", { scale }))}
+              onPanel={(panel) => void run(api("PUT", "/api/show/panel", panel))}
               onSoundPack={(pack) => void run(api("PUT", "/api/show/sound-pack", { pack }))}
             />
           </section>

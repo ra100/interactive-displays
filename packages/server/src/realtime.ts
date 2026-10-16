@@ -10,6 +10,7 @@ import {
   type ShowOverview,
   type SignalValues,
   WatchSchema,
+  displayPanel,
   displayScale,
 } from "@interactive-displays/core";
 import type { Server, Socket } from "socket.io";
@@ -57,6 +58,7 @@ export const buildSnapshot = (service: ShowService, displayId: string): DisplayS
       id: displayId,
       ...(definition?.name ? { name: definition.name } : {}),
       scale: displayScale(show, displayId),
+      panel: displayPanel(show, displayId),
     },
     screen,
     preview,

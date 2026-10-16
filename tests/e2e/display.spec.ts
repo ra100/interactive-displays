@@ -42,15 +42,17 @@ test.describe("display", () => {
   });
 
   for (const displayId of ["test", "engineering-1", "tactical-1"]) {
-    test(`keeps touch targets at least 60px on ${displayId}`, async ({ page }) => {
-      await page.setViewportSize({ width: 800, height: 450 });
+    test(`keeps buttons 1–2 cm tall on a 90-inch 4K panel on ${displayId}`, async ({ page }) => {
+      await page.setViewportSize({ width: 3840, height: 2160 });
       await page.goto(`/d/${displayId}`);
       await expect(page.locator(".screen")).toBeVisible();
 
+      const cm = Math.hypot(3840, 2160) / (90 * 2.54);
       for (const button of await page.getByRole("button").all()) {
         const box = await button.boundingBox();
-        expect(box?.height).toBeGreaterThanOrEqual(60);
-        expect(box?.width).toBeGreaterThanOrEqual(60);
+        expect(box?.height).toBeGreaterThanOrEqual(cm);
+        expect(box?.height).toBeLessThanOrEqual(2 * cm);
+        expect(box?.width).toBeGreaterThanOrEqual(cm);
       }
     });
   }

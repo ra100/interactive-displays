@@ -39,6 +39,8 @@ export const baseRenderers: BaseThemeRenderers = defineRenderers({
     sidebar: BaseFrame,
     "header-main": BaseFrame,
     dashboard: BaseFrame,
+    split: BaseFrame,
+    console: BaseFrame,
   },
   decor: {},
 });

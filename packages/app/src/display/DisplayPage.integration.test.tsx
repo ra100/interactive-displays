@@ -63,7 +63,7 @@ const snapshot = (overrides: Partial<DisplaySnapshot> = {}): DisplaySnapshot => 
   },
   state: "normal",
   signals: {},
-  display: { id: "bridge-1", scale: 1 },
+  display: { id: "bridge-1", scale: 1, panel: { inches: 90, buttonCm: 1.5 } },
   screen: ScreenSchema.parse({
     schemaVersion: 2,
     id: "welcome",

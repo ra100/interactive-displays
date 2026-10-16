@@ -50,3 +50,33 @@ export const bracket = defineDecor({
   }),
   example: { side: "left" },
 });
+
+export const segments = defineDecor({
+  kind: "lcars.segments",
+  label: "Segments",
+  description:
+    "A run of coloured blocks with reference numbers, the broken bars and columns that edge TNG frames. Use a row along a section edge or a column beside a panel.",
+  props: z.strictObject({
+    direction: z.enum(["row", "column"]).default("row"),
+    count: z.number().int().min(2).max(12).default(5),
+    // The tones the blocks cycle through.
+    tones: z.array(ToneSchema).min(1).max(6).default(["primary", "secondary", "accent", "info"]),
+    caps: z.enum(["none", "start", "end", "both"]).default("end"),
+    numbers: z.boolean().default(true),
+  }),
+  example: { direction: "row", count: 5 },
+});
+
+export const scan = defineDecor({
+  kind: "lcars.scan",
+  label: "Sensor scope",
+  description:
+    "A round scope: range rings, bearing ticks, a sweeping arm and a few contacts, the circular Okudagram of tactical and science displays.",
+  props: z.strictObject({
+    rings: z.number().int().min(2).max(6).default(4),
+    contacts: z.number().int().min(0).max(12).default(4),
+    sweep: z.boolean().default(true),
+    tone: ToneSchema.default("info"),
+  }),
+  example: { rings: 4, contacts: 4 },
+});

@@ -103,9 +103,25 @@
 .hud-frame--header-main {
   grid-template:
     "header" var(--hud-head)
-    "toolbar" max(calc(var(--touch) + 3 * var(--u)), calc(10 * var(--u)))
+    "toolbar" calc(var(--touch) + 3 * var(--u))
     "main" minmax(0, 1fr)
     "status" var(--hud-foot) / minmax(0, 1fr);
+}
+
+.hud-frame--split {
+  grid-template:
+    "header header" var(--hud-head)
+    "aside aside" minmax(0, 24%)
+    "nav main" minmax(0, 1fr)
+    "status status" var(--hud-foot) / minmax(0, 22%) minmax(0, 1fr);
+}
+
+.hud-frame--console {
+  grid-template:
+    "header header header" var(--hud-head)
+    "nav toolbar aside" calc(var(--touch) + 3 * var(--u))
+    "nav main aside" minmax(0, 1fr)
+    "status status status" var(--hud-foot) / minmax(0, 18%) minmax(0, 1fr) minmax(0, 24%);
 }
 
 .hud-frame--dashboard {
@@ -322,7 +338,7 @@
 /* ── Buttons ────────────────────────────────────────────────────────────── */
 
 .hud-button {
-  --hud-cut: calc(1.6 * var(--u));
+  --hud-cut: min(calc(1.6 * var(--u)), calc(0.3 * var(--touch)));
 
   position: relative;
   display: flex;

@@ -126,7 +126,7 @@ const Library = ({ overview, connection }: Tools) => {
             <li key={screen.id} className="screen-card">
               <Link className="screen-card__open" to={`/builder/${screen.id}`} aria-label={`Edit ${screen.name}`}>
                 {doc ? (
-                  <ScreenThumbnail screen={doc} theme={overview.show.theme} states={overview.show.states} live={live} scale={overview.show.scale} />
+                  <ScreenThumbnail screen={doc} theme={overview.show.theme} states={overview.show.states} live={live} scale={overview.show.scale} panel={overview.show.panel} />
                 ) : (
                   <div className="screen-card__placeholder" style={{ aspectRatio: screen.profile.aspect.replace(":", " / ") }} />
                 )}

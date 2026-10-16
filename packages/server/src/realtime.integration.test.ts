@@ -70,7 +70,7 @@ describe("displays", () => {
 
     const snapshot = await next;
     expect(snapshot.screen?.id).toBe("tactical");
-    expect(snapshot.display).toEqual({ id: "bridge-2", name: "Bridge 2", scale: 0.7 });
+    expect(snapshot.display).toEqual({ id: "bridge-2", name: "Bridge 2", scale: 0.7, panel: { inches: 90, buttonCm: 1.5 } });
   });
 
   it("keeps edits off air until they are published, then updates only the displays showing the screen", async () => {
@@ -260,6 +260,8 @@ describe("operators and builders", () => {
     expect(overview.displays.map((display) => display.id)).toEqual([
       "corridor-1",
       "engineering-1",
+      "ops-1",
+      "science-1",
       "tactical-1",
       "test",
       "viewscreen-1",

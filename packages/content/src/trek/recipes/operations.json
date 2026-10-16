@@ -6,7 +6,9 @@
   "archetypes": {
     "dashboard": 2,
     "header-main": 2,
-    "sidebar": 2
+    "sidebar": 2,
+    "split": 2,
+    "console": 2
   },
   "titles": [
     "OPERATIONS",

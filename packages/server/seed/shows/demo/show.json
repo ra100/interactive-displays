@@ -62,6 +62,16 @@
       "id": "viewscreen-1",
       "name": "Viewscreen",
       "screen": "viewscreen"
+    },
+    {
+      "id": "ops-1",
+      "name": "Ops console",
+      "screen": "operations"
+    },
+    {
+      "id": "science-1",
+      "name": "Science station",
+      "screen": "sensors"
     }
   ],
   "signals": [

@@ -62,7 +62,7 @@ export const crt = defineTheme({
       },
     },
   },
-  archetypes: ["sidebar", "header-main", "dashboard"],
+  archetypes: ["sidebar", "header-main", "dashboard", "split", "console"],
   // Mostly the bright phosphor; panels alternate with a dimmer shade rather than new colours.
   tones: {
     nav: ["primary"],
@@ -108,5 +108,7 @@ export const crt = defineTheme({
     "lcars.bar": { kind: "crt.rule", props: { style: "double" } },
     "lcars.elbow": { kind: "crt.rule", props: { style: "single" } },
     "lcars.bracket": { kind: "crt.brackets" },
+    "lcars.segments": { kind: "crt.rule", props: { style: "single" } },
+    "lcars.scan": { kind: "crt.radar" },
   },
 });

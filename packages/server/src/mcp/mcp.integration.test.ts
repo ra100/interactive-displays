@@ -81,6 +81,7 @@ describe("MCP endpoint", () => {
         "set_cues",
         "run_cue",
         "set_scale",
+        "set_panel",
         "set_signal",
         "video_command",
       ]),
@@ -175,6 +176,7 @@ describe("MCP endpoint", () => {
     expect((await call(client, "set_state", { state: "red-alert" })).data).toEqual({ state: "red-alert" });
     expect((await call(client, "set_theme", { id: "hud", variant: "amber" })).data).toEqual({ theme: { id: "hud", variant: "amber" } });
     expect((await call(client, "set_scale", { scale: 0.5 })).data).toEqual({ scale: 0.5 });
+    expect((await call(client, "set_panel", { inches: 100 })).data).toEqual({ panel: { inches: 100, buttonCm: 1.5 } });
     expect((await server.api<{ state: string }>("GET", "/health")).body.state).toBe("red-alert");
     expect((await call(client, "set_signal", { signal: "shields", value: 40 })).data).toEqual({ signal: "shields", value: 40 });
     expect((await call(client, "set_signal", { signal: "shields" })).isError).toBe(true);

@@ -54,6 +54,41 @@ export const CrtHeaderMainFrame = ({ slots }: FrameRendererProps) => (
   </div>
 );
 
+export const CrtSplitFrame = ({ slots }: FrameRendererProps) => (
+  <div className="crt-frame crt-frame--split">
+    <Title>{slots.title}</Title>
+    <Box area="aside" line="single" tone="secondary">
+      {slots.aside}
+    </Box>
+    <Box area="nav" line="double" tone="primary">
+      {slots.nav}
+    </Box>
+    <Box area="main" line="double" tone="neutral">
+      {slots.main}
+    </Box>
+    <Status>{slots.status}</Status>
+  </div>
+);
+
+export const CrtConsoleFrame = ({ slots }: FrameRendererProps) => (
+  <div className="crt-frame crt-frame--console">
+    <Title>{slots.title}</Title>
+    <Box area="nav" line="double" tone="primary">
+      {slots.nav}
+    </Box>
+    <Box area="toolbar" line="dashed" tone="secondary">
+      {slots.toolbar}
+    </Box>
+    <Box area="main" line="double" tone="neutral">
+      {slots.main}
+    </Box>
+    <Box area="aside" line="single" tone="secondary">
+      {slots.aside}
+    </Box>
+    <Status>{slots.status}</Status>
+  </div>
+);
+
 export const CrtDashboardFrame = ({ slots }: FrameRendererProps) => (
   <div className="crt-frame crt-frame--dashboard">
     <Title>{slots.title}</Title>

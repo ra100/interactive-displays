@@ -1,0 +1,507 @@
+{
+  "schemaVersion": 2,
+  "id": "sensors",
+  "name": "Long range sensors",
+  "tags": [
+    "demo",
+    "lcars",
+    "split"
+  ],
+  "profile": {
+    "aspect": "16:9",
+    "fit": "fluid"
+  },
+  "revision": 0,
+  "published": 0,
+  "root": {
+    "id": "root",
+    "type": "container",
+    "layout": {
+      "kind": "frame",
+      "archetype": "split"
+    },
+    "children": [
+      {
+        "slot": "title",
+        "node": {
+          "id": "title",
+          "type": "widget",
+          "kind": "title",
+          "props": {
+            "text": "Long range sensors",
+            "code": "SCI 47-3821",
+            "tone": "info"
+          }
+        }
+      },
+      {
+        "slot": "aside",
+        "node": {
+          "id": "sci-summary",
+          "type": "container",
+          "layout": {
+            "kind": "stack",
+            "direction": "row",
+            "gap": "large"
+          },
+          "children": [
+            {
+              "node": {
+                "id": "sci-range",
+                "type": "widget",
+                "kind": "readout",
+                "props": {
+                  "label": "Range",
+                  "value": 4.7,
+                  "tone": "info",
+                  "precision": 1,
+                  "unit": "LY"
+                }
+              }
+            },
+            {
+              "node": {
+                "id": "sci-contacts",
+                "type": "widget",
+                "kind": "readout",
+                "props": {
+                  "label": "Contacts",
+                  "value": 3,
+                  "tone": "accent",
+                  "precision": 0
+                }
+              }
+            },
+            {
+              "node": {
+                "id": "sci-bearing",
+                "type": "widget",
+                "kind": "readout",
+                "props": {
+                  "label": "Bearing",
+                  "value": "127 mark 4",
+                  "tone": "secondary",
+                  "precision": 0
+                }
+              }
+            },
+            {
+              "weight": 1.4,
+              "node": {
+                "id": "sci-summary-side",
+                "type": "container",
+                "layout": {
+                  "kind": "stack",
+                  "direction": "column",
+                  "gap": "small"
+                },
+                "children": [
+                  {
+                    "weight": 1,
+                    "node": {
+                      "id": "sci-seg",
+                      "type": "decor",
+                      "kind": "lcars.segments",
+                      "props": {
+                        "count": 6,
+                        "caps": "end",
+                        "tones": [
+                          "info",
+                          "secondary",
+                          "accent"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "weight": 1.4,
+                    "node": {
+                      "id": "sci-sweep",
+                      "type": "widget",
+                      "kind": "gauge",
+                      "props": {
+                        "label": "Sweep",
+                        "value": 64,
+                        "unit": "%",
+                        "variant": "bar",
+                        "tone": "info"
+                      },
+                      "bind": {
+                        "value": {
+                          "ambient": {
+                            "kind": "walk",
+                            "min": 0,
+                            "max": 100,
+                            "volatility": 0.3
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-0",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Scan",
+            "tone": "info"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-1",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Analyse",
+            "tone": "accent"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-2",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Track",
+            "tone": "secondary"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-3",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Probes",
+            "tone": "primary"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-4",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Sensor log",
+            "tone": "neutral"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-5",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Operations",
+            "tone": "info"
+          },
+          "actions": [
+            {
+              "do": "navigate",
+              "screen": "operations"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "main",
+        "node": {
+          "id": "sci-main",
+          "type": "container",
+          "layout": {
+            "kind": "stack",
+            "direction": "row",
+            "gap": "large"
+          },
+          "children": [
+            {
+              "weight": 2,
+              "node": {
+                "id": "sci-scope",
+                "type": "decor",
+                "kind": "lcars.scan",
+                "props": {
+                  "rings": 5,
+                  "contacts": 7,
+                  "tone": "info"
+                }
+              }
+            },
+            {
+              "weight": 2,
+              "node": {
+                "id": "sci-detail",
+                "type": "container",
+                "layout": {
+                  "kind": "stack",
+                  "direction": "column",
+                  "gap": "medium"
+                },
+                "children": [
+                  {
+                    "weight": 1.6,
+                    "node": {
+                      "id": "sci-grid",
+                      "type": "widget",
+                      "kind": "data-grid",
+                      "props": {
+                        "columns": [
+                          "Contact",
+                          "Bearing",
+                          "Range",
+                          "Class"
+                        ],
+                        "rows": [
+                          [
+                            "A-114",
+                            "012 M 3",
+                            "2.1 LY",
+                            "Comet"
+                          ],
+                          [
+                            "B-207",
+                            "127 M 4",
+                            "3.8 LY",
+                            "Unknown"
+                          ],
+                          [
+                            "C-031",
+                            "244 M 1",
+                            "4.6 LY",
+                            "Freighter"
+                          ]
+                        ],
+                        "highlight": 2,
+                        "tone": "secondary"
+                      }
+                    }
+                  },
+                  {
+                    "node": {
+                      "id": "sci-g1",
+                      "type": "widget",
+                      "kind": "gauge",
+                      "props": {
+                        "label": "Subspace noise",
+                        "value": 22,
+                        "unit": "%",
+                        "variant": "segmented",
+                        "tone": "accent"
+                      },
+                      "bind": {
+                        "value": {
+                          "ambient": {
+                            "kind": "walk",
+                            "min": 15,
+                            "max": 30,
+                            "volatility": 0.3
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "node": {
+                      "id": "sci-g2",
+                      "type": "widget",
+                      "kind": "gauge",
+                      "props": {
+                        "label": "Resolution",
+                        "value": 81,
+                        "unit": "%",
+                        "variant": "segmented",
+                        "tone": "info"
+                      },
+                      "bind": {
+                        "value": {
+                          "ambient": {
+                            "kind": "walk",
+                            "min": 75,
+                            "max": 90,
+                            "volatility": 0.3
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "weight": 1,
+                    "node": {
+                      "id": "sci-lamps",
+                      "type": "widget",
+                      "kind": "status-matrix",
+                      "props": {
+                        "label": "Array elements",
+                        "columns": 14,
+                        "rows": 3,
+                        "activity": "calm",
+                        "tone": "info"
+                      }
+                    }
+                  },
+                  {
+                    "weight": 0.5,
+                    "node": {
+                      "id": "sci-buttons",
+                      "type": "container",
+                      "layout": {
+                        "kind": "stack",
+                        "direction": "row",
+                        "gap": "small"
+                      },
+                      "children": [
+                        {
+                          "node": {
+                            "id": "sci-focus",
+                            "type": "widget",
+                            "kind": "button",
+                            "props": {
+                              "label": "Focus",
+                              "tone": "info"
+                            },
+                            "actions": [
+                              {
+                                "do": "sound",
+                                "sound": "confirm"
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "node": {
+                            "id": "sci-widen",
+                            "type": "widget",
+                            "kind": "button",
+                            "props": {
+                              "label": "Widen",
+                              "tone": "secondary"
+                            },
+                            "actions": [
+                              {
+                                "do": "sound",
+                                "sound": "confirm"
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "node": {
+                            "id": "sci-lock",
+                            "type": "widget",
+                            "kind": "button",
+                            "props": {
+                              "label": "Lock on",
+                              "tone": "accent"
+                            },
+                            "actions": [
+                              {
+                                "do": "sound",
+                                "sound": "confirm"
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "node": {
+                            "id": "sci-hail",
+                            "type": "widget",
+                            "kind": "button",
+                            "props": {
+                              "label": "Hail",
+                              "tone": "primary"
+                            },
+                            "actions": [
+                              {
+                                "do": "sound",
+                                "sound": "hail"
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "weight": 0.8,
+              "node": {
+                "id": "sci-cascade",
+                "type": "widget",
+                "kind": "data-cascade",
+                "props": {
+                  "columns": 4,
+                  "speed": "slow",
+                  "tone": "info"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slot": "status",
+        "node": {
+          "id": "status",
+          "type": "widget",
+          "kind": "text",
+          "props": {
+            "text": "Long range scan in progress \u00b7 no hostile contacts",
+            "size": "small",
+            "tone": "secondary"
+          }
+        }
+      }
+    ]
+  }
+}

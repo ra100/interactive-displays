@@ -18,7 +18,7 @@ describe("gallery", () => {
     expect(container.querySelectorAll(".frame")).toHaveLength(ARCHETYPE_IDS.length);
     expect(container.querySelectorAll(".gallery__row")).toHaveLength(catalog.size);
     expect(container.querySelectorAll(".gallery__strip .gallery__tile")).toHaveLength(catalog.size * SLOTS.length);
-    expect(container.querySelectorAll(".decor-slot")).toHaveLength(4);
+    expect(container.querySelectorAll(".decor-slot")).toHaveLength(6);
     expect(container.querySelector(".widget-fallback")).toBeNull();
   });
 

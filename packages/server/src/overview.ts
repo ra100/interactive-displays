@@ -36,6 +36,7 @@ export const buildOverview = (service: ShowService, connected: ReadonlySet<strin
         ...(definition?.name ? { name: definition.name } : {}),
         ...(definition?.screen ? { assigned: definition.screen } : {}),
         ...(definition?.scale !== undefined ? { scale: definition.scale } : {}),
+        ...(definition?.inches !== undefined ? { inches: definition.inches } : {}),
         showing: navigated ?? resolveScreenId(show, id) ?? null,
         preview: previews.get(id) ?? null,
         navigated,

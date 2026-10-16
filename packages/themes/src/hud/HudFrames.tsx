@@ -55,6 +55,41 @@ export const HudHeaderMainFrame = ({ slots }: FrameRendererProps) => (
   </div>
 );
 
+export const HudSplitFrame = ({ slots }: FrameRendererProps) => (
+  <div className="hud-frame hud-frame--split">
+    <Header>{slots.title}</Header>
+    <Panel area="aside" tone="secondary">
+      {slots.aside}
+    </Panel>
+    <Panel area="nav" tone="primary">
+      {slots.nav}
+    </Panel>
+    <Panel area="main" tone="neutral">
+      {slots.main}
+    </Panel>
+    <Status>{slots.status}</Status>
+  </div>
+);
+
+export const HudConsoleFrame = ({ slots }: FrameRendererProps) => (
+  <div className="hud-frame hud-frame--console">
+    <Header>{slots.title}</Header>
+    <Panel area="nav" tone="primary">
+      {slots.nav}
+    </Panel>
+    <Panel area="toolbar" tone="secondary">
+      {slots.toolbar}
+    </Panel>
+    <Panel area="main" tone="neutral">
+      {slots.main}
+    </Panel>
+    <Panel area="aside" tone="secondary">
+      {slots.aside}
+    </Panel>
+    <Status>{slots.status}</Status>
+  </div>
+);
+
 export const HudDashboardFrame = ({ slots }: FrameRendererProps) => (
   <div className="hud-frame hud-frame--dashboard">
     <Header>{slots.title}</Header>

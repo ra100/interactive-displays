@@ -2,7 +2,7 @@ import { ARCHETYPES, type ChildEntryInput, type Profile, type Screen, ScreenSche
 
 // Starting points for a new screen. Each one is a valid, lint-clean screen with placeholder content the crew
 // replaces; the frame ones use the archetypes every theme draws.
-export const TEMPLATE_IDS = ["sidebar", "header-main", "dashboard", "stack", "canvas"] as const;
+export const TEMPLATE_IDS = ["sidebar", "header-main", "dashboard", "split", "console", "stack", "canvas"] as const;
 
 export type TemplateId = (typeof TEMPLATE_IDS)[number];
 
@@ -10,6 +10,8 @@ export const TEMPLATES: Record<TemplateId, { label: string; description: string 
   sidebar: { label: ARCHETYPES.sidebar.label, description: ARCHETYPES.sidebar.description },
   "header-main": { label: ARCHETYPES["header-main"].label, description: ARCHETYPES["header-main"].description },
   dashboard: { label: ARCHETYPES.dashboard.label, description: ARCHETYPES.dashboard.description },
+  split: { label: ARCHETYPES.split.label, description: ARCHETYPES.split.description },
+  console: { label: ARCHETYPES.console.label, description: ARCHETYPES.console.description },
   stack: { label: "Blank column", description: "A title over one column, to fill with anything." },
   canvas: { label: "Free canvas", description: "Place everything by hand, for art and schematics." },
 };
@@ -33,13 +35,18 @@ const frame = (archetype: keyof typeof ARCHETYPES, title: string): ChildEntryInp
   const head: ChildEntryInput = { slot: "title", node: widget("title", "title", { text: title }) };
   const status: ChildEntryInput = { slot: "status", node: placeholder("status", "STATUS NOMINAL") };
   const main: ChildEntryInput = { slot: "main", node: placeholder("main-text", "Main content goes here.") };
+  const aside: ChildEntryInput = { slot: "aside", node: placeholder("aside-text", "Secondary readouts.") };
   switch (archetype) {
     case "sidebar":
       return [head, ...buttons("nav", ["SYSTEMS", "DIAGNOSTICS", "LOGS"]), main, status];
     case "header-main":
       return [head, ...buttons("toolbar", ["SCAN", "ANALYSE", "REPORT"]), main, status];
     case "dashboard":
-      return [head, main, { slot: "aside", node: placeholder("aside-text", "Secondary readouts.") }, status];
+      return [head, main, aside, status];
+    case "split":
+      return [head, aside, ...buttons("nav", ["SYSTEMS", "DIAGNOSTICS", "LOGS"]), main, status];
+    case "console":
+      return [head, ...buttons("nav", ["SYSTEMS", "DIAGNOSTICS", "LOGS"]), ...buttons("toolbar", ["SCAN", "ANALYSE", "REPORT"]), main, aside, status];
   }
 };
 

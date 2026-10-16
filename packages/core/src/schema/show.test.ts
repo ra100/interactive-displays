@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CueListSchema, DEFAULT_UI_SCALE, displayScale, findState, nextCue, resolveScreenId, ShowSchema } from "./show.ts";
+import { CueListSchema, DEFAULT_PANEL, DEFAULT_UI_SCALE, displayPanel, displayScale, findState, nextCue, resolveScreenId, ShowSchema } from "./show.ts";
 
 const show = ShowSchema.parse({
   schemaVersion: 1,
@@ -51,6 +51,21 @@ describe("ShowSchema", () => {
     expect(displayScale(parsed, "bridge")).toBe(DEFAULT_UI_SCALE);
     expect(displayScale(parsed, "unknown")).toBe(DEFAULT_UI_SCALE);
     expect(ShowSchema.safeParse({ ...parsed, scale: 3 }).success).toBe(false);
+  });
+
+  it("sizes buttons for a 90-inch panel by default, and a display can name its own diagonal", () => {
+    const parsed = ShowSchema.parse({
+      schemaVersion: 1,
+      id: "s",
+      name: "S",
+      theme: { id: "base" },
+      displays: [{ id: "tablet", inches: 11 }, { id: "bridge" }],
+    });
+    expect(parsed.panel).toEqual(DEFAULT_PANEL);
+    expect(displayPanel(parsed, "tablet")).toEqual({ inches: 11, buttonCm: 1.5 });
+    expect(displayPanel(parsed, "bridge")).toEqual(DEFAULT_PANEL);
+    expect(ShowSchema.safeParse({ ...parsed, panel: { inches: 90, buttonCm: 6 } }).success).toBe(false);
+    expect(ShowSchema.safeParse({ ...parsed, displays: [{ id: "x", inches: 2 }] }).success).toBe(false);
   });
 
   it("takes a running order of cues that each change something", () => {

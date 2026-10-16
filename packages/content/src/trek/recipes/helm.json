@@ -6,7 +6,8 @@
   "archetypes": {
     "header-main": 3,
     "dashboard": 2,
-    "sidebar": 1
+    "sidebar": 1,
+    "console": 2
   },
   "titles": [
     "FLIGHT CONTROL",

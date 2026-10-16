@@ -25,12 +25,30 @@ export const UiScaleSchema = z.number().min(0.25).max(2);
 // Shows start smaller than 1:1 because sets use large 4K panels.
 export const DEFAULT_UI_SCALE = 0.7;
 
+// A panel's diagonal in inches. With it a display knows how big a centimetre is on its screen.
+export const PanelInchesSchema = z.number().min(5).max(200);
+
+// How tall buttons are on the physical panel, in centimetres: a fingertip is about 1.5 cm.
+export const ButtonCmSchema = z.number().min(0.8).max(4);
+
+// The physical screens a show runs on. Buttons are sized in real centimetres from this, whatever the
+// resolution or scale, so a 100" 4K panel gets fingertip-sized buttons rather than ones a hand wide.
+export const PanelSchema = z.object({
+  inches: PanelInchesSchema.default(90),
+  buttonCm: ButtonCmSchema.default(1.5),
+});
+
+// Sets use 80–100" 4K panels; 90" puts 1.5 cm buttons between 1.33 and 1.67 cm on any of them.
+export const DEFAULT_PANEL: Panel = { inches: 90, buttonCm: 1.5 };
+
 export const DisplayDefSchema = z.object({
   id: IdSchema,
   name: z.string().min(1).max(60).optional(),
   screen: IdSchema.optional(),
   // Overrides the show's scale for this one display, e.g. a smaller panel in a corridor.
   scale: UiScaleSchema.optional(),
+  // This display's panel diagonal, when it is not the show's (a tablet next to the big screens).
+  inches: PanelInchesSchema.optional(),
 });
 
 export const ShowSettingsSchema = z.object({
@@ -97,6 +115,7 @@ export const ShowSchema = z.object({
   name: z.string().min(1).max(120),
   theme: z.object({ id: IdSchema, variant: IdSchema.optional() }),
   scale: UiScaleSchema.default(DEFAULT_UI_SCALE),
+  panel: PanelSchema.default(DEFAULT_PANEL),
   // Whose sounds displays play: another theme's pack, e.g. LCARS chirps on a HUD look. Unset: the theme's own.
   soundPack: IdSchema.optional(),
   // Show-wide modes; the first one is the state a fresh show starts in.
@@ -117,6 +136,7 @@ export const ShowSchema = z.object({
 
 export type Effect = z.infer<typeof EffectSchema>;
 export type StateDef = z.infer<typeof StateDefSchema>;
+export type Panel = z.infer<typeof PanelSchema>;
 export type DisplayDef = z.infer<typeof DisplayDefSchema>;
 export type ShowSettings = z.infer<typeof ShowSettingsSchema>;
 export type Cue = z.infer<typeof CueSchema>;
@@ -135,6 +155,12 @@ export const findSignal = (show: Pick<Show, "signals">, signalId: string): Signa
 // The scale a display draws at: its own, or the show's.
 export const displayScale = (show: Show, displayId: string): number =>
   show.displays.find((display) => display.id === displayId)?.scale ?? show.scale;
+
+// The panel a display draws on: its own diagonal, or the show's, with the show's button size.
+export const displayPanel = (show: Show, displayId: string): Panel => ({
+  ...show.panel,
+  inches: show.displays.find((display) => display.id === displayId)?.inches ?? show.panel.inches,
+});
 
 // The cue GO runs next: the one after the last cue run, or the first. Undefined after the last cue.
 export const nextCue = (show: Pick<Show, "cues">, lastCueId: string | null): Cue | undefined => {
