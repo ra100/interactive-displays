@@ -3,6 +3,41 @@
 What each phase of the v2 rebuild looks like. Screenshots are captured by `tests/e2e/showcase.spec.ts`
 against the real server and built app (`pnpm build && SHOWCASE=phase-N pnpm test:e2e showcase`).
 
+## Drag-and-drop layout in the editor
+
+Layouts are now set up in the preview itself, with the mouse: drag parts in from the Add panel, move them by
+dragging their selection, drag the edges between parts to change widths, drag grid lines and grid cell edges,
+and use the quick buttons on the selection for the common layout steps. Every drag is one edit, so Undo takes it
+back. Editor shots are 1920×1080 at 2× (3840×2160 images); the display shot is a full 4K capture.
+
+**Drop where it goes.** While dragging over the preview, a dashed outline shows the container it will land in and
+an orange mark shows the spot: a line between parts, a grid cell, or a point on a canvas. Empty frame slots are
+drawn in the editor so there is somewhere to drop. Near the edge of a container the drop goes next to it rather
+than into it.
+
+| Into an empty slot | Into a grid cell |
+|---|---|
+| ![Dropping a button into the empty nav slot](layout-dnd/drop-into-empty-slot.png) | ![Dropping a bar graph into a grid cell](layout-dnd/drop-into-grid-cell.png) |
+
+**Resize by dragging.** The orange bars between the selected part and its neighbours change how the room is
+shared; a selected grid shows its column and row lines; the blue tabs on a grid part's right and bottom edges
+change how many cells it spans. A chip shows the new value while dragging.
+
+| Grid lines and quick buttons | Dragging a column line | Spanning two rows |
+|---|---|---|
+| ![Grid handles and tools](layout-dnd/grid-handles-and-tools.png) | ![Column drag](layout-dnd/grid-column-drag.png) | ![Span drag](layout-dnd/grid-span-drag.png) |
+
+| Sharing room between two buttons | Moving a button in the preview |
+|---|---|
+| ![Share drag](layout-dnd/share-drag.png) | ![Moving a part](layout-dnd/move-in-preview.png) |
+
+**Quick buttons** on the selection: **+ Copy**, **In row** and **In column** (put the part in a new row or column
+so something can go beside it), **To row / To column** for a stack, **+ Col, − Col, + Row, − Row** for a grid,
+and **Delete**.
+
+| Quick buttons | Built from an empty frame | On a 4K display |
+|---|---|---|
+| ![Selection tools](layout-dnd/selection-tools.png) | ![Finished in the editor](layout-dnd/editor-built.png) | ![Cargo bay on a 4K display](layout-dnd/4k-cargo-bay.png) |
 ## LCARS references and real button sizes
 
 More of LCARS, taken from the shows and from LCARS builds that catalogue them (sources and the element

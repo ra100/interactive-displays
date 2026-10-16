@@ -6,6 +6,38 @@ Docker smoke test); these steps are for a person with real displays.
 Report problems or ideas as a GitHub issue (label `v2`) or in the project thread, with the display type,
 browser, the URL you opened and a photo or screenshot if possible.
 
+## Drag-and-drop layout in the editor
+
+### Setup
+
+Start the server (`pnpm dev`, or `pnpm build && pnpm start`), open `/builder`, make a **New screen** from the
+**Sidebar** template (or any screen) and open it in the editor. A mouse or trackpad is enough.
+
+### Checks
+
+1. **Drop into an empty slot.** Drag **Button** from the Add panel over the preview. A dashed outline and a label
+   ("Into nav") show where it will go, and empty slots are drawn with a faint dashed border. Drop it: the button
+   appears there and is selected.
+2. **Drop between parts.** Drag two more buttons just below the first one. The orange line shows the position;
+   the outline lists the buttons in that order.
+3. **Grid cells.** On the **Layouts** tab drag **Grid 2×2** into main, then drag a Gauge, a Readout, a Bar graph
+   and a Status matrix into its four cells. Each cell lights up under the pointer. Dropping on a taken cell puts
+   the new part before the one there instead of on top of it.
+4. **Move.** Click a part in the preview and drag its orange selection box somewhere else: into another slot,
+   between other parts, into a grid cell. A short click (no drag) still selects the part under the pointer.
+5. **Widths.** Select a button in a row or column. Drag the orange bar between it and its neighbour: both resize,
+   a chip shows the shares (for example `1.5 : 0.5`), and the Inspector's **Size share** shows the new value.
+6. **Grid lines.** Select the grid. Drag a column or row line: the chip shows the tracks (for example
+   `1.3fr 0.7fr`). Select a part in the grid and drag the blue tab on its right or bottom edge to span more cells.
+7. **Quick buttons.** With a part selected, try **+ Copy**, **In row**, **In column** and **Delete** on the small
+   toolbar above it. With the grid selected try **+ Col**, **− Col**, **+ Row**, **− Row**; parts in a removed
+   column move back inside. With a stack selected, **To row / To column** flips it.
+8. **Undo.** Every drag, resize and quick button is one step of **Undo** (Ctrl+Z).
+9. **Canvas.** On a canvas, dragging a part from the Add panel drops it centred on the pointer; moving and resizing
+   with the corner handles works as before.
+10. **Displays.** Publish and open the screen on a display (`/d/<id>`): it looks like the preview, without the
+    dashed empty-slot borders or any handles.
+11. **Outline.** Dragging rows in the outline, and from the Add panel into the outline, still works.
 ## LCARS references and real button sizes
 
 ### Setup

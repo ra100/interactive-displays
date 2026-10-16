@@ -700,6 +700,168 @@ test.describe("showcase phase 6", () => {
   });
 });
 
+test.describe("showcase drag-and-drop layout", () => {
+  test.skip(phase !== "layout-dnd", "set SHOWCASE=layout-dnd to capture screenshots");
+  // The editor at 1920×1080 on a 2× screen: 3840×2160 images in which the editor is still readable.
+  test.use({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 2 });
+
+  const SCREEN = "cargo-bay";
+  const DISPLAY = "showcase-layout";
+
+  test.afterEach(async ({ request }) => {
+    await request.put(`/api/displays/${DISPLAY}`, { data: { screen: null } });
+    await request.delete(`/api/screens/${SCREEN}`);
+  });
+
+  const centre = async (page: Page, selector: string, index = 0) => {
+    const box = await page.locator(selector).nth(index).boundingBox();
+    if (!box) throw new Error(`nothing at ${selector}`);
+    return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  };
+
+  const paletteItem = async (page: Page, tab: string, name: RegExp) => {
+    await page.getByRole("tab", { name: tab }).click();
+    const item = page.getByRole("tabpanel", { name: tab }).getByRole("button", { name });
+    await item.scrollIntoViewIfNeeded();
+    const box = await item.boundingBox();
+    if (!box) throw new Error("no palette item");
+    return { x: box.x + 40, y: box.y + box.height / 2 };
+  };
+
+  // Drags with real pointer moves; `shot` captures the moment before the drop.
+  const drag = async (page: Page, from: { x: number; y: number }, to: { x: number; y: number }, shot?: string) => {
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    await page.mouse.move(from.x + 20, from.y + 20, { steps: 4 });
+    await page.mouse.move(to.x, to.y, { steps: 14 });
+    if (shot) {
+      await settle(page);
+      await page.screenshot({ path: out(shot) });
+    }
+    await page.mouse.up();
+    await expect(page.getByText("Saved", { exact: true })).toBeVisible();
+  };
+
+  test("building a screen from an empty frame by dragging", async ({ page, request, browser }) => {
+    const created = await request.post("/api/screens", {
+      data: {
+        schemaVersion: 2,
+        id: SCREEN,
+        name: "Cargo bay",
+        root: {
+          id: "root",
+          type: "container",
+          layout: { kind: "frame", archetype: "sidebar" },
+          children: [{ slot: "title", node: { id: "title", type: "widget", kind: "title", props: { text: "CARGO BAY", code: "07-2214" } } }],
+        },
+      },
+    });
+    expect(created.status()).toBe(201);
+    await page.goto(`/builder/${SCREEN}`);
+    await expect(page.locator(".editor__name h1")).toHaveText("Cargo bay");
+    const slot = (name: string) => `.preview-stage [data-slot="${name}"]`;
+
+    // Buttons into the empty nav column.
+    const button = /^Button A touch/;
+    await drag(page, await paletteItem(page, "Widgets", button), await centre(page, slot("nav")), "drop-into-empty-slot");
+    for (const label of ["MANIFEST", "LOCKS"]) {
+      const nav = await page.locator(slot("nav")).boundingBox();
+      if (!nav) throw new Error("no nav");
+      await drag(page, await paletteItem(page, "Widgets", button), { x: nav.x + nav.width / 2, y: nav.y + nav.height + 4 });
+      const field = page.getByRole("tabpanel", { name: "Selection" }).getByLabel("Label");
+      await field.fill(label);
+      await field.blur();
+    }
+
+    // A grid into main, then parts into its cells.
+    await drag(page, await paletteItem(page, "Layouts", /^Grid 2×2/), await centre(page, slot("main")));
+    const grid = '.preview-stage [data-node-id="grid"]';
+    const cell = async (col: number, row: number) => {
+      const box = await page.locator(grid).boundingBox();
+      if (!box) throw new Error("no grid");
+      return { x: box.x + (box.width * (col - 0.5)) / 2, y: box.y + (box.height * (row - 0.5)) / 2 };
+    };
+    await drag(page, await paletteItem(page, "Widgets", /^Gauge/), await cell(1, 1));
+    await drag(page, await paletteItem(page, "Widgets", /^Readout/), await cell(2, 1));
+    await drag(page, await paletteItem(page, "Widgets", /^Bar graph/), await cell(1, 2), "drop-into-grid-cell");
+    await drag(page, await paletteItem(page, "Widgets", /^Status matrix/), await cell(2, 2));
+    await drag(page, await paletteItem(page, "Widgets", /^Text/), await centre(page, slot("status")));
+
+    // The grid's own handles and quick buttons; dragging the line between its columns.
+    await page.getByRole("tree", { name: "Outline" }).getByRole("treeitem", { name: /Grid · 2×2/ }).last().click();
+    await settle(page);
+    await page.screenshot({ path: out("grid-handles-and-tools") });
+    // Away from where it crosses the line between the rows.
+    const column = await page.locator('.resize-handle[data-kind="track"][data-axis="x"]').boundingBox();
+    if (!column) throw new Error("no column line");
+    const line = { x: column.x + column.width / 2, y: column.y + column.height / 4 };
+    await page.mouse.move(line.x, line.y);
+    await page.mouse.down();
+    await page.mouse.move(line.x + 160, line.y, { steps: 10 });
+    await settle(page);
+    await page.screenshot({ path: out("grid-column-drag") });
+    await page.mouse.up();
+    await expect(page.getByText("Saved", { exact: true })).toBeVisible();
+
+    // The gauge spans both rows by dragging its bottom edge.
+    // A click on the selected grid's box selects the part under the pointer.
+    const gauge = await centre(page, '.preview-stage [data-kind="gauge"]');
+    await page.mouse.click(gauge.x, gauge.y);
+    const bottom = await centre(page, '.resize-handle[data-kind="span"][data-axis="y"]');
+    const gridBox = await page.locator(grid).boundingBox();
+    if (!gridBox) throw new Error("no grid");
+    await page.mouse.move(bottom.x, bottom.y);
+    await page.mouse.down();
+    await page.mouse.move(bottom.x, gridBox.y + gridBox.height - 10, { steps: 10 });
+    await settle(page);
+    await page.screenshot({ path: out("grid-span-drag") });
+    await page.mouse.up();
+    await expect(page.getByText("Saved", { exact: true })).toBeVisible();
+
+    // The first nav button gets more of the column's room than the next one.
+    const first = await centre(page, '.preview-stage [data-slot="nav"] [data-kind="button"]');
+    await page.mouse.click(first.x, first.y);
+    const edge = await centre(page, '.resize-handle[data-kind="share"]');
+    await page.mouse.move(edge.x, edge.y);
+    await page.mouse.down();
+    await page.mouse.move(edge.x, edge.y + 14, { steps: 8 });
+    await settle(page);
+    await page.screenshot({ path: out("share-drag") });
+    await page.mouse.up();
+    await expect(page.getByText("Saved", { exact: true })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await page.keyboard.press("Escape");
+    await settle(page);
+    await page.screenshot({ path: out("editor-built") });
+
+    await page.getByRole("button", { name: "Publish" }).click();
+    await expect(page.getByText("Published", { exact: true })).toBeVisible();
+    await request.put(`/api/displays/${DISPLAY}`, { data: { screen: SCREEN } });
+    const context = await browser.newContext({ viewport: { width: 3840, height: 2160 }, deviceScaleFactor: 1 });
+    const display = await context.newPage();
+    await display.goto(`/d/${DISPLAY}`);
+    await expect(display.locator(".screen")).toBeVisible();
+    await settle(display);
+    await display.waitForTimeout(400);
+    await display.screenshot({ path: out("4k-cargo-bay") });
+    await context.close();
+  });
+
+  test("moving a part by dragging it in the preview", async ({ page }) => {
+    await page.goto("/builder/engineering");
+    await expect(page.locator(".editor__name h1")).toHaveText("Main engineering");
+    await page.locator('.preview-stage [data-node-id="tool-damage"]').click();
+    await settle(page);
+    await page.screenshot({ path: out("selection-tools") });
+    const from = await centre(page, ".selection-box");
+    const to = await centre(page, '.preview-stage [data-node-id="tool-core"]');
+    await drag(page, from, { x: to.x - 40, y: to.y }, "move-in-preview");
+    // Put the seeded draft back as it was.
+    await page.getByRole("button", { name: "Undo" }).click();
+    await expect(page.getByText("Saved", { exact: true })).toBeVisible();
+  });
+});
+
 test.describe("showcase lcars references", () => {
   test.skip(phase !== "lcars-references", "set SHOWCASE=lcars-references to capture screenshots");
 
