@@ -13,12 +13,14 @@ import {
   type NodeLocation,
   type NormRect,
   canReroll,
+  orientationOf,
   randomSeed,
   rerollScreenOps,
   resolveTokens,
   SpaceSchema,
   type SlotName,
   type ThemeTokens,
+  type Turned,
   type When,
 } from "@interactive-displays/core";
 import { decorCatalog, getThemeManifest } from "@interactive-displays/themes/manifest";
@@ -261,6 +263,56 @@ const LayoutEditor = ({ container }: { container: ContainerNode }) => {
   );
 };
 
+const ARRANGE_NAMES: Record<NonNullable<Turned["arrange"]>, string> = {
+  auto: "Rearrange automatically",
+  keep: "Keep as designed",
+  row: "Lay out in a row",
+  column: "Lay out in a column",
+};
+
+// How a part changes on a display turned the other way from the screen's design.
+const TurnedSection = ({ node }: { node: Node }) => {
+  const { screen, apply } = useEditor();
+  const other = orientationOf(screen.profile.aspect) === "landscape" ? "portrait" : "landscape";
+  const turned = node.turned ?? {};
+  const set = (patch: Partial<Record<keyof Turned, Turned[keyof Turned] | undefined>>) => {
+    const next: Record<string, unknown> = { ...turned, ...patch };
+    for (const key of Object.keys(next)) if (next[key] === undefined || next[key] === false || next[key] === "auto") delete next[key];
+    apply([{ op: "set", id: node.id, turned: Object.keys(next).length > 0 ? (next as Turned) : null }]);
+  };
+  const lines = node.type === "container" && (node.layout.kind === "stack" || node.layout.kind === "grid");
+  const arranges = node.type === "container" && node.layout.kind !== "canvas";
+  const choices: NonNullable<Turned["arrange"]>[] = lines ? ["auto", "keep", "row", "column"] : ["auto", "keep"];
+
+  return (
+    <Section title={`On a ${other} display`}>
+      {arranges ? (
+        <label className="tool-field">
+          <span className="field__label">Arrangement</span>
+          <select
+            className="tool-select"
+            value={turned.arrange ?? "auto"}
+            onChange={(event) => set({ arrange: choices.find((choice) => choice === event.target.value) ?? "auto" })}
+          >
+            {choices.map((choice) => (
+              <option key={choice} value={choice}>
+                {ARRANGE_NAMES[choice]}
+              </option>
+            ))}
+          </select>
+          <span className="tool-field__hint">
+            {screen.profile.rearrange ? "Rows of panels become columns and grids turn; preview it with the 9:16 or 16:9 button." : "This screen keeps its arrangement on every display (screen settings)."}
+          </span>
+        </label>
+      ) : null}
+      <label className="check">
+        <input type="checkbox" checked={turned.hidden === true} onChange={(event) => set({ hidden: event.target.checked })} />
+        Hidden on a {other} display
+      </label>
+    </Section>
+  );
+};
+
 const overridesSummary = (entry: When[number]) => {
   const keys = Object.keys(entry.props ?? {});
   return [...keys, ...(entry.hidden ? ["hidden"] : [])].join(", ");
@@ -419,6 +471,8 @@ const NodeInspector = ({ location }: { location: NodeLocation }) => {
           <span className="tool-field__hint">Draws this part and everything in it larger or smaller.</span>
         </label>
       </Section>
+
+      <TurnedSection node={node} />
 
       <Section title="Visibility">
         {overrideState ? (

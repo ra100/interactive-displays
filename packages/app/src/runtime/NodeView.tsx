@@ -2,17 +2,19 @@ import {
   archetypeSlots,
   type ChildEntry,
   type ContainerNode,
+  frameOrientation,
   type GridArea,
   isArchetype,
   type Node,
   type NormRect,
   nodeInState,
-  SLOT_DIRECTION,
+  type Orientation,
+  slotDirection,
   type SlotName,
 } from "@interactive-displays/core";
 import { resolveDecor, resolveFrameRenderer } from "@interactive-displays/themes/react";
 import { type CSSProperties, createContext, type ReactNode, useContext } from "react";
-import { SlotProvider, useEditing, useShowState, useThemeId } from "./context.ts";
+import { SlotProvider, useEditing, useShowState, useThemeId, useTurn } from "./context.ts";
 import { DecorView } from "./DecorView.tsx";
 import { WidgetErrorBoundary } from "./WidgetErrorBoundary.tsx";
 import { WidgetFallback } from "./WidgetFallback.tsx";
@@ -84,9 +86,9 @@ const CanvasView = ({ node }: { node: ContainerNode }) => (
   </div>
 );
 
-const SlotView = ({ slot, entries }: { slot: SlotName; entries: ChildEntry[] }) => (
+const SlotView = ({ slot, entries, orientation }: { slot: SlotName; entries: ChildEntry[]; orientation: Orientation }) => (
   <SlotProvider value={slot}>
-    <div className="slot" data-slot={slot} data-direction={SLOT_DIRECTION[slot]}>
+    <div className="slot" data-slot={slot} data-direction={slotDirection(slot, orientation)}>
       {entries.map((child) => (
         <div key={child.node.id} className="slot__item" style={weightStyle(child)}>
           <NodeView node={child.node} />
@@ -96,10 +98,13 @@ const SlotView = ({ slot, entries }: { slot: SlotName; entries: ChildEntry[] }) 
   </SlotProvider>
 );
 
-// The theme draws the chrome; the runtime renders each slot's children and hands them over.
+// The theme draws the chrome, for a portrait or a landscape display; the runtime renders each slot's children and
+// hands them over.
 const FrameView = ({ node, archetype }: { node: ContainerNode; archetype: string }) => {
   const themeId = useThemeId();
   const editing = useEditing();
+  const turn = useTurn();
+  const orientation = frameOrientation(node, turn.from, turn.to);
   const children = useVisibleChildren(node);
   if (!isArchetype(archetype)) return <WidgetFallback kind={archetype} reason="Unknown archetype" />;
   const Frame = resolveFrameRenderer(themeId, archetype);
@@ -108,11 +113,11 @@ const FrameView = ({ node, archetype }: { node: ContainerNode; archetype: string
   const slots: Partial<Record<SlotName, ReactNode>> = {};
   for (const slot of archetypeSlots(archetype)) {
     const entries = children.filter((child) => child.slot === slot);
-    if (entries.length > 0 || editing) slots[slot] = <SlotView slot={slot} entries={entries} />;
+    if (entries.length > 0 || editing) slots[slot] = <SlotView slot={slot} entries={entries} orientation={orientation} />;
   }
 
   return (
-    <div className="frame" data-node-id={node.id} data-archetype={archetype}>
+    <div className="frame" data-node-id={node.id} data-archetype={archetype} data-orientation={orientation}>
       <Frame archetype={archetype} nodeId={node.id} slots={slots} />
     </div>
   );

@@ -2,12 +2,16 @@ import {
   DEFAULT_PANEL,
   type Effect,
   nodeInState,
+  type Orientation,
+  orientationOf,
+  orientationOfBox,
   type Panel,
   type Profile,
   resolveTokens,
   type Screen,
   type StateDef,
   themeCssVariables,
+  turnTree,
 } from "@interactive-displays/core";
 import { getThemeManifest } from "@interactive-displays/themes/manifest";
 import {
@@ -19,8 +23,8 @@ import {
   StillContext,
   TickerContext,
 } from "@interactive-displays/themes/react";
-import { type CSSProperties, type ReactNode, useMemo, useState } from "react";
-import { EditingProvider, ShowStateProvider, ThemeIdProvider } from "./context.ts";
+import { type CSSProperties, type ReactNode, type RefObject, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { EditingProvider, ShowStateProvider, ThemeIdProvider, type Turn, TurnProvider } from "./context.ts";
 import { type Live, LiveContext } from "./live.ts";
 import { NodeView } from "./NodeView.tsx";
 import "./runtime.css";
@@ -51,7 +55,32 @@ interface Props {
   editing?: boolean;
   // The physical panel (diagonal and button height), so buttons come out in real centimetres.
   panel?: Panel | undefined;
+  // The display's shape; measured from the screen's own box when not given.
+  orientation?: Orientation | undefined;
 }
+
+// Until the screen box is measured: the window's shape on a display, the design's in a preview or thumbnail.
+const firstGuess = (embedded: boolean, design: Orientation): Orientation =>
+  embedded || typeof window === "undefined" ? design : orientationOfBox(window.innerWidth, window.innerHeight);
+
+// The shape of the box the screen is drawn in, kept up to date as the display turns or the preview resizes.
+const useMeasuredOrientation = (element: RefObject<HTMLElement | null>, initial: Orientation): Orientation => {
+  const [orientation, setOrientation] = useState(initial);
+  useLayoutEffect(() => {
+    const target = element.current;
+    if (!target) return;
+    const measure = () => {
+      const { width, height } = target.getBoundingClientRect();
+      if (width > 0 && height > 0) setOrientation(orientationOfBox(width, height));
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [element]);
+  return orientation;
+};
 
 // Thumbnails freeze at one moment, the same on every render.
 const STILL_TICKER = frozenTicker(Date.UTC(2026, 9, 15, 12, 0, 0));
@@ -85,6 +114,7 @@ export const ScreenView = ({
   scale = 1,
   editing = false,
   panel = DEFAULT_PANEL,
+  orientation: orientationProp,
 }: Props) => {
   const theme = getThemeManifest(themeId);
   // Video commands from this screen's own buttons, when the caller has no bus of its own.
@@ -107,12 +137,24 @@ export const ScreenView = ({
     "--panel-inches": String(panel.inches),
     "--button-cm": String(panel.buttonCm),
   } as CSSProperties;
-  const root = nodeInState(screen.root, state);
+  // A display turned the other way from the design gets the screen rearranged for its shape, unless the screen
+  // asks to keep its arrangement.
+  const element = useRef<HTMLElement>(null);
+  const design = orientationOf(screen.profile.aspect);
+  const measured = useMeasuredOrientation(element, firstGuess(embedded, design));
+  const display = orientationProp ?? measured;
+  const to = screen.profile.rearrange ? display : design;
+  const turn = useMemo<Turn>(() => ({ from: design, to }), [design, to]);
+  const arranged = useMemo(() => turnTree(screen.root, design, to), [screen.root, design, to]);
+  const root = nodeInState(arranged, state);
   const Root = embedded ? "div" : "main";
 
   return (
     <div className={embedded ? "screen-frame screen-frame--embedded" : "screen-frame"}>
       <Root
+        ref={(node: HTMLElement | null) => {
+          element.current = node;
+        }}
         className="screen"
         data-theme={theme.id}
         data-variant={variant && theme.variants[variant] ? variant : undefined}
@@ -121,6 +163,8 @@ export const ScreenView = ({
         data-state={state}
         data-effect={effect}
         data-still={still || undefined}
+        data-orientation={display}
+        data-turned={design !== to || undefined}
         style={style}
       >
         <ThemeIdProvider value={theme.id}>
@@ -130,7 +174,9 @@ export const ScreenView = ({
                 <MediaBusContext.Provider value={live.media}>
                   <Still still={still}>
                     <EditingProvider value={editing}>
-                      <NodeView node={root} />
+                      <TurnProvider value={turn}>
+                        <NodeView node={root} />
+                      </TurnProvider>
                     </EditingProvider>
                   </Still>
                 </MediaBusContext.Provider>

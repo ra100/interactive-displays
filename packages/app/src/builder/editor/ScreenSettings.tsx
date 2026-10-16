@@ -1,4 +1,4 @@
-import { type Field, type Profile, ProfileSchema, slugify } from "@interactive-displays/core";
+import { type Field, orientationOf, type Profile, ProfileSchema, slugify } from "@interactive-displays/core";
 import { getThemeManifest } from "@interactive-displays/themes/manifest";
 import { useEditor } from "./EditorContext.ts";
 import { FieldInput } from "./FieldInput.tsx";
@@ -51,6 +51,14 @@ export const ScreenSettings = () => {
         />
         <FieldInput {...common} field={ASPECT} value={screen.profile.aspect} onChange={(value) => profile({ aspect: ProfileSchema.shape.aspect.parse(value) })} />
         <FieldInput {...common} field={FIT} value={screen.profile.fit} onChange={(value) => profile({ fit: ProfileSchema.shape.fit.parse(value) })} />
+        <label className="check">
+          <input type="checkbox" checked={screen.profile.rearrange} onChange={(event) => profile({ rearrange: event.target.checked })} />
+          Rearrange on a display turned the other way
+          <span className="tool-field__hint">
+            A {screen.profile.aspect} screen on a {orientationOf(screen.profile.aspect) === "landscape" ? "portrait" : "landscape"} display moves its parts
+            around (rows become columns, the nav column becomes a band) instead of stretching.
+          </span>
+        </label>
       </section>
     </div>
   );

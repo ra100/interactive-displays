@@ -928,3 +928,52 @@ test.describe("showcase lcars references", () => {
     await lookRegion.screenshot({ path: out("operator-panel-size") });
   });
 });
+
+test.describe("showcase portrait", () => {
+  test.skip(phase !== "portrait", "set SHOWCASE=portrait to capture screenshots");
+
+  const LANDSCAPE = { width: 3840, height: 2160 };
+  const PORTRAIT = { width: 2160, height: 3840 };
+
+  test.afterEach(async ({ request }) => {
+    expect((await request.put("/api/show/theme", { data: { id: "lcars" } })).ok()).toBe(true);
+  });
+
+  const both = async (page: Page, name: string, display: string, query = "") => {
+    for (const [shape, size] of [["landscape", LANDSCAPE], ["portrait", PORTRAIT]] as const) {
+      await page.setViewportSize(size);
+      await page.goto(`/d/${display}${query}`);
+      await expect(page.locator(".screen")).toBeVisible();
+      await expect(page.locator(".screen")).toHaveAttribute("data-orientation", shape);
+      await settle(page);
+      await page.waitForTimeout(400);
+      await page.screenshot({ path: out(`${name}-${shape}`) });
+    }
+  };
+
+  test("every LCARS layout, landscape and turned to portrait", async ({ page }) => {
+    await both(page, "bridge-sidebar", "test");
+    await both(page, "tactical-dashboard", "tactical-1");
+    await both(page, "sensors-split", "science-1");
+    await both(page, "operations-console", "ops-1");
+    await both(page, "engineering-header-main", "engineering-1");
+  });
+
+  test("the other looks turn too", async ({ page }) => {
+    await both(page, "operations-hud", "ops-1", "?theme=hud");
+    await both(page, "sensors-crt", "science-1", "?theme=crt");
+    await both(page, "bridge-base", "test", "?theme=base");
+  });
+
+  test("the editor previews the turned screen and sets how parts turn", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    await page.goto("/builder/operations");
+    await expect(page.getByRole("region", { name: "Preview" })).toBeVisible();
+    await page.getByRole("radiogroup", { name: "Preview aspect" }).getByRole("radio", { name: "9:16" }).click();
+    await expect(page.getByRole("note")).toContainText("Rearranged for a portrait display");
+    await page.getByRole("tree", { name: "Outline" }).getByRole("treeitem", { name: /Frame · console/ }).first().click({ force: true });
+    await expect(page.getByRole("combobox", { name: /Arrangement/ })).toBeVisible();
+    await settle(page);
+    await page.screenshot({ path: out("editor-turned-preview") });
+  });
+});

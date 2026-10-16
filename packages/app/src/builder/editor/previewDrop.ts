@@ -88,7 +88,9 @@ const alongAxis = (
 
 const intoSlot = (frame: ContainerNode, slot: SlotName, element: HTMLElement, pointer: Point): Omit<Drop, "label"> => {
   const entries = frame.children.flatMap((child, index) => (child.slot === slot ? [{ id: child.node.id, index }] : []));
-  const { index, mark, into } = alongAxis(element, entries, SLOT_DIRECTION[slot], pointer, indexAfterSlot(frame, slot));
+  // The slot says which way it runs: on a portrait display the nav and the side panel are bands.
+  const direction = element.dataset["direction"] === "row" || element.dataset["direction"] === "column" ? element.dataset["direction"] : SLOT_DIRECTION[slot];
+  const { index, mark, into } = alongAxis(element, entries, direction, pointer, indexAfterSlot(frame, slot));
   return { target: { parentId: frame.id, index, slot }, mark, into };
 };
 

@@ -45,10 +45,18 @@ interface Sequence {
   items: Array<Share & { box: Box }>;
 }
 
+// Which way a frame slot runs as drawn: on a portrait display the nav and the side panel are bands.
+const slotDirectionIn = (stage: HTMLElement, frameId: string, slot: SlotName): "row" | "column" => {
+  const frame = elementOf(stage, frameId);
+  const own = [...(frame?.querySelectorAll<HTMLElement>(`.slot[data-slot="${slot}"]`) ?? [])].find((each) => each.closest(".frame") === frame);
+  const drawn = own?.dataset["direction"];
+  return drawn === "row" || drawn === "column" ? drawn : SLOT_DIRECTION[slot];
+};
+
 // The visible children of a stack, or of one frame slot, in order along their axis.
 const sequenceOf = (stage: HTMLElement, container: ContainerNode, slot: SlotName | undefined): Sequence | undefined => {
   const { layout } = container;
-  const direction = layout.kind === "stack" ? layout.direction : layout.kind === "frame" && slot ? SLOT_DIRECTION[slot] : undefined;
+  const direction = layout.kind === "stack" ? layout.direction : layout.kind === "frame" && slot ? slotDirectionIn(stage, container.id, slot) : undefined;
   if (!direction) return undefined;
   const axis: Axis = direction === "row" ? "x" : "y";
   const items = container.children.flatMap((child) => {

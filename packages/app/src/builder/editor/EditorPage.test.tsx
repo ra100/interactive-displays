@@ -192,6 +192,19 @@ describe("screen editor", () => {
     );
   });
 
+  it("previews the screen rearranged on a portrait display and sets how a part turns", async () => {
+    await open();
+    await userEvent.click(within(screen.getByRole("radiogroup", { name: "Preview aspect" })).getByRole("radio", { name: "9:16" }));
+    expect(within(screen.getByRole("main")).getByRole("note")).toHaveTextContent("Rearranged for a portrait display");
+    expect(preview().querySelector(".frame")).toHaveAttribute("data-orientation", "portrait");
+    expect(preview().querySelector('.slot[data-slot="nav"]')).toHaveAttribute("data-direction", "row");
+
+    await selectInOutline(/Frame/);
+    await userEvent.selectOptions(inspector().getByRole("combobox", { name: /Arrangement/ }), "Keep as designed");
+    await waitFor(() => expect(opsSent()[0]?.ops).toEqual([{ op: "set", id: "root", turned: { arrange: "keep" } }]));
+    await waitFor(() => expect(preview().querySelector(".frame")).toHaveAttribute("data-orientation", "landscape"));
+  });
+
   it("edits a prop for one show state only", async () => {
     await open();
     await userEvent.selectOptions(screen.getByLabelText("State"), "red-alert");
