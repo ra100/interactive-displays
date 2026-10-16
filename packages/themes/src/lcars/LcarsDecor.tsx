@@ -8,7 +8,7 @@ export const LcarsElbow = ({ props }: DecorRendererProps<DecorProps<typeof elbow
     className="lcars-elbow"
     data-corner={props.corner}
     data-tone={props.tone}
-    style={{ "--arm": `${props.arm * 100}%`, "--bar": `${props.bar * 100}%` } as CSSProperties}
+    style={{ "--arm": props.arm, "--bar": props.bar } as CSSProperties}
     aria-hidden="true"
   >
     <div className="lcars-elbow__inner" />
