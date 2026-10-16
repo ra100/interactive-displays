@@ -6,6 +6,40 @@ Docker smoke test); these steps are for a person with real displays.
 Report problems or ideas as a GitHub issue (label `v2`) or in the project thread, with the display type,
 browser, the URL you opened and a photo or screenshot if possible.
 
+## LCARS references and real button sizes
+
+### Setup
+
+A fresh data directory gets two new demo screens and displays: **Operations** on `ops-1` and **Long range
+sensors** on `science-1`. An existing data directory keeps its show; create the screens from the **Console** and
+**Split frame** templates in `/builder` instead. You need `/operator` on a laptop or phone, at least one real 4K
+panel, and a tape measure or ruler.
+
+### Buttons at their real size
+
+| # | Step | Expected |
+|---|---|---|
+| 1 | In `/operator` → **Look**, set **Panel** to your panel's diagonal (for example 85″) and leave **Buttons** at 1.5 cm | Every display redraws within a second |
+| 2 | Open `/d/test` fullscreen on the 4K panel and measure a button in the main area and a block in the left column | The main button is about 1.5 cm tall; the column blocks are about 2 cm. Within 2 mm either way |
+| 3 | Set **Buttons** to 2 cm, then 1 cm | Buttons grow to about 2 cm, then shrink to about 1 cm. Titles, readouts and the frame do not change |
+| 4 | Change **Size** to 50% and back to 70% | Text and the frame shrink and grow; buttons stay the same height |
+| 5 | On a display card, set **Panel** to 13″ and open that display on a laptop or tablet | Buttons on that display are about 1.5 cm on its own screen; the 4K panel is unchanged. Set it back to **Show panel** |
+| 6 | Press buttons on the panel with a fingertip, in the nav column, the toolbar and the main area | Each press lands on the button you aimed at and flashes; nothing next to it fires |
+| 7 | Open `/builder`, a screen with buttons, and its preview | The preview shows buttons in proportion to the rest of the screen, small as on the panel |
+
+### New LCARS layouts and pieces
+
+| # | Step | Expected |
+|---|---|---|
+| 1 | Open `/d/ops-1` on the 4K panel | A console: sweep and blocks on the left, a row of small pill buttons under the title, segmented bars, readouts, gauges, lamp rows, a data cascade and a sensor scope behind a divider on the right |
+| 2 | Open `/d/science-1` | The split frame: an upper frame with summary readouts sweeping down into a segmented bar, a gap, and a lower frame sweeping up into the nav column; a large scope with a turning sweep and blinking contacts |
+| 3 | Press **Sensors** on Operations, then **Operations** on Long range sensors | Each moves that display to the other screen |
+| 4 | Set red alert, then damaged, then normal | Both screens restyle like the other LCARS screens |
+| 5 | In **Look**, try the variants **Deep Space Nine**, **Voyager** and **Lower Decks** | Each recolours every display; text stays readable on black |
+| 6 | Switch the theme to **Holo HUD**, then **Terminal** | Both screens keep their layout in the new look; segments become a scale or a rule, the scope a reticle or a radar |
+| 7 | Open `/gallery?theme=lcars` | Five frames (Sidebar, Header and main, Dashboard, Split frame, Console) and six decor pieces, including Segments and Sensor scope, with no dashed fallback boxes |
+| 8 | In `/builder`, **New screen** → **Split frame** and **Console**, then **Generate** a few Starship sections | The templates are valid; some generated screens use the new layouts |
+
 ## Phase 6: a second look and show tooling
 
 ### Setup

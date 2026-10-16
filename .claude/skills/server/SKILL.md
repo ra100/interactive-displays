@@ -52,6 +52,7 @@ Reads are open. With `EDITOR_TOKEN` set, every other method under `/api/` needs 
 | `PUT /api/show/settings` | `{ liveEdit?, displayGlobalActions?, sounds?, aiPublish?, aiLiveControl? }` |
 | `PUT /api/show/theme` | `{ id, variant? }`: re-skins every display (422 for an unknown theme or variant) |
 | `PUT /api/show/scale` | `{ scale }` (0.25–2): how big every display draws, unless it has its own |
+| `PUT /api/show/panel` | `{ inches?, buttonCm? }` (5–200", 0.8–4 cm): the panels' diagonal and how tall buttons are on them |
 | `PUT /api/show/sound-pack` | `{ pack }`: whose sounds the displays play; `null` for the theme's own |
 | `PUT /api/show/cues` | `{ cues }`: replaces the running order (422 with issue paths for unknown states, signals, screens) |
 | `POST /api/cues/go` | runs the cue after the last one run → `{ cue, skipped }`; 409 after the last cue |
@@ -78,7 +79,7 @@ Reads are open. With `EDITOR_TOKEN` set, every other method under `/api/` needs 
 | `POST /api/screens/:id/duplicate` | `{ id?, name? }` (201) |
 | `DELETE /api/screens/:id` | 409 while a display or the show default uses it; moves it to `.trash/` |
 | `POST /api/state` | `{ state }` |
-| `PUT /api/displays/:id` | `{ name?, screen?, scale? }`; `null` clears (a cleared scale follows the show's) |
+| `PUT /api/displays/:id` | `{ name?, screen?, scale?, inches? }`; `null` clears (a cleared scale or panel follows the show's) |
 | `DELETE /api/displays/:id` | forget a display |
 | `POST /api/displays/:id/identify` | flash the display's name |
 | `POST /api/displays/:id/reload` | reload the display's page |
@@ -103,7 +104,7 @@ and test both (`mcp.integration.test.ts` uses the SDK client).
 - Show: `set_cues` writes the running order (nothing goes on air); `list_displays` includes the cues and the last
   one run.
 - Gated: `publish_screen` needs `settings.aiPublish`; `assign_screen`, `set_state`, `set_theme`, `run_cue`,
-  `set_scale`, `set_signal`, `video_command` need `settings.aiLiveControl`. Refusals are tool errors naming the operator switch.
+  `set_scale`, `set_panel`, `set_signal`, `video_command` need `settings.aiLiveControl`. Refusals are tool errors naming the operator switch.
 - Resources: `interactive-displays://guide` (design rules, `src/mcp/guide.ts`), `://catalog`, `://recipes`,
   `://screens/{id}`. Prompts: `design-screen`, `fill-placeholders`, `new-section-recipe`.
 
@@ -127,8 +128,8 @@ Errors come back as tool results with `isError` and `{ error, status, issues?, r
 
 ```
 settings.json                                    { "schemaVersion": 1, "activeShow": "demo" }
-shows/<showId>/show.json                         Show: theme (+variant), scale, soundPack, states, signals, cues,
-                                                 settings, defaultScreen, displays[] (with scale); read at start,
+shows/<showId>/show.json                         Show: theme (+variant), scale, panel, soundPack, states, signals, cues,
+                                                 settings, defaultScreen, displays[] (with scale, inches); read at start,
                                                  rewritten whole on every change
 shows/<showId>/runtime.json                      current state, shared manual signal values, last cue run,
                                                  last-seen displays
@@ -149,7 +150,7 @@ show down. All writes are atomic (temp file + rename) and serialized per file.
 Typed in `packages/core/src/protocol` (`PROTOCOL_VERSION` 4). Clients emit `hello` with a role:
 
 - `display { displayId }` joins `display:<id>` and gets a `snapshot` (show with theme, states, signals, the
-  sounds setting and sound pack, current state, shared signal values, display with its effective `scale`, screen,
+  sounds setting and sound pack, current state, shared signal values, display with its effective `scale` and `panel`, screen,
   `preview` and `navigated` flags). A new
   snapshot follows whenever what it shows changes or the show's settings or signals change; `state { state }` for
   show-wide changes, `signals { values }` with changed shared values, `video { target, command }`,

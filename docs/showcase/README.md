@@ -3,6 +3,51 @@
 What each phase of the v2 rebuild looks like. Screenshots are captured by `tests/e2e/showcase.spec.ts`
 against the real server and built app (`pnpm build && SHOWCASE=phase-N pnpm test:e2e showcase`).
 
+## LCARS references and real button sizes
+
+More of LCARS, taken from the shows and from LCARS builds that catalogue them (sources and the element
+inventory are in [`docs/reference/lcars.md`](../reference/lcars.md)), and buttons that are 1 to 2 cm tall on the
+set's 80–100" 4K panels. Every display shot is a full 3840×2160 capture at the default 70% size and 1.5 cm buttons
+(reduced to 256 colours).
+
+**Buttons at their real size.** The show knows its panels' diagonal (90" by default, a display can have its own)
+and draws buttons 1.5 cm tall on them: about 29 px on a 4K panel. Left at 90", the same pixels are 1.33 cm on an
+80" panel and 1.67 cm on a 100" one. Before, these buttons came out 113 to 212 px, 5 to 12 cm.
+
+| Before | After |
+|---|---|
+| ![Bridge before](lcars-references/4k-bridge-before.png) | ![Bridge with 1.5 cm buttons](lcars-references/4k-bridge.png) |
+
+**Two new layouts.** *Console* (Voyager and later): the sweep and navigation column, a row of tools, and a side
+panel behind a capped divider. *Split frame* (TNG Engineering): an upper frame that sweeps down into a segmented
+bar, a gap, and a lower frame that sweeps up into the navigation column. Both are dense on purpose, the way the
+panels on set were; they use the new **segments** and **sensor scope** decor and the status matrix drawn as lamp
+rows.
+
+| Operations (console) | Long range sensors (split frame) |
+|---|---|
+| ![Operations console](lcars-references/4k-operations-console.png) | ![Long range sensors](lcars-references/4k-sensors-split.png) |
+
+**Era palettes**: Deep Space Nine, Voyager and Lower Decks join Nemesis blue and Picard grey.
+
+| Deep Space Nine | Voyager | Lower Decks |
+|---|---|---|
+| ![DS9](lcars-references/4k-operations-ds9.png) | ![Voyager](lcars-references/4k-sensors-voyager.png) | ![Lower Decks](lcars-references/4k-operations-lower-decks.png) |
+
+**States, size, and the other looks.** The new layouts restyle for red alert, balance well at 50% size, and are
+drawn natively by the HUD and the terminal (segments become a scale or a rule, the scope a reticle or a radar).
+
+| Red alert | 50% size | Holo HUD | Terminal |
+|---|---|---|---|
+| ![Red alert](lcars-references/4k-operations-red-alert.png) | ![50%](lcars-references/4k-operations-scale-50.png) | ![HUD](lcars-references/4k-operations-hud.png) | ![CRT](lcars-references/4k-sensors-crt.png) |
+
+**Gallery and operator.** All five LCARS frames and six decor pieces, and the new **Panel** and **Buttons**
+pickers in the operator's Look section.
+
+| Frames | Decor | Look |
+|---|---|---|
+| ![Frames](lcars-references/gallery-frames.png) | ![Decor](lcars-references/gallery-decor.png) | ![Panel and button pickers](lcars-references/operator-panel-size.png) |
+
 ## Phase 6: a second look and show tooling
 
 The same show now runs in three completely different looks: **LCARS**, **Holo HUD** (the translucent HUD chosen
