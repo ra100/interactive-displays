@@ -514,10 +514,180 @@
   pointer-events: none;
 }
 
-.selection-box[data-canvas="true"] {
+.selection-box[data-canvas="true"],
+.selection-box[data-movable="true"] {
   cursor: move;
   pointer-events: auto;
   touch-action: none;
+}
+
+/* Everything the editor draws over the preview; only the handles and tools take the pointer. */
+.preview-overlay {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  pointer-events: none;
+}
+
+.resize-handle {
+  position: absolute;
+  z-index: 3;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.resize-handle::after {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  border: 1px solid rgb(0 0 0 / 70%);
+  border-radius: 3px;
+  background: var(--tool-accent);
+  content: "";
+  opacity: 0.85;
+}
+
+.resize-handle[data-axis="x"] {
+  cursor: col-resize;
+}
+
+.resize-handle[data-axis="y"] {
+  cursor: row-resize;
+}
+
+.resize-handle[data-axis="x"]::after {
+  width: 4px;
+  max-height: 60px;
+}
+
+.resize-handle[data-axis="y"]::after {
+  height: 4px;
+  max-width: 60px;
+}
+
+.resize-handle[data-kind="span"]::after {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  border-radius: 6px;
+  background: var(--tool-info);
+}
+
+/* A grid line shows its whole length, faintly, so it reads as the line between two tracks. */
+.resize-handle[data-kind="track"]::before {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  border: 0 dashed rgb(255 156 51 / 55%);
+  content: "";
+}
+
+.resize-handle[data-kind="track"][data-axis="x"]::before {
+  width: 0;
+  border-left-width: 1px;
+}
+
+.resize-handle[data-kind="track"][data-axis="y"]::before {
+  height: 0;
+  border-top-width: 1px;
+}
+
+.resize-handle:hover::after {
+  opacity: 1;
+  box-shadow: 0 0 0 3px rgb(255 156 51 / 35%);
+}
+
+.resize-readout,
+.drop-into__label {
+  position: absolute;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--tool-accent);
+  color: var(--tool-on-accent);
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.resize-readout {
+  z-index: 4;
+  transform: translate(-50%, -150%);
+}
+
+.selection-tools {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  max-width: 100%;
+  padding: 2px;
+  border: 1px solid var(--tool-border);
+  border-radius: 8px;
+  background: var(--tool-panel);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 50%);
+  pointer-events: auto;
+}
+
+.selection-tools__button {
+  height: 24px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--tool-text);
+  font: 600 12px system-ui, sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.selection-tools__button:hover:not(:disabled) {
+  background: var(--tool-raised);
+}
+
+.selection-tools__button:active:not(:disabled) {
+  background: var(--tool-accent);
+  color: var(--tool-on-accent);
+}
+
+.selection-tools__button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.drop-into {
+  position: absolute;
+  outline: 2px dashed var(--tool-accent);
+  outline-offset: -2px;
+  background: rgb(255 156 51 / 8%);
+}
+
+.drop-into__label {
+  top: 4px;
+  left: 4px;
+}
+
+.drop-mark {
+  position: absolute;
+  border-radius: 2px;
+  background: var(--tool-accent);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 70%);
+}
+
+.drop-mark[data-kind="cell"],
+.drop-mark[data-kind="spot"] {
+  border: 2px solid var(--tool-accent);
+  background: rgb(255 156 51 / 25%);
+}
+
+/* Empty frame slots are drawn in the editor only, as places to drop into. */
+.preview-stage .slot:empty {
+  min-width: 24px;
+  min-height: 24px;
+  outline: 1px dashed rgb(255 255 255 / 18%);
+  outline-offset: -1px;
 }
 
 .selection-box__handle {
