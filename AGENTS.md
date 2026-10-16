@@ -20,7 +20,8 @@ packages/
                       signals and bindings, actions, assets, theme manifest (with sounds and tone palettes),
                       content packs (recipes, blocks, vocabulary)
             catalog/  defineWidget() registry (one file per widget) and defineDecor()
-            tree/     walk/find nodes; nodeInState applies `when` overrides for a show state
+            tree/     walk/find nodes; nodeInState applies `when` overrides for a show state; turnTree rearranges
+                      a screen for a display turned the other way (rows to columns, grids on their side)
             signals/  sample a signal at a moment (seeded walk, wave, clock), per-state sources, bindProps
             validate/ validateScreen: schema, unique ids, known kinds, props, slots, grid areas, decor
             ops/      the operation language (insert, remove, move, update, set, place, layout, replace,
@@ -115,6 +116,9 @@ and `zod`. The server imports `core`, `content`, `@interactive-displays/themes/m
   slots). LCARS sources and the element inventory are in `docs/reference/lcars.md`.
 - Layout is fluid: stacks with weights, `--u` and container query units. `--u` is 1% of the display's shorter side
   times the scale: the show's (0.7 by default, for 4K panels of 80–100"), a display's own, and any node's `scale`.
+- A screen on a display turned the other way from its `profile.aspect` is rearranged, not stretched: frames draw
+  portrait chrome (nav as a band, aside below main), rows of panels become columns, grids turn. A node's
+  `turned: { arrange, hidden }` and the screen's `profile.rearrange` override it.
 - A display says `hello` and gets a full `snapshot`; reconnecting is just another hello. Show state changes
   arrive as a small `state` event so they reach every display within 100 ms.
 

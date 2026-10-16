@@ -3,6 +3,47 @@
 What each phase of the v2 rebuild looks like. Screenshots are captured by `tests/e2e/showcase.spec.ts`
 against the real server and built app (`pnpm build && SHOWCASE=phase-N pnpm test:e2e showcase`).
 
+## Portrait displays rearrange the screen
+
+Turn a panel from landscape to portrait (or show a 16:9 screen on a tall display) and the screen is rebuilt for
+the new shape instead of stretched. Every frame has a portrait form in every look: the nav column becomes a band of
+buttons under the title, side panels move below the main area, rows of panels stack into columns and grids turn
+on their side. The rules are automatic; the editor lets you keep a part as designed, force it into a row or a
+column, or hide it on the turned display, and a screen can switch rearranging off. Each pair below is the same
+published screen at 3840×2160 and 2160×3840.
+
+| Bridge (sidebar) | | Tactical (dashboard) | |
+|---|---|---|---|
+| ![Bridge landscape](portrait/bridge-sidebar-landscape.png) | ![Bridge portrait](portrait/bridge-sidebar-portrait.png) | ![Tactical landscape](portrait/tactical-dashboard-landscape.png) | ![Tactical portrait](portrait/tactical-dashboard-portrait.png) |
+
+| Operations (console) | | Sensors (split) | |
+|---|---|---|---|
+| ![Operations landscape](portrait/operations-console-landscape.png) | ![Operations portrait](portrait/operations-console-portrait.png) | ![Sensors landscape](portrait/sensors-split-landscape.png) | ![Sensors portrait](portrait/sensors-split-portrait.png) |
+
+**What moves.** On the bridge the nav blocks become a band under the title and the sweep slims to a bracket. On
+tactical the shields panel drops below weapons behind a horizontal divider and lays its gauges side by side under
+its heading. Operations moves its sensor net to the bottom. Engineering's grid turns, so the EPS column becomes a
+band along the bottom.
+
+| Engineering (header and main) | | HUD | | Terminal | |
+|---|---|---|---|---|---|
+| ![Engineering landscape](portrait/engineering-header-main-landscape.png) | ![Engineering portrait](portrait/engineering-header-main-portrait.png) | ![HUD landscape](portrait/operations-hud-landscape.png) | ![HUD portrait](portrait/operations-hud-portrait.png) | ![Terminal landscape](portrait/sensors-crt-landscape.png) | ![Terminal portrait](portrait/sensors-crt-portrait.png) |
+
+**In the editor.** Press **9:16** above the preview to see a landscape screen turned. A note says it is
+rearranged; select any part and choose its **Arrangement** (rearrange automatically, keep as designed, row,
+column) or **Hidden on a portrait display** in the inspector. Moving and resizing stays in the screen's own shape.
+
+![Editor previewing a turned screen](portrait/editor-turned-preview.png)
+
+### Under the hood
+
+- `turnTree(root, from, to)` in `core/tree/turn.ts` is pure and deterministic; the display, the preview and the
+  tests all call it. Same orientation in and out gives back the very same tree.
+- Frames get `data-orientation`; themes style `.frame[data-orientation="portrait"] > …`. LCARS adds a portrait arm
+  that continues the bracket beside the nav band.
+- Documents: `profile.rearrange` and a node's `turned: { arrange, hidden }`, set with the `set` op. See
+  `docs/deviations/2026-10-16-portrait-rearrange.md`.
+
 ## Drag-and-drop layout in the editor
 
 Layouts are now set up in the preview itself, with the mouse: drag parts in from the Add panel, move them by

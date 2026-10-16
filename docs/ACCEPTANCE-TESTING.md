@@ -6,6 +6,52 @@ Docker smoke test); these steps are for a person with real displays.
 Report problems or ideas as a GitHub issue (label `v2`) or in the project thread, with the display type,
 browser, the URL you opened and a photo or screenshot if possible.
 
+## Portrait displays rearrange the screen
+
+### Setup
+
+Start the server (`pnpm build && pnpm start`). Use a display you can turn (a TV on a rotating mount, a tablet, or
+a desktop browser window you can resize from wide to tall). All seeded screens are 16:9.
+
+### Checks
+
+1. **Bridge.** Open `/d/test` wide, then turn the display (or make the window taller than it is wide). Without a
+   reload the nav column becomes a band of blocks under the title, the sweep becomes a slim bracket and the
+   readouts take the full width. Turn it back: the nav column returns.
+2. **Buttons stay buttons.** On the turned bridge, the nav blocks are still about 2 cm tall on the panel and their
+   labels read; press one to check it still works.
+3. **Tactical** (`/d/tactical-1`). Portrait: the shields panel moves below weapons behind a horizontal bar, with
+   its heading on top and its gauges side by side.
+4. **Operations** (`/d/ops-1`) and **Sensors** (`/d/science-1`). Portrait: nav becomes a band; the console's sensor
+   net drops to the bottom; the split keeps its upper summary panel and puts the nav band above the scanner.
+5. **Engineering** (`/d/engineering-1`). Portrait: the three-panel grid turns, so the EPS column becomes a band
+   along the bottom.
+6. **Other looks.** Repeat 1 and 4 with `?theme=hud`, `?theme=crt` and `?theme=base`, or switch the Look in the
+   operator console: each has its own portrait frames.
+7. **Editor preview.** Open a screen in `/builder`, press **9:16**. The preview shows the rearranged screen and a
+   note under it. Clicking selects parts; dragging, edge handles and the quick layout buttons are off there.
+   Press **16:9** to edit the layout again.
+8. **Per part.** In 9:16, select the frame and set **Arrangement** to **Keep as designed**: the preview draws the
+   landscape chrome again. Select a row of panels and choose **Lay out in a row**: it stays a row on portrait.
+   Tick **Hidden on a portrait display** on a part: it disappears only in 9:16. Publish and turn a real display to
+   see the same. Undo reverses each change.
+9. **Per screen.** In **Screen** settings untick **Rearrange on a display turned the other way**: a turned display
+   stretches the landscape layout as before.
+10. **Portrait screens.** Generate a screen with the 9:16 shape (Generate dialog) and show it on a wide display:
+    its columns of panels become rows and its frame draws landscape chrome.
+
+### Edge cases worth trying
+
+- A screen with `fit: contain` letterboxes to its own shape and is never rearranged.
+- Drag a part in the outline while previewing 9:16: the outline still moves it in the designed arrangement.
+- A canvas keeps its hand-placed picture when turned; only stacks and grids inside its parts rearrange.
+
+### Known limitations
+
+- Rearranging is rule-based: a part it gets wrong needs its **Arrangement** set by hand; there is no separate
+  portrait copy of a screen to draw freely.
+- Drag-and-drop and resizing work only in the screen's own shape.
+
 ## Drag-and-drop layout in the editor
 
 ### Setup
