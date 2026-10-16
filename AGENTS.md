@@ -67,8 +67,8 @@ packages/
                       (assign, size, identify, QR, video transport, send back)
             builder/  /builder (lazy): library/ (screens, templates, Generate dialog, signals), generation.ts
                       (generator inputs from the show and theme, regenerate and reroll) and editor/ (session with undo
-                      and rebase, outline, preview, inspector with live values and actions, history, assets,
-                      send to display)
+                      and rebase, outline, preview with drag-and-drop, edge and grid resizing and quick layout
+                      buttons, inspector with live values and actions, history, assets, send to display)
             tools/    shared by operator and builder: connection, token gate, API client, dialogs
 tests/e2e/  Playwright, against the built app served by the real server
 data/       runtime data (gitignored): settings.json, shows/<id>/{show,runtime}.json, shows/<id>/screens/
