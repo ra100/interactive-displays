@@ -3,7 +3,7 @@ import type { Op } from "../ops/ops.ts";
 import { ARCHETYPE_IDS, type ArchetypeId, archetypeSlots, isArchetype, type SlotName } from "../schema/archetypes.ts";
 import { BLOCK_SIZES, type ContentPack, type Recipe, type System } from "../schema/content.ts";
 import type { ChildEntry, GridArea, Node, WidgetNode } from "../schema/node.ts";
-import { type Density, type GeneratorInfo, type Profile, SCREEN_SCHEMA_VERSION, type Screen } from "../schema/screen.ts";
+import { DEFAULT_PROFILE, type Density, type GeneratorInfo, type Profile, SCREEN_SCHEMA_VERSION, type Screen } from "../schema/screen.ts";
 import { collectIds, findNode, lockedParts, walkNodes } from "../tree/tree.ts";
 import { validateScreen } from "../validate/validateScreen.ts";
 import { blockFits, buildBlock, chooseBlock } from "./blocks.ts";
@@ -239,7 +239,7 @@ const navLabels = (options: GenerateOptions, focus: System | undefined): { label
 const buildRoot = (options: GenerateOptions, random: Random, archetype: ArchetypeId, context: Context): Node => {
   const { recipe, pack, show } = options;
   const counts = COUNTS[options.density ?? "normal"];
-  const profile = options.profile ?? { aspect: "16:9", fit: "fluid" };
+  const profile = options.profile ?? DEFAULT_PROFILE;
   const kept = keptFrom(options.from);
   const keptIn = (slot: SlotName) => kept.get(slot) ?? [];
   const focus = options.suite?.system ? recipe.systems.find((system) => system.id === options.suite?.system) : undefined;
@@ -340,7 +340,7 @@ const pickArchetype = (options: GenerateOptions, random: Random): ArchetypeId =>
   if (options.archetype) return options.archetype;
   const root = options.from?.root;
   if (root?.type === "container" && root.layout.kind === "frame" && isArchetype(root.layout.archetype)) return root.layout.archetype;
-  return random.weighted(archetypeWeights(options.recipe, options.theme, options.profile ?? { aspect: "16:9", fit: "fluid" }));
+  return random.weighted(archetypeWeights(options.recipe, options.theme, options.profile ?? DEFAULT_PROFILE));
 };
 
 export const generatorInfo = (options: GenerateOptions): GeneratorInfo => ({
@@ -373,7 +373,7 @@ export const generateScreen = (options: GenerateOptions): Screen => {
       name: options.name ?? (focus ? `${options.recipe.label}: ${focus.label}` : options.recipe.label),
       section: options.recipe.id,
       tags: ["generated"],
-      profile: options.profile ?? { aspect: "16:9", fit: "fluid" },
+      profile: options.profile ?? DEFAULT_PROFILE,
       revision: 0,
       generator: generatorInfo(options),
       root,
@@ -387,7 +387,7 @@ export const generateScreen = (options: GenerateOptions): Screen => {
 
 // Several different takes on one section: consecutive seeds, each on another layout when the recipe allows.
 export const generateVariants = (options: Omit<GenerateOptions, "archetype" | "from">, count = 3): Screen[] => {
-  const profile = options.profile ?? { aspect: "16:9", fit: "fluid" };
+  const profile = options.profile ?? DEFAULT_PROFILE;
   // The first take follows the recipe's weights (and the display's shape); the others try the remaining layouts.
   const weights = archetypeWeights(options.recipe, options.theme, profile);
   const random = createRandom(options.seed);

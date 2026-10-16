@@ -78,7 +78,7 @@ export const GenerateDialog = ({
   const variants = useMemo(() => {
     if (!section) return [];
     try {
-      return generateVariants({ ...base, pack: section.pack, recipe: section.recipe, seed, density, id, profile: { aspect, fit: "fluid" } });
+      return generateVariants({ ...base, pack: section.pack, recipe: section.recipe, seed, density, id, profile: { aspect, fit: "fluid", rearrange: true } });
     } catch {
       return [];
     }

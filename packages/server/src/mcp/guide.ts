@@ -38,11 +38,18 @@ decor is theme-only ornament. Documents store meaning; the theme decides the loo
 - Buttons are sized in real centimetres from the show's panel (90" and 1.5 cm by default), not by scale, so they
   stay fingertip-sized on a 100" panel. Leave room for them rather than making them weight-filled walls of colour.
 
+## Portrait and landscape
+- A screen is designed for its profile.aspect. On a display turned the other way (a 16:9 screen on a portrait
+  panel, or the reverse) it is rearranged, not stretched: frames draw portrait chrome (the nav column becomes a
+  band under the title, the aside moves below main), rows of panels become columns and grids turn on their side.
+  profile.rearrange false keeps the designed arrangement. Per part, set {id, turned: {arrange?, hidden?}}: arrange
+  "keep" leaves it as designed, "row"/"column" set a stack's or grid's direction outright, hidden drops it there.
+
 ## Editing safely
 - Every edit is a list of ops applied all or nothing against the screen's revision (baseRevision). On a 409, call
   get_screen again and rebuild the ops. Locked nodes cannot be changed or removed through MCP.
 - Ops: insert {parent, index?, child: {node, slot?, weight?, area?, rect?}}, remove {id}, move {id, parent, index?},
-  update {id, props} (shallow merge), set {id, locked?, hidden?, when?, bind?, actions?} (null removes),
+  update {id, props} (shallow merge), set {id, locked?, hidden?, when?, scale?, turned?, bind?, actions?} (null removes),
   place {id, slot?, weight?, area?, rect?}, layout {id, layout}, replace {id, node}, meta {name?, section?, tags?, profile?}.
 - Check your work with lint_screen and get_screen (format "outline" is compact). Displays show the published copy:
   edits land in the draft until someone publishes.

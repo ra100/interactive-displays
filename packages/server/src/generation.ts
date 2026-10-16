@@ -135,7 +135,7 @@ export const createGeneration = async ({ service, dataDir, log }: { service: Sho
         seed: request.seed ?? randomSeed(),
         id,
         density: request.density ?? "normal",
-        profile: { aspect: request.aspect ?? "16:9", fit: "fluid" as const },
+        profile: { aspect: request.aspect ?? "16:9", fit: "fluid" as const, rearrange: true },
         ...(request.name ? { name: request.name } : {}),
         ...(request.archetype ? { archetype: request.archetype } : {}),
       };

@@ -6,7 +6,12 @@ export const ProfileSchema = z.object({
   aspect: z.enum(["16:9", "16:10", "4:3", "21:9", "9:16"]).default("16:9"),
   // fluid re-flows to the display; contain letterboxes to the aspect ratio.
   fit: z.enum(["fluid", "contain"]).default("fluid"),
+  // On a display turned the other way (portrait for a landscape screen, or the reverse) the parts are rearranged
+  // to suit it rather than stretched; off keeps the designed arrangement.
+  rearrange: z.boolean().default(true),
 });
+
+export const DEFAULT_PROFILE: z.infer<typeof ProfileSchema> = { aspect: "16:9", fit: "fluid", rearrange: true };
 
 export const DENSITIES = ["sparse", "normal", "dense"] as const;
 
@@ -33,7 +38,7 @@ export const ScreenSchema = z.object({
   // The ship section this screen belongs to, e.g. "engineering".
   section: IdSchema.optional(),
   tags: z.array(z.string().min(1).max(40)).max(50).default([]),
-  profile: ProfileSchema.default({ aspect: "16:9", fit: "fluid" }),
+  profile: ProfileSchema.default(DEFAULT_PROFILE),
   // The draft revision; every accepted batch of ops adds one.
   revision: z.number().int().min(0).default(0),
   // The revision displays show. Absent until the screen is first published.

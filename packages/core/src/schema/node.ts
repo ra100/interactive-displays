@@ -17,6 +17,16 @@ export const WhenSchema = z
   )
   .max(10);
 
+// How a part changes when the display is turned the other way from the screen's design: a landscape screen on a
+// portrait display, or the reverse. `auto` rearranges it (rows become columns, grids turn), `keep` leaves it as
+// designed, `row` and `column` set a stack's or grid's direction outright; `hidden` drops it.
+export const TURN_ARRANGEMENTS = ["auto", "keep", "row", "column"] as const;
+
+export const TurnedSchema = z.object({
+  arrange: z.enum(TURN_ARRANGEMENTS).optional(),
+  hidden: z.boolean().optional(),
+});
+
 const nodeBase = {
   id: IdSchema,
   locked: z.boolean().optional(),
@@ -24,6 +34,7 @@ const nodeBase = {
   when: WhenSchema.optional(),
   // Draws this part and everything in it larger or smaller than the rest of the screen.
   scale: z.number().min(0.25).max(4).optional(),
+  turned: TurnedSchema.optional(),
 };
 
 // Grid tracks: fractions of the free space ("2fr") or "auto".
@@ -119,6 +130,7 @@ export const NodeSchema: z.ZodDiscriminatedUnion<
 
 export type Space = z.infer<typeof SpaceSchema>;
 export type When = z.infer<typeof WhenSchema>;
+export type Turned = z.infer<typeof TurnedSchema>;
 export type Layout = z.infer<typeof LayoutSchema>;
 export type GridArea = z.infer<typeof GridAreaSchema>;
 export type NormRect = z.infer<typeof NormRectSchema>;

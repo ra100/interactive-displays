@@ -195,7 +195,7 @@ describe("generateScreen", () => {
   });
 
   it("stacks panels on a portrait display", () => {
-    const screen = generateScreen({ ...base, profile: { aspect: "9:16", fit: "fluid" }, archetype: "header-main", density: "sparse" });
+    const screen = generateScreen({ ...base, profile: { aspect: "9:16", fit: "fluid", rearrange: true }, archetype: "header-main", density: "sparse" });
     const grid = nodes(screen.root).find((node) => node.type === "container" && node.layout.kind === "grid");
     expect(grid?.type === "container" && grid.layout.kind === "grid" && grid.layout.columns).toEqual(["1fr"]);
   });
@@ -213,7 +213,7 @@ describe("generateVariants", () => {
 
 describe("layouts on a portrait display", () => {
   it("leads with the stacked layout most of the time", () => {
-    const firsts = Array.from({ length: 20 }, (_, seed) => generateVariants({ ...base, seed, profile: { aspect: "9:16", fit: "fluid" } })[0]);
+    const firsts = Array.from({ length: 20 }, (_, seed) => generateVariants({ ...base, seed, profile: { aspect: "9:16", fit: "fluid", rearrange: true } })[0]);
     const stacked = firsts.filter((screen) => screen?.root.type === "container" && screen.root.layout.kind === "frame" && screen.root.layout.archetype === "header-main");
     expect(stacked.length).toBeGreaterThanOrEqual(12);
   });

@@ -119,7 +119,7 @@ const applyOne = (screen: Screen, op: Op, options: ApplyOptions): Op => {
       }
       const inverse: Extract<Op, { op: "set" }> = { op: "set", id: op.id };
       const fields = node as Record<string, unknown>;
-      for (const key of ["locked", "hidden", "when", "scale", "bind", "actions"] as const) {
+      for (const key of ["locked", "hidden", "when", "scale", "turned", "bind", "actions"] as const) {
         if (!(key in op) || op[key] === undefined) continue;
         inverse[key] = (fields[key] ?? null) as never;
         const value = op[key];

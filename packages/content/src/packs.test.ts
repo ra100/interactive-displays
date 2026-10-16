@@ -83,7 +83,7 @@ describe.each(packs)("the $id pack", (pack) => {
   it("generates valid, lint-clean screens for any section, seed, density and shape", () => {
     fc.assert(
       fc.property(arbitrary, ({ recipe, seed, density, aspect, archetype }) => {
-        const screen = generateScreen(options(recipe, { seed, density, profile: { aspect, fit: "fluid" }, ...(archetype ? { archetype } : {}) }));
+        const screen = generateScreen(options(recipe, { seed, density, profile: { aspect, fit: "fluid", rearrange: true }, ...(archetype ? { archetype } : {}) }));
         expect(validateScreen(screen, catalog).ok).toBe(true);
         expect(problems(screen)).toEqual([]);
       }),
@@ -103,7 +103,7 @@ describe.each(packs)("the $id pack", (pack) => {
   it("keeps panels small enough to touch", () => {
     fc.assert(
       fc.property(arbitrary, ({ recipe, seed, density, aspect }) => {
-        const screen = generateScreen(options(recipe, { seed, density, profile: { aspect, fit: "fluid" } }));
+        const screen = generateScreen(options(recipe, { seed, density, profile: { aspect, fit: "fluid", rearrange: true } }));
         walkNodes(screen.root, (node) => {
           if (node.type !== "container" || node.layout.kind !== "stack") return;
           const buttons = node.children.filter((child) => child.node.type === "widget" && child.node.kind === "button");

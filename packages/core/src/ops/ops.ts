@@ -8,6 +8,7 @@ import {
   NodeSchema,
   NormRectSchema,
   SlotSchema,
+  TurnedSchema,
   WhenSchema,
 } from "../schema/node.ts";
 import { GeneratorInfoSchema, ProfileSchema } from "../schema/screen.ts";
@@ -39,6 +40,8 @@ export const OpSchema = z.discriminatedUnion("op", [
     hidden: z.boolean().nullable().optional(),
     when: WhenSchema.nullable().optional(),
     scale: z.number().min(0.25).max(4).nullable().optional(),
+    // How the part changes on a display turned the other way from the screen's design.
+    turned: TurnedSchema.nullable().optional(),
     // Widgets only: live values and what a control does.
     bind: BindingsSchema.nullable().optional(),
     actions: ActionsSchema.nullable().optional(),
