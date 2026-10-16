@@ -52,7 +52,9 @@ describe("GET /api/show", () => {
     expect(body.state).toBe("normal");
     expect(body.show.settings).toEqual({ liveEdit: false, displayGlobalActions: true, sounds: false, aiPublish: false, aiLiveControl: false });
     expect(body.screens.map((screen) => screen.id)).toEqual([
+      "astrometrics",
       "bridge",
+      "conn",
       "sensors",
       "engineering",
       "operations",
@@ -60,8 +62,9 @@ describe("GET /api/show", () => {
       "standby",
       "tactical",
       "viewscreen",
+      "weapons-control",
     ]);
-    expect(body.screens[0]).toMatchObject({ name: "Bridge operations", revision: 0, published: 0, profile: { aspect: "16:9" } });
+    expect(body.screens[1]).toMatchObject({ name: "Bridge operations", revision: 0, published: 0, profile: { aspect: "16:9" } });
     const { displays } = body;
     expect(displays.find((display) => display.id === "d-new123")).toMatchObject({
       showing: "bridge",
@@ -98,7 +101,9 @@ describe("screens", () => {
   it("lists every draft for the screen library", async () => {
     const { body } = await server.api<{ screens: Screen[] }>("GET", "/api/screens");
     expect(body.screens.map((screen) => screen.name)).toEqual([
+      "Astrometrics",
       "Bridge operations",
+      "Helm control",
       "Long range sensors",
       "Main engineering",
       "Operations",
@@ -106,6 +111,7 @@ describe("screens", () => {
       "Standby",
       "Tactical",
       "Viewscreen",
+      "Weapons control",
     ]);
   });
 
