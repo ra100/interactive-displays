@@ -1,0 +1,482 @@
+{
+  "schemaVersion": 2,
+  "id": "bridge",
+  "name": "Bridge operations",
+  "tags": [
+    "demo",
+    "lcars"
+  ],
+  "profile": {
+    "aspect": "16:9",
+    "fit": "fluid"
+  },
+  "revision": 0,
+  "published": 0,
+  "root": {
+    "id": "root",
+    "type": "container",
+    "layout": {
+      "kind": "frame",
+      "archetype": "sidebar"
+    },
+    "children": [
+      {
+        "slot": "title",
+        "node": {
+          "id": "title",
+          "type": "widget",
+          "kind": "title",
+          "props": {
+            "text": "Bridge operations",
+            "code": "01-4774"
+          }
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-helm",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Helm",
+            "tone": "primary"
+          }
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-tactical",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Tactical",
+            "tone": "danger"
+          },
+          "actions": [
+            {
+              "do": "navigate",
+              "screen": "tactical"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-engineering",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Engineering",
+            "tone": "secondary"
+          },
+          "actions": [
+            {
+              "do": "navigate",
+              "screen": "engineering"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-science",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Science",
+            "tone": "info"
+          }
+        }
+      },
+      {
+        "slot": "nav",
+        "node": {
+          "id": "nav-comms",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Comms",
+            "tone": "accent"
+          }
+        }
+      },
+      {
+        "slot": "main",
+        "node": {
+          "id": "main-body",
+          "type": "container",
+          "layout": {
+            "kind": "stack",
+            "direction": "column",
+            "gap": "large"
+          },
+          "children": [
+            {
+              "weight": 1,
+              "node": {
+                "id": "ship-status",
+                "type": "widget",
+                "kind": "title",
+                "props": {
+                  "text": "Ship status",
+                  "code": "47-1138",
+                  "tone": "info"
+                }
+              }
+            },
+            {
+              "weight": 3,
+              "node": {
+                "id": "readouts",
+                "type": "container",
+                "layout": {
+                  "kind": "grid",
+                  "columns": [
+                    "1fr",
+                    "1fr"
+                  ],
+                  "rows": [
+                    "1fr",
+                    "1fr",
+                    "1fr"
+                  ],
+                  "gap": "small"
+                },
+                "children": [
+                  {
+                    "area": {
+                      "col": 1,
+                      "row": 1
+                    },
+                    "node": {
+                      "id": "hull",
+                      "type": "widget",
+                      "kind": "readout",
+                      "props": {
+                        "label": "Hull integrity",
+                        "value": 100,
+                        "unit": "%",
+                        "tone": "secondary"
+                      },
+                      "bind": {
+                        "value": {
+                          "signal": "hull"
+                        }
+                      },
+                      "when": [
+                        {
+                          "state": "damaged",
+                          "props": {
+                            "tone": "danger"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "area": {
+                      "col": 2,
+                      "row": 1
+                    },
+                    "node": {
+                      "id": "shields",
+                      "type": "widget",
+                      "kind": "readout",
+                      "props": {
+                        "label": "Shields",
+                        "value": 0,
+                        "unit": "%",
+                        "tone": "secondary"
+                      },
+                      "bind": {
+                        "value": {
+                          "signal": "shields"
+                        }
+                      },
+                      "when": [
+                        {
+                          "state": "yellow-alert",
+                          "props": {
+                            "tone": "warning"
+                          }
+                        },
+                        {
+                          "state": "red-alert",
+                          "props": {
+                            "tone": "danger"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "area": {
+                      "col": 1,
+                      "row": 2
+                    },
+                    "node": {
+                      "id": "warp",
+                      "type": "widget",
+                      "kind": "readout",
+                      "props": {
+                        "label": "Warp factor",
+                        "value": 6.2,
+                        "precision": 1,
+                        "tone": "secondary"
+                      },
+                      "bind": {
+                        "value": {
+                          "signal": "warp.factor"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "area": {
+                      "col": 2,
+                      "row": 2
+                    },
+                    "node": {
+                      "id": "course",
+                      "type": "widget",
+                      "kind": "readout",
+                      "props": {
+                        "label": "Heading",
+                        "value": "127 mark 4",
+                        "tone": "secondary"
+                      }
+                    }
+                  },
+                  {
+                    "area": {
+                      "col": 1,
+                      "row": 3
+                    },
+                    "node": {
+                      "id": "crew",
+                      "type": "widget",
+                      "kind": "readout",
+                      "props": {
+                        "label": "Crew complement",
+                        "value": "1,014",
+                        "tone": "secondary"
+                      }
+                    }
+                  },
+                  {
+                    "area": {
+                      "col": 2,
+                      "row": 3
+                    },
+                    "node": {
+                      "id": "stardate",
+                      "type": "widget",
+                      "kind": "clock",
+                      "props": {
+                        "label": "Stardate",
+                        "format": "stardate",
+                        "tone": "secondary"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "weight": 1,
+              "node": {
+                "id": "actions",
+                "type": "container",
+                "layout": {
+                  "kind": "stack",
+                  "direction": "row",
+                  "gap": "medium"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "act-scan",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Sensor sweep",
+                        "tone": "info"
+                      }
+                    }
+                  },
+                  {
+                    "node": {
+                      "id": "act-hail",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Open channel",
+                        "tone": "accent"
+                      },
+                      "actions": [
+                        {
+                          "do": "sound",
+                          "sound": "hail"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "weight": 1,
+                    "node": {
+                      "id": "act-alert",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Yellow alert",
+                        "tone": "warning"
+                      },
+                      "actions": [
+                        {
+                          "do": "setState",
+                          "state": "yellow-alert"
+                        },
+                        {
+                          "do": "setSignal",
+                          "signal": "shields",
+                          "value": 100
+                        }
+                      ],
+                      "when": [
+                        {
+                          "state": "yellow-alert",
+                          "hidden": true
+                        },
+                        {
+                          "state": "red-alert",
+                          "hidden": true
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "weight": 1,
+                    "node": {
+                      "id": "act-red",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Red alert",
+                        "tone": "danger"
+                      },
+                      "actions": [
+                        {
+                          "do": "setState",
+                          "state": "red-alert"
+                        },
+                        {
+                          "do": "setSignal",
+                          "signal": "shields",
+                          "value": 100
+                        }
+                      ],
+                      "when": [
+                        {
+                          "state": "red-alert",
+                          "hidden": true
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "weight": 1,
+                    "node": {
+                      "id": "act-stand-down",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Stand down",
+                        "tone": "success"
+                      },
+                      "hidden": true,
+                      "actions": [
+                        {
+                          "do": "setState",
+                          "state": "normal"
+                        },
+                        {
+                          "do": "setSignal",
+                          "signal": "shields",
+                          "value": 0
+                        }
+                      ],
+                      "when": [
+                        {
+                          "state": "yellow-alert",
+                          "hidden": false
+                        },
+                        {
+                          "state": "red-alert",
+                          "hidden": false
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "weight": 0.25,
+              "node": {
+                "id": "main-bar",
+                "type": "decor",
+                "kind": "lcars.bar",
+                "props": {
+                  "caps": "right",
+                  "code": "LCARS 4774",
+                  "tone": "neutral"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slot": "status",
+        "node": {
+          "id": "status-line",
+          "type": "widget",
+          "kind": "text",
+          "props": {
+            "text": "ALL SYSTEMS NOMINAL \u00b7 HOLDING COURSE",
+            "size": "small",
+            "tone": "secondary"
+          },
+          "when": [
+            {
+              "state": "yellow-alert",
+              "props": {
+                "text": "YELLOW ALERT \u00b7 SHIELDS UP \u00b7 ALL DECKS STAND BY",
+                "tone": "warning"
+              }
+            },
+            {
+              "state": "red-alert",
+              "props": {
+                "text": "RED ALERT \u00b7 ALL HANDS TO BATTLE STATIONS",
+                "tone": "danger"
+              }
+            },
+            {
+              "state": "damaged",
+              "props": {
+                "text": "HULL BREACH DECK 12 \u00b7 DAMAGE CONTROL TEAMS REPORT",
+                "tone": "danger"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "section": "bridge"
+}

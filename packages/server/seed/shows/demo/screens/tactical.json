@@ -1,0 +1,339 @@
+{
+  "schemaVersion": 2,
+  "id": "tactical",
+  "name": "Tactical",
+  "tags": [
+    "demo",
+    "lcars"
+  ],
+  "profile": {
+    "aspect": "16:9",
+    "fit": "fluid"
+  },
+  "revision": 0,
+  "published": 0,
+  "root": {
+    "id": "root",
+    "type": "container",
+    "layout": {
+      "kind": "frame",
+      "archetype": "dashboard"
+    },
+    "children": [
+      {
+        "slot": "title",
+        "node": {
+          "id": "title",
+          "type": "widget",
+          "kind": "title",
+          "props": {
+            "text": "Tactical",
+            "code": "03-1984",
+            "tone": "danger"
+          }
+        }
+      },
+      {
+        "slot": "main",
+        "node": {
+          "id": "weapons",
+          "type": "container",
+          "layout": {
+            "kind": "stack",
+            "direction": "column",
+            "gap": "medium"
+          },
+          "children": [
+            {
+              "weight": 1,
+              "node": {
+                "id": "weapons-title",
+                "type": "widget",
+                "kind": "title",
+                "props": {
+                  "text": "Weapons",
+                  "code": "TAC-7",
+                  "tone": "primary"
+                }
+              }
+            },
+            {
+              "weight": 4,
+              "node": {
+                "id": "weapons-grid",
+                "type": "container",
+                "layout": {
+                  "kind": "grid",
+                  "columns": [
+                    "1fr",
+                    "1fr"
+                  ],
+                  "rows": [
+                    "1fr",
+                    "1fr"
+                  ],
+                  "gap": "medium"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "w-phasers",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Phasers",
+                        "tone": "primary"
+                      }
+                    }
+                  },
+                  {
+                    "node": {
+                      "id": "w-torpedoes",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Photon torpedoes",
+                        "tone": "danger"
+                      }
+                    }
+                  },
+                  {
+                    "node": {
+                      "id": "w-lock",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Target lock",
+                        "tone": "warning"
+                      },
+                      "actions": [
+                        {
+                          "do": "sound",
+                          "sound": "confirm"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "node": {
+                      "id": "w-evasive",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Evasive pattern",
+                        "tone": "info"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "weight": 2,
+              "node": {
+                "id": "contacts",
+                "type": "widget",
+                "kind": "data-grid",
+                "props": {
+                  "columns": [
+                    "Contact",
+                    "Bearing",
+                    "Range",
+                    "Status"
+                  ],
+                  "rows": [
+                    [
+                      "Bird-of-Prey",
+                      "042 m 3",
+                      "12,000 km",
+                      "Cloaked"
+                    ],
+                    [
+                      "Freighter",
+                      "311 m 0",
+                      "80,000 km",
+                      "Neutral"
+                    ],
+                    [
+                      "Probe",
+                      "187 m 12",
+                      "3,400 km",
+                      "Unknown"
+                    ]
+                  ],
+                  "tone": "secondary"
+                },
+                "when": [
+                  {
+                    "state": "red-alert",
+                    "props": {
+                      "highlight": 1,
+                      "tone": "danger"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slot": "aside",
+        "node": {
+          "id": "shields",
+          "type": "container",
+          "layout": {
+            "kind": "stack",
+            "direction": "column",
+            "gap": "small"
+          },
+          "children": [
+            {
+              "weight": 1.2,
+              "node": {
+                "id": "shields-title",
+                "type": "widget",
+                "kind": "title",
+                "props": {
+                  "text": "Shields",
+                  "tone": "info"
+                }
+              }
+            },
+            {
+              "weight": 4,
+              "node": {
+                "id": "sh-strength",
+                "type": "widget",
+                "kind": "gauge",
+                "props": {
+                  "label": "Strength",
+                  "value": 0,
+                  "unit": "%",
+                  "variant": "arc",
+                  "tone": "info",
+                  "dangerBelow": 25
+                },
+                "bind": {
+                  "value": {
+                    "signal": "shields"
+                  }
+                }
+              }
+            },
+            {
+              "weight": 1.5,
+              "node": {
+                "id": "sh-hull",
+                "type": "widget",
+                "kind": "gauge",
+                "props": {
+                  "label": "Hull",
+                  "value": 100,
+                  "unit": "%",
+                  "variant": "segmented",
+                  "tone": "secondary",
+                  "dangerBelow": 40
+                },
+                "bind": {
+                  "value": {
+                    "signal": "hull"
+                  }
+                }
+              }
+            },
+            {
+              "weight": 1.6,
+              "node": {
+                "id": "sh-controls",
+                "type": "container",
+                "layout": {
+                  "kind": "stack",
+                  "direction": "row",
+                  "gap": "small"
+                },
+                "children": [
+                  {
+                    "weight": 1,
+                    "node": {
+                      "id": "shields-mode",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Raise shields",
+                        "tone": "info"
+                      },
+                      "actions": [
+                        {
+                          "do": "setSignal",
+                          "signal": "shields",
+                          "value": 100
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "weight": 1,
+                    "node": {
+                      "id": "shields-lower",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Lower",
+                        "tone": "neutral"
+                      },
+                      "actions": [
+                        {
+                          "do": "setSignal",
+                          "signal": "shields",
+                          "value": 0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slot": "status",
+        "node": {
+          "id": "status-line",
+          "type": "widget",
+          "kind": "text",
+          "props": {
+            "text": "NO CONTACTS \u00b7 LONG RANGE SENSORS CLEAR",
+            "size": "small",
+            "tone": "secondary"
+          },
+          "when": [
+            {
+              "state": "yellow-alert",
+              "props": {
+                "text": "YELLOW ALERT \u00b7 SHIELDS UP \u00b7 ALL DECKS STAND BY",
+                "tone": "warning"
+              }
+            },
+            {
+              "state": "red-alert",
+              "props": {
+                "text": "RED ALERT \u00b7 ALL HANDS TO BATTLE STATIONS",
+                "tone": "danger"
+              }
+            },
+            {
+              "state": "damaged",
+              "props": {
+                "text": "HULL BREACH DECK 12 \u00b7 DAMAGE CONTROL TEAMS REPORT",
+                "tone": "danger"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "section": "tactical"
+}

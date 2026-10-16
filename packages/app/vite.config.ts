@@ -11,6 +11,7 @@ export default defineConfig({
       "/socket.io": { target: server, ws: true },
       "/api": server,
       "/health": server,
+      "/media": server,
     },
   },
   test: {

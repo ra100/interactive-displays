@@ -20,6 +20,8 @@
 
 .screen {
   --u: 1cqmin;
+  /* Smallest touch target. Themes use it for anything pressable. */
+  --touch: 60px;
   display: flex;
   box-sizing: border-box;
   width: 100%;
@@ -29,6 +31,25 @@
   background: var(--theme-bg);
   color: var(--theme-fg);
   font-family: var(--font-body);
+}
+
+.screen-frame--embedded {
+  width: 100%;
+  height: 100%;
+}
+
+/* A preview is a scaled-down display, so its touch minimum scales with it (60 px on a 720p display). */
+.screen-frame--embedded .screen {
+  --touch: calc(8.3 * var(--u));
+}
+
+/* A still screen (thumbnails, screenshots) shows one frame of every animation, its own included. */
+.screen[data-still],
+.screen[data-still] *,
+.screen[data-still] *::before,
+.screen[data-still] *::after {
+  animation-play-state: paused !important;
+  transition: none !important;
 }
 
 .screen[data-fit="contain"] {
@@ -76,7 +97,8 @@
 }
 
 /* flex-grow comes from the child's weight. */
-.stack__item {
+.stack__item,
+.slot__item {
   display: flex;
   flex-shrink: 1;
   flex-basis: 0;
@@ -84,12 +106,81 @@
   min-height: 0;
 }
 
-.stack__item > * {
+.stack__item > *,
+.slot__item > *,
+.grid__item > *,
+.canvas__item > *,
+.frame > * {
   flex: 1;
 }
 
-/* Widgets size their type to their own box with cq* units. */
-.widget-slot {
+.grid {
+  display: grid;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.grid[data-gap="small"] {
+  gap: var(--u);
+}
+
+.grid[data-gap="medium"] {
+  gap: calc(2 * var(--u));
+}
+
+.grid[data-gap="large"] {
+  gap: calc(4 * var(--u));
+}
+
+.grid__item {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Free placement: children carry rects in fractions of the canvas. */
+.canvas {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.canvas__item {
+  position: absolute;
+  display: flex;
+}
+
+/* The theme's frame decides where each slot goes; a slot lays out its children along its direction. */
+.frame {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.slot {
+  display: flex;
+  flex: 1;
+  gap: calc(1.2 * var(--u));
+  min-width: 0;
+  min-height: 0;
+}
+
+.slot[data-direction="row"] {
+  flex-direction: row;
+}
+
+.slot[data-direction="column"] {
+  flex-direction: column;
+}
+
+/* Widgets and decor size themselves to their own box with cq* units. */
+.widget-slot,
+.decor-slot {
   container-type: size;
   position: relative;
   min-width: 0;
@@ -111,3 +202,73 @@
   text-transform: uppercase;
   opacity: 0.7;
 }
+
+/*
+ * State effects every theme gets. Themes add their own looks on top (an LCARS alert pulses its frame);
+ * colour changes come from the theme's effect tokens.
+ */
+
+/* Blackout: the screen goes dark but keeps its layout, so it comes back instantly. */
+.screen[data-effect="blackout"] {
+  background: #000;
+}
+
+.screen[data-effect="blackout"] > * {
+  visibility: hidden;
+}
+
+/* Damaged: the screen stutters and some elements drop out now and then. */
+@keyframes screen-damaged-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  4% {
+    opacity: 0.25;
+  }
+  6% {
+    opacity: 1;
+  }
+  47% {
+    opacity: 1;
+  }
+  48% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+  81% {
+    opacity: 0.1;
+  }
+  84% {
+    opacity: 1;
+  }
+}
+
+@keyframes screen-damaged-jitter {
+  0%,
+  92%,
+  100% {
+    transform: none;
+  }
+  93% {
+    transform: translate(calc(0.4 * var(--u)), 0);
+  }
+  95% {
+    transform: translate(calc(-0.3 * var(--u)), calc(0.2 * var(--u)));
+  }
+}
+
+.screen[data-effect="damaged"] > * {
+  animation: screen-damaged-jitter 3.1s linear infinite;
+}
+
+.screen[data-effect="damaged"] :is(.stack__item, .grid__item, .slot__item):nth-child(3n + 2) {
+  animation: screen-damaged-flicker 2.3s linear infinite;
+}
+
+.screen[data-effect="damaged"] :is(.stack__item, .grid__item, .slot__item):nth-child(4n + 1) {
+  animation: screen-damaged-flicker 3.7s linear 0.8s infinite;
+}
+

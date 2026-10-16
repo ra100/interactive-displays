@@ -28,6 +28,8 @@ FROM manifests AS runtime-files
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile --prod --ignore-scripts --filter "@interactive-displays/server..."
 COPY packages/core/src packages/core/src
+# The server imports only the theme manifests (plain data); the renderers ship in the app build.
+COPY packages/themes/src packages/themes/src
 COPY packages/server/src packages/server/src
 COPY packages/server/seed packages/server/seed
 COPY --from=build /repo/packages/app/dist packages/app/dist

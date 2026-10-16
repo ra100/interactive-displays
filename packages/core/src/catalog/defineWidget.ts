@@ -11,6 +11,10 @@ export interface WidgetDefinition<Props extends z.ZodType = z.ZodType> {
   readonly props: Props;
   // Valid sample props, used by previews, contract tests and AI prompts.
   readonly example: z.input<Props>;
+  // Props that can follow a live value (a signal) instead of a fixed one.
+  readonly bindable?: readonly (keyof z.output<Props> & string)[];
+  // A control an actor uses; only these may carry actions.
+  readonly interactive?: boolean;
 }
 
 export type AnyWidgetDefinition = WidgetDefinition<z.ZodType<Record<string, unknown>>>;

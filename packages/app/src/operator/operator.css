@@ -1,0 +1,462 @@
+/* Operator console: phone first, a crew member's thumb on big targets (60 px and up). */
+.operator {
+  padding: 0 0 32px;
+}
+
+.operator .tool-button,
+.operator .tool-select {
+  min-height: 60px;
+}
+
+.operator .tool-button--small {
+  min-height: 44px;
+}
+
+.operator__header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--tool-border);
+  background: color-mix(in srgb, var(--tool-bg) 92%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.operator__title {
+  flex: 1;
+  min-width: 0;
+}
+
+.operator__title h1 {
+  overflow: hidden;
+  font-size: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.operator__title .tool-label {
+  margin: 0;
+}
+
+.operator__layout {
+  display: grid;
+  gap: 24px;
+  padding: 16px;
+}
+
+.operator__controls,
+.operator__section,
+.operator__displays {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.operator__controls {
+  gap: 24px;
+}
+
+.operator__hint {
+  margin: 0;
+  color: var(--tool-muted);
+  font-size: 14px;
+}
+
+/* States */
+.state-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.state-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.state-button {
+  --effect: var(--tool-muted);
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  min-height: 76px;
+  padding: 10px 14px;
+  border: 2px solid color-mix(in srgb, var(--effect) 55%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--effect) 10%, var(--tool-panel));
+  color: var(--tool-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 60ms ease-out;
+}
+
+.state-button:active {
+  transform: scale(0.96);
+}
+
+.state-button[data-effect="none"] {
+  --effect: var(--tool-success);
+}
+
+.state-button[data-effect="warning"] {
+  --effect: var(--tool-warning);
+}
+
+.state-button[data-effect="alert"] {
+  --effect: var(--tool-danger);
+}
+
+.state-button[data-effect="damaged"] {
+  --effect: #ff7a1a;
+}
+
+.state-button[aria-pressed="true"] {
+  border-color: var(--effect);
+  background: var(--effect);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--effect) 35%, transparent);
+  color: #111;
+}
+
+.state-button__label {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.state-button__banner {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  opacity: 0.75;
+}
+
+.panic-button {
+  min-height: 72px;
+  border: 3px solid var(--tool-danger);
+  border-radius: 14px;
+  background: #000;
+  color: var(--tool-danger);
+  font: inherit;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 60ms ease-out;
+}
+
+.panic-button:active {
+  transform: scale(0.98);
+}
+
+.panic-button[aria-pressed="true"] {
+  background: var(--tool-danger);
+  color: #000;
+  animation: panic-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes panic-pulse {
+  50% {
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--tool-danger) 30%, transparent);
+  }
+}
+
+/* Live values: a thumb-sized slider with a step either way. */
+.signal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.signal-control {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--tool-border);
+  border-radius: 14px;
+  background: var(--tool-panel);
+}
+
+.signal-control__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.signal-control__label {
+  font-weight: 700;
+}
+
+.signal-control__value {
+  font-size: 20px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.signal-control--reading .signal-control__value {
+  color: var(--tool-muted);
+}
+
+.signal-control__row {
+  display: grid;
+  grid-template-columns: 60px 1fr 60px;
+  align-items: center;
+  gap: 10px;
+}
+
+.signal-control__row .tool-button {
+  padding: 0;
+  font-size: 24px;
+}
+
+.signal-control__slider {
+  width: 100%;
+  height: 60px;
+  margin: 0;
+  background: transparent;
+  accent-color: var(--tool-accent);
+  cursor: pointer;
+  appearance: none;
+}
+
+.signal-control__slider::-webkit-slider-runnable-track {
+  height: 10px;
+  border-radius: 5px;
+  background: var(--tool-raised);
+}
+
+.signal-control__slider::-moz-range-track {
+  height: 10px;
+  border-radius: 5px;
+  background: var(--tool-raised);
+}
+
+.signal-control__slider::-webkit-slider-thumb {
+  width: 44px;
+  height: 44px;
+  margin-top: -17px;
+  border: 3px solid var(--tool-bg);
+  border-radius: 50%;
+  background: var(--tool-accent);
+  appearance: none;
+}
+
+.signal-control__slider::-moz-range-thumb {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--tool-bg);
+  border-radius: 50%;
+  background: var(--tool-accent);
+}
+
+/* Show switches */
+.show-switches {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.show-switch {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 8px 12px;
+  border: 1px solid var(--tool-border);
+  border-radius: 14px;
+  background: var(--tool-panel);
+  cursor: pointer;
+}
+
+.show-switch__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.show-switch__label {
+  font-weight: 700;
+}
+
+.show-switch__hint {
+  color: var(--tool-muted);
+  font-size: 13px;
+}
+
+.show-switch input {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  accent-color: var(--tool-accent);
+}
+
+/* Displays */
+.display-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.display-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--tool-border);
+  border-radius: 14px;
+  background: var(--tool-panel);
+}
+
+.display-card[data-connected="false"] .display-card__preview {
+  opacity: 0.45;
+}
+
+.display-card__top {
+  display: grid;
+  grid-template-columns: minmax(0, 45%) minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px 0;
+}
+
+.display-card__preview {
+  min-width: 0;
+}
+
+.display-card__empty {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
+  border: 1px dashed var(--tool-border);
+  border-radius: 6px;
+  color: var(--tool-muted);
+}
+
+.display-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 14px 14px;
+}
+
+.display-card__heading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+
+.display-card__name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.display-card__meta,
+.display-card__note {
+  margin: 0;
+  color: var(--tool-muted);
+  font-size: 13px;
+}
+
+.display-card__assign {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.display-card__actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+  gap: 8px;
+}
+
+.display-card__actions .tool-button {
+  padding: 0 8px;
+}
+
+.display-card__video {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.display-card__transport {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.display-card__rename {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+}
+
+.display-card__rename .tool-input {
+  min-height: 60px;
+}
+
+.operator__join {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.operator__join summary {
+  width: 100%;
+  list-style: none;
+}
+
+.operator__join summary::-webkit-details-marker {
+  display: none;
+}
+
+.operator__join p {
+  color: var(--tool-muted);
+}
+
+/* Tablets and desktops: states on the left, a grid of display cards on the right. */
+@media (min-width: 900px) {
+  .operator__layout {
+    grid-template-columns: minmax(300px, 380px) 1fr;
+    align-items: start;
+    gap: 24px;
+    padding: 24px;
+  }
+
+  .operator__controls {
+    position: sticky;
+    top: 88px;
+    max-height: calc(100vh - 112px);
+    overflow-y: auto;
+  }
+
+  .display-list {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}

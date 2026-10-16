@@ -1,0 +1,112 @@
+.gallery {
+  box-sizing: border-box;
+  height: 100dvh;
+  padding: 24px;
+  overflow: auto;
+  background: #0b0d10;
+  color: #d6dbe1;
+  font-family: system-ui, sans-serif;
+}
+
+.gallery__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 16px 24px;
+  margin-bottom: 24px;
+}
+
+.gallery__title {
+  margin: 0 16px 0 0;
+  font-size: 28px;
+}
+
+.gallery__control {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.gallery__control select {
+  min-width: 160px;
+  min-height: 36px;
+  padding: 0 8px;
+  border: 1px solid #39414b;
+  border-radius: 6px;
+  background: #151a20;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  text-transform: none;
+}
+
+.gallery__section {
+  margin-bottom: 40px;
+}
+
+.gallery__section h2 {
+  margin: 0 0 16px;
+  font-size: 18px;
+}
+
+.gallery__row-title {
+  margin: 16px 0 8px;
+  color: #9aa4b2;
+  font-size: 14px;
+}
+
+.gallery__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  align-items: start;
+  gap: 16px;
+}
+
+.gallery__grid--wide {
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+}
+
+.gallery__tile {
+  margin: 0;
+}
+
+.gallery__preview {
+  overflow: hidden;
+  border: 1px solid #262c33;
+  border-radius: 6px;
+}
+
+.gallery__caption {
+  margin-top: 6px;
+  color: #8a94a1;
+  font-size: 12px;
+}
+
+.gallery__empty {
+  color: #8a94a1;
+}
+
+/* Widget tiles are cut-outs of one display at one scale: each is as many --gallery-u wide as its slot is --u. */
+.gallery__strip {
+  --gallery-u: 6px;
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.gallery__strip .gallery__tile {
+  width: calc(var(--tile-units) * var(--gallery-u));
+  max-width: 100%;
+}
+
+.gallery__preview--scaled .screen {
+  --u: calc(100cqw / var(--tile-units));
+
+  /* A slot has no screen margin of its own. */
+  padding: 0;
+}

@@ -13,10 +13,17 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@interactive-displays/core": "workspace:*"
+    "@fontsource/antonio": "~5.2.0",
+    "@interactive-displays/core": "workspace:*",
+    "zod": "^4.3.6"
   },
   "peerDependencies": {
     "react": "^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",

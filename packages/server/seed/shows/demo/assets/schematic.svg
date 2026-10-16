@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" font-family="Antonio, 'Arial Narrow', sans-serif">
+  <title>Ship schematic, dorsal view</title>
+  <rect width="800" height="450" fill="#000"/>
+  <g stroke="#1f3a5f" stroke-width="1">
+    <path d="M0 75H800M0 150H800M0 225H800M0 300H800M0 375H800M100 0V450M200 0V450M300 0V450M400 0V450M500 0V450M600 0V450M700 0V450"/>
+  </g>
+  <g fill="none" stroke="#9cf" stroke-width="3" stroke-linejoin="round">
+    <ellipse cx="250" cy="225" rx="170" ry="120"/>
+    <ellipse cx="250" cy="225" rx="60" ry="42"/>
+    <path d="M405 205 L520 200 L520 250 L405 245"/>
+    <path d="M500 180 Q560 160 640 175 L700 190 Q720 225 700 260 L640 275 Q560 290 500 270 Z"/>
+    <path d="M520 185 L470 95 M520 265 L470 355"/>
+    <rect x="430" y="70" width="300" height="34" rx="17"/>
+    <rect x="430" y="346" width="300" height="34" rx="17"/>
+  </g>
+  <g fill="#f90">
+    <circle cx="250" cy="225" r="10"/>
+    <rect x="710" y="74" width="16" height="26" rx="8"/>
+    <rect x="710" y="350" width="16" height="26" rx="8"/>
+    <rect x="590" y="214" width="40" height="22" rx="11"/>
+  </g>
+  <g fill="#c9c" font-size="18" letter-spacing="2">
+    <text x="250" y="78" text-anchor="middle">PRIMARY HULL</text>
+    <text x="610" y="160" text-anchor="middle">ENGINEERING</text>
+    <text x="580" y="60" text-anchor="middle">PORT NACELLE</text>
+    <text x="580" y="405" text-anchor="middle">STARBOARD NACELLE</text>
+    <text x="610" y="300" text-anchor="middle">WARP CORE</text>
+  </g>
+  <g fill="#f96" font-size="14" letter-spacing="1">
+    <text x="20" y="435">DORSAL VIEW · SCALE 1:2400 · SECTION 01</text>
+  </g>
+</svg>

@@ -1,0 +1,260 @@
+/* Screen library: a searchable grid of live draft thumbnails. */
+.library {
+  padding-bottom: 32px;
+}
+
+.library__header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--tool-border);
+  background: color-mix(in srgb, var(--tool-bg) 92%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.library__title {
+  flex: 1;
+  min-width: 0;
+}
+
+.library__title h1 {
+  overflow: hidden;
+  font-size: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.library__title .tool-label {
+  margin: 0;
+}
+
+.library__search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px 0;
+}
+
+.library__search .tool-input {
+  max-width: 420px;
+}
+
+.library__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 16px 24px;
+  list-style: none;
+}
+
+.library__empty {
+  padding: 0 24px;
+  color: var(--tool-muted);
+}
+
+.screen-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--tool-border);
+  border-radius: 12px;
+  background: var(--tool-panel);
+}
+
+.screen-card__open {
+  display: block;
+  padding: 10px 10px 0;
+}
+
+.screen-card__open:hover .thumbnail {
+  outline: 2px solid var(--tool-accent);
+}
+
+.screen-card__placeholder {
+  border-radius: 6px;
+  background: #000;
+}
+
+.screen-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px 12px;
+}
+
+.screen-card__name {
+  overflow: hidden;
+  font-size: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.screen-card__meta {
+  margin: 0;
+  color: var(--tool-muted);
+  font-size: 12px;
+}
+
+.screen-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.screen-card__actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+/* New screen dialog */
+.new-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.new-screen__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.new-screen__templates {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.new-screen__templates legend {
+  margin-bottom: 8px;
+}
+
+.template-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  border: 2px solid var(--tool-border);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.template-card[data-selected="true"] {
+  border-color: var(--tool-accent);
+}
+
+.template-card input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.template-card:has(input:focus-visible) {
+  outline: 2px solid var(--tool-focus);
+  outline-offset: 2px;
+}
+
+.template-card__label {
+  font-weight: 700;
+}
+
+.template-card__description {
+  color: var(--tool-muted);
+  font-size: 12px;
+}
+
+/* Signals dialog: the list on the left, the selected signal on the right. */
+.signals {
+  display: grid;
+  gap: 16px;
+}
+
+.signals__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.signals__list ul {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 320px;
+  margin: 0;
+  overflow-y: auto;
+  padding: 0;
+  list-style: none;
+}
+
+.signals__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.signals__item[aria-selected="true"] {
+  border-color: var(--tool-accent);
+  background: var(--tool-raised);
+}
+
+.signals__name {
+  font-weight: 700;
+}
+
+.signals__meta {
+  color: var(--tool-muted);
+  font-size: 12px;
+}
+
+.signals__edit,
+.signal-form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.signals__edit > .tool-button {
+  align-self: flex-start;
+}
+
+.signal-form__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.signal-form__scope {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.signal-form__choice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (min-width: 700px) {
+  .signals {
+    grid-template-columns: 220px 1fr;
+  }
+}

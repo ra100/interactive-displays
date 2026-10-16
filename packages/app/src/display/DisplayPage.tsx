@@ -1,14 +1,28 @@
 import { IdSchema } from "@interactive-displays/core";
-import { useEffect } from "react";
-import { Navigate, useParams } from "react-router-dom";
+import { useEffect, useMemo } from "react";
+import { Navigate, useParams, useSearchParams } from "react-router-dom";
 import { ScreenView } from "../runtime/ScreenView.tsx";
 import { getOrCreateDisplayId, rememberDisplayId } from "./displayId.ts";
+import { IdentifyOverlay } from "./IdentifyOverlay.tsx";
 import { StatusMessage } from "./StatusMessage.tsx";
 import { useDisplayConnection } from "./useDisplayConnection.ts";
+import { useSounds } from "./useSounds.ts";
 import "./display.css";
 
+// One empty list, so memoised values do not change on every render before the first snapshot.
+const NONE: never[] = [];
+
 const ConnectedDisplay = ({ displayId }: { displayId: string }) => {
-  const { status, snapshot, error } = useDisplayConnection(displayId);
+  const { status, snapshot, error, identify, entered, signals, media, press } = useDisplayConnection(displayId);
+  // ?theme=base&variant=nemesis previews the show in another look on this display only.
+  const [params] = useSearchParams();
+  const themeId = params.get("theme") ?? snapshot?.show.theme.id ?? "base";
+  const playSound = useSounds(themeId, snapshot?.show.sounds ?? false, entered, snapshot?.show.states ?? NONE);
+  const showSignals = snapshot?.show.signals;
+  const live = useMemo(
+    () => ({ signals: showSignals ?? NONE, store: signals, media, press, playSound }),
+    [showSignals, signals, media, press, playSound],
+  );
 
   useEffect(() => {
     rememberDisplayId(displayId);
@@ -22,13 +36,28 @@ const ConnectedDisplay = ({ displayId }: { displayId: string }) => {
     );
   }
 
+  // An unknown state (a show edited mid-session) renders as normal rather than failing.
+  const effect = snapshot.show.states.find((state) => state.id === snapshot.state)?.effect ?? "none";
+
   return (
     <>
       {snapshot.screen ? (
-        <ScreenView screen={snapshot.screen} themeId={snapshot.show.theme.id} />
+        <ScreenView
+          screen={snapshot.screen}
+          themeId={themeId}
+          variant={params.get("variant") ?? snapshot.show.theme.variant}
+          state={snapshot.state}
+          effect={effect}
+          states={snapshot.show.states}
+          live={live}
+        />
       ) : (
-        <StatusMessage title="NO SCREEN ASSIGNED" detail={`${displayId} · ${snapshot.show.name}`} />
+        // The id is big so the operator can read it from across the room and assign a screen to it.
+        <StatusMessage title="NO SCREEN ASSIGNED" code={displayId} detail={snapshot.show.name} />
       )}
+      <IdentifyOverlay request={identify} />
+      {/* Sent from the editor: the crew should know this is not what goes on air. */}
+      {snapshot.preview ? <div className="preview-badge">DRAFT PREVIEW</div> : null}
       {/* The last screen stays up while reconnecting, so a network blip never blanks a display on camera. */}
       {status === "connected" ? null : <div className="connection-badge">RECONNECTING</div>}
       {error && status === "connected" ? <div className="connection-badge">{error}</div> : null}

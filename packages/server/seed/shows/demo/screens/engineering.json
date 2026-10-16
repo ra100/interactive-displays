@@ -1,0 +1,609 @@
+{
+  "schemaVersion": 2,
+  "id": "engineering",
+  "name": "Main engineering",
+  "tags": [
+    "demo",
+    "lcars"
+  ],
+  "profile": {
+    "aspect": "16:9",
+    "fit": "fluid"
+  },
+  "revision": 0,
+  "published": 0,
+  "root": {
+    "id": "root",
+    "type": "container",
+    "layout": {
+      "kind": "frame",
+      "archetype": "header-main"
+    },
+    "children": [
+      {
+        "slot": "title",
+        "node": {
+          "id": "title",
+          "type": "widget",
+          "kind": "title",
+          "props": {
+            "text": "Main engineering",
+            "code": "04-1977"
+          }
+        }
+      },
+      {
+        "slot": "toolbar",
+        "node": {
+          "id": "tool-core",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Warp core",
+            "tone": "primary"
+          },
+          "actions": [
+            {
+              "do": "sound",
+              "sound": "confirm"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "toolbar",
+        "node": {
+          "id": "tool-eps",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "EPS grid",
+            "tone": "secondary"
+          }
+        }
+      },
+      {
+        "slot": "toolbar",
+        "node": {
+          "id": "tool-dilithium",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Dilithium",
+            "tone": "accent"
+          }
+        }
+      },
+      {
+        "slot": "toolbar",
+        "node": {
+          "id": "tool-damage",
+          "type": "widget",
+          "kind": "button",
+          "props": {
+            "label": "Diagnostics",
+            "tone": "info"
+          },
+          "when": [
+            {
+              "state": "damaged",
+              "props": {
+                "label": "Damage control",
+                "tone": "danger"
+              }
+            }
+          ],
+          "actions": [
+            {
+              "do": "navigate",
+              "screen": "schematic"
+            }
+          ]
+        }
+      },
+      {
+        "slot": "main",
+        "node": {
+          "id": "body",
+          "type": "container",
+          "layout": {
+            "kind": "grid",
+            "columns": [
+              "2fr",
+              "1fr"
+            ],
+            "rows": [
+              "1fr",
+              "1fr"
+            ],
+            "gap": "large"
+          },
+          "children": [
+            {
+              "area": {
+                "col": 1,
+                "row": 1
+              },
+              "node": {
+                "id": "core",
+                "type": "container",
+                "layout": {
+                  "kind": "stack",
+                  "direction": "column",
+                  "gap": "medium"
+                },
+                "children": [
+                  {
+                    "weight": 1,
+                    "node": {
+                      "id": "core-title",
+                      "type": "widget",
+                      "kind": "title",
+                      "props": {
+                        "text": "Warp core",
+                        "code": "M/ARA-01",
+                        "tone": "primary"
+                      }
+                    }
+                  },
+                  {
+                    "weight": 2.5,
+                    "node": {
+                      "id": "core-banner",
+                      "type": "widget",
+                      "kind": "alert-banner",
+                      "props": {
+                        "tone": "danger"
+                      },
+                      "hidden": true,
+                      "when": [
+                        {
+                          "state": "yellow-alert",
+                          "hidden": false
+                        },
+                        {
+                          "state": "red-alert",
+                          "hidden": false
+                        },
+                        {
+                          "state": "damaged",
+                          "hidden": false
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "weight": 1.4,
+                    "node": {
+                      "id": "core-output",
+                      "type": "widget",
+                      "kind": "gauge",
+                      "props": {
+                        "label": "Core output",
+                        "value": 94,
+                        "min": 0,
+                        "max": 110,
+                        "unit": "%",
+                        "variant": "segmented",
+                        "dangerAbove": 102
+                      },
+                      "bind": {
+                        "value": {
+                          "signal": "warp.output"
+                        }
+                      },
+                      "when": [
+                        {
+                          "state": "damaged",
+                          "props": {
+                            "dangerBelow": 60
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "weight": 2,
+                    "node": {
+                      "id": "core-trace",
+                      "type": "widget",
+                      "kind": "sparkline",
+                      "props": {
+                        "label": "Output trace",
+                        "min": 30,
+                        "max": 110,
+                        "points": 60,
+                        "tone": "accent"
+                      },
+                      "bind": {
+                        "value": {
+                          "signal": "warp.output"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "weight": 1.2,
+                    "node": {
+                      "id": "core-text",
+                      "type": "widget",
+                      "kind": "text",
+                      "props": {
+                        "text": "Matter/antimatter reaction assembly stable. Intermix ratio 1:1. Dilithium matrix aligned.",
+                        "size": "medium"
+                      },
+                      "when": [
+                        {
+                          "state": "damaged",
+                          "props": {
+                            "text": "Magnetic constriction failing. Prepare to eject the warp core.",
+                            "tone": "danger"
+                          }
+                        },
+                        {
+                          "state": "red-alert",
+                          "props": {
+                            "text": "Core output at 104%. Holding at maximum warp.",
+                            "tone": "warning"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "area": {
+                "col": 2,
+                "row": 1,
+                "rowSpan": 2
+              },
+              "node": {
+                "id": "eps",
+                "type": "container",
+                "layout": {
+                  "kind": "stack",
+                  "direction": "column",
+                  "gap": "small"
+                },
+                "children": [
+                  {
+                    "weight": 1.5,
+                    "node": {
+                      "id": "eps-title",
+                      "type": "widget",
+                      "kind": "title",
+                      "props": {
+                        "text": "EPS taps",
+                        "tone": "info"
+                      }
+                    }
+                  },
+                  {
+                    "weight": 1,
+                    "node": {
+                      "id": "eps-1",
+                      "type": "widget",
+                      "kind": "readout",
+                      "props": {
+                        "label": "Deck 1–10",
+                        "value": 97,
+                        "unit": "%",
+                        "precision": 1,
+                        "tone": "secondary"
+                      },
+                      "bind": {
+                        "value": {
+                          "ambient": {
+                            "kind": "walk",
+                            "min": 94,
+                            "max": 99.5,
+                            "volatility": 0.5
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "weight": 1,
+                    "node": {
+                      "id": "eps-2",
+                      "type": "widget",
+                      "kind": "readout",
+                      "props": {
+                        "label": "Deck 11–20",
+                        "value": 97,
+                        "unit": "%",
+                        "precision": 1,
+                        "tone": "secondary"
+                      },
+                      "bind": {
+                        "value": {
+                          "ambient": {
+                            "kind": "walk",
+                            "min": 94,
+                            "max": 99.5,
+                            "volatility": 0.5
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "weight": 1,
+                    "node": {
+                      "id": "eps-3",
+                      "type": "widget",
+                      "kind": "readout",
+                      "props": {
+                        "label": "Deck 21–30",
+                        "value": 97,
+                        "unit": "%",
+                        "precision": 1,
+                        "tone": "secondary"
+                      },
+                      "bind": {
+                        "value": {
+                          "ambient": {
+                            "kind": "walk",
+                            "min": 94,
+                            "max": 99.5,
+                            "volatility": 0.5
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "weight": 1,
+                    "node": {
+                      "id": "eps-4",
+                      "type": "widget",
+                      "kind": "readout",
+                      "props": {
+                        "label": "Deck 31–42",
+                        "value": 97,
+                        "unit": "%",
+                        "precision": 1,
+                        "tone": "secondary"
+                      },
+                      "bind": {
+                        "value": {
+                          "ambient": {
+                            "kind": "walk",
+                            "min": 90,
+                            "max": 99.5,
+                            "volatility": 0.5
+                          }
+                        }
+                      },
+                      "when": [
+                        {
+                          "state": "damaged",
+                          "props": {
+                            "tone": "danger"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "weight": 1.2,
+                    "node": {
+                      "id": "eps-load",
+                      "type": "widget",
+                      "kind": "gauge",
+                      "props": {
+                        "label": "Grid load",
+                        "value": 60,
+                        "unit": "%",
+                        "variant": "bar",
+                        "tone": "info",
+                        "dangerAbove": 90
+                      },
+                      "bind": {
+                        "value": {
+                          "signal": "eps.load"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "weight": 4,
+                    "node": {
+                      "id": "eps-cascade",
+                      "type": "widget",
+                      "kind": "data-cascade",
+                      "props": {
+                        "columns": 4,
+                        "speed": "normal",
+                        "tone": "secondary"
+                      }
+                    }
+                  },
+                  {
+                    "weight": 1.2,
+                    "node": {
+                      "id": "eps-clock",
+                      "type": "widget",
+                      "kind": "clock",
+                      "props": {
+                        "label": "Stardate",
+                        "format": "stardate",
+                        "tone": "info"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "area": {
+                "col": 1,
+                "row": 2
+              },
+              "node": {
+                "id": "systems",
+                "type": "container",
+                "layout": {
+                  "kind": "grid",
+                  "columns": [
+                    "1fr",
+                    "1fr",
+                    "1fr"
+                  ],
+                  "rows": [
+                    "1fr",
+                    "1fr"
+                  ],
+                  "gap": "small"
+                },
+                "children": [
+                  {
+                    "area": {
+                      "col": 1,
+                      "row": 1,
+                      "rowSpan": 2
+                    },
+                    "node": {
+                      "id": "sys-plasma",
+                      "type": "widget",
+                      "kind": "bar-graph",
+                      "props": {
+                        "label": "Plasma flow",
+                        "bars": 10,
+                        "activity": "busy",
+                        "tone": "primary"
+                      }
+                    }
+                  },
+                  {
+                    "area": {
+                      "col": 2,
+                      "row": 1,
+                      "rowSpan": 2
+                    },
+                    "node": {
+                      "id": "sys-relays",
+                      "type": "widget",
+                      "kind": "status-matrix",
+                      "props": {
+                        "label": "Relays",
+                        "columns": 6,
+                        "rows": 4,
+                        "activity": "calm",
+                        "tone": "info"
+                      },
+                      "when": [
+                        {
+                          "state": "damaged",
+                          "props": {
+                            "tone": "danger",
+                            "activity": "busy"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "area": {
+                      "col": 3,
+                      "row": 1
+                    },
+                    "node": {
+                      "id": "sys-life",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Life support",
+                        "tone": "success"
+                      },
+                      "actions": [
+                        {
+                          "do": "sound",
+                          "sound": "confirm"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "area": {
+                      "col": 3,
+                      "row": 2
+                    },
+                    "node": {
+                      "id": "sys-eject",
+                      "type": "widget",
+                      "kind": "button",
+                      "props": {
+                        "label": "Core eject",
+                        "tone": "neutral"
+                      },
+                      "when": [
+                        {
+                          "state": "damaged",
+                          "props": {
+                            "tone": "danger"
+                          }
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "do": "setState",
+                          "state": "damaged"
+                        },
+                        {
+                          "do": "setSignal",
+                          "signal": "hull",
+                          "delta": -39
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "slot": "status",
+        "node": {
+          "id": "status-line",
+          "type": "widget",
+          "kind": "text",
+          "props": {
+            "text": "ALL ENGINEERING SYSTEMS NOMINAL · CHIEF ENGINEER ON DUTY",
+            "size": "small",
+            "tone": "secondary"
+          },
+          "when": [
+            {
+              "state": "yellow-alert",
+              "props": {
+                "text": "YELLOW ALERT · SHIELDS UP · ALL DECKS STAND BY",
+                "tone": "warning"
+              }
+            },
+            {
+              "state": "red-alert",
+              "props": {
+                "text": "RED ALERT · ALL HANDS TO BATTLE STATIONS",
+                "tone": "danger"
+              }
+            },
+            {
+              "state": "damaged",
+              "props": {
+                "text": "HULL BREACH DECK 12 · DAMAGE CONTROL TEAMS REPORT",
+                "tone": "danger"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "section": "engineering"
+}

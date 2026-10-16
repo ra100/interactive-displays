@@ -1,0 +1,344 @@
+/*
+ * Shared look of the crew tools (operator console and editor). Deliberately plain and theme-independent:
+ * the show's theme is for the screens, the tools only have to be clear in a dark studio.
+ */
+.tool {
+  --tool-bg: #0b0e13;
+  --tool-panel: #141922;
+  --tool-raised: #1c2330;
+  --tool-border: #2b3445;
+  --tool-text: #e6e9ee;
+  --tool-muted: #8d97a8;
+  --tool-accent: #ff9c33;
+  --tool-on-accent: #1d1305;
+  --tool-danger: #ef4b4f;
+  --tool-warning: #f2c94c;
+  --tool-success: #3dd68c;
+  --tool-info: #58b8ff;
+  --tool-focus: #8fb4ff;
+  --tool-radius: 10px;
+
+  box-sizing: border-box;
+  height: 100dvh;
+  overflow: auto;
+  background: var(--tool-bg);
+  color: var(--tool-text);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px;
+  line-height: 1.4;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tool *,
+.tool *::before,
+.tool *::after {
+  box-sizing: border-box;
+}
+
+.tool--centered {
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.tool h1,
+.tool h2,
+.tool h3 {
+  margin: 0;
+  line-height: 1.2;
+}
+
+.tool-label {
+  color: var(--tool-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.tool-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--tool-border);
+  border-radius: var(--tool-radius);
+  background: var(--tool-raised);
+  color: var(--tool-text);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    transform 60ms ease-out,
+    filter 60ms ease-out;
+}
+
+.tool-button:hover:not(:disabled) {
+  filter: brightness(1.15);
+}
+
+.tool-button:active:not(:disabled) {
+  transform: scale(0.97);
+  filter: brightness(1.35);
+}
+
+.tool-button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.tool-button--primary {
+  border-color: var(--tool-accent);
+  background: var(--tool-accent);
+  color: var(--tool-on-accent);
+}
+
+.tool-button--danger {
+  border-color: var(--tool-danger);
+  background: var(--tool-danger);
+  color: #fff;
+}
+
+.tool-button--quiet {
+  border-color: transparent;
+  background: transparent;
+}
+
+.tool-button--small {
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+
+.tool button:focus-visible,
+.tool a:focus-visible,
+.tool input:focus-visible,
+.tool select:focus-visible,
+.tool textarea:focus-visible,
+.tool [tabindex]:focus-visible {
+  outline: 2px solid var(--tool-focus);
+  outline-offset: 2px;
+}
+
+.tool-input,
+.tool-select,
+.tool-textarea {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--tool-border);
+  border-radius: 8px;
+  background: var(--tool-panel);
+  color: var(--tool-text);
+  font: inherit;
+}
+
+.tool-textarea {
+  min-height: 80px;
+  padding: 8px 10px;
+  resize: vertical;
+}
+
+.tool-select {
+  padding-right: 28px;
+}
+
+.tool-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border: 1px solid var(--tool-border);
+  border-radius: 999px;
+  color: var(--tool-muted);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tool-chip[data-tone="success"] {
+  border-color: color-mix(in srgb, var(--tool-success) 50%, transparent);
+  color: var(--tool-success);
+}
+
+.tool-chip[data-tone="warning"] {
+  border-color: color-mix(in srgb, var(--tool-warning) 50%, transparent);
+  color: var(--tool-warning);
+}
+
+.tool-chip[data-tone="danger"] {
+  border-color: color-mix(in srgb, var(--tool-danger) 50%, transparent);
+  color: var(--tool-danger);
+}
+
+.tool-chip[data-tone="info"] {
+  border-color: color-mix(in srgb, var(--tool-info) 50%, transparent);
+  color: var(--tool-info);
+}
+
+.tool-dot {
+  display: inline-block;
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--tool-muted);
+}
+
+.tool-dot[data-on="true"] {
+  background: var(--tool-success);
+  box-shadow: 0 0 8px var(--tool-success);
+}
+
+.tool-error {
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--tool-danger) 60%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--tool-danger) 12%, transparent);
+  color: #ffb3b5;
+}
+
+/* A live screen render inside a list or card; it never takes clicks. */
+.thumbnail {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #000;
+  pointer-events: none;
+}
+
+.thumbnail > .screen-frame {
+  position: absolute;
+  inset: 0;
+}
+
+.qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.qr svg {
+  width: min(220px, 60vw);
+  height: auto;
+  border-radius: 8px;
+}
+
+.qr__caption {
+  color: var(--tool-muted);
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 13px;
+  word-break: break-all;
+  text-align: center;
+}
+
+.token-prompt {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(380px, 100%);
+}
+
+.token-prompt__title {
+  font-size: 24px;
+}
+
+.token-prompt__help {
+  margin: 0;
+  color: var(--tool-muted);
+}
+
+.toast {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  z-index: 50;
+  max-width: calc(100vw - 32px);
+  padding: 10px 16px;
+  border: 1px solid var(--tool-border);
+  border-radius: var(--tool-radius);
+  background: var(--tool-raised);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 50%);
+  color: var(--tool-text);
+  transform: translateX(-50%);
+}
+
+.toast[data-tone="danger"] {
+  border-color: var(--tool-danger);
+}
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(0 0 0 / 60%);
+}
+
+.dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: min(440px, 100%);
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  padding: 20px;
+  border: 1px solid var(--tool-border);
+  border-radius: 14px;
+  background: var(--tool-panel);
+  box-shadow: 0 16px 48px rgb(0 0 0 / 60%);
+}
+
+.dialog--wide {
+  width: min(760px, 100%);
+}
+
+.dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dialog__header h2 {
+  font-size: 20px;
+}
+
+.dialog__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--tool-muted);
+}
+
+.dialog__body p {
+  margin: 0;
+}
+
+.dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.tool-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tool-field__hint {
+  color: var(--tool-muted);
+  font-size: 12px;
+}

@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 2,
+  "id": "standby",
+  "name": "Standby",
+  "tags": [
+    "demo",
+    "lcars"
+  ],
+  "profile": {
+    "aspect": "16:9",
+    "fit": "fluid"
+  },
+  "revision": 0,
+  "published": 0,
+  "root": {
+    "id": "root",
+    "type": "container",
+    "layout": {
+      "kind": "canvas"
+    },
+    "children": [
+      {
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 0.22,
+          "h": 0.3
+        },
+        "node": {
+          "id": "elbow-top",
+          "type": "decor",
+          "kind": "lcars.elbow",
+          "props": {
+            "corner": "tl",
+            "arm": 0.55,
+            "bar": 0.28,
+            "tone": "neutral"
+          }
+        }
+      },
+      {
+        "rect": {
+          "x": 0.225,
+          "y": 0,
+          "w": 0.5,
+          "h": 0.084
+        },
+        "node": {
+          "id": "bar-top",
+          "type": "decor",
+          "kind": "lcars.bar",
+          "props": {
+            "caps": "none",
+            "tone": "secondary"
+          }
+        }
+      },
+      {
+        "rect": {
+          "x": 0.73,
+          "y": 0,
+          "w": 0.27,
+          "h": 0.084
+        },
+        "node": {
+          "id": "bar-top-2",
+          "type": "decor",
+          "kind": "lcars.bar",
+          "props": {
+            "caps": "right",
+            "code": "47-0219",
+            "tone": "primary"
+          }
+        }
+      },
+      {
+        "rect": {
+          "x": 0,
+          "y": 0.31,
+          "w": 0.121,
+          "h": 0.18
+        },
+        "node": {
+          "id": "side-1",
+          "type": "decor",
+          "kind": "lcars.bar",
+          "props": {
+            "caps": "none",
+            "tone": "accent"
+          }
+        }
+      },
+      {
+        "rect": {
+          "x": 0,
+          "y": 0.5,
+          "w": 0.121,
+          "h": 0.18
+        },
+        "node": {
+          "id": "side-2",
+          "type": "decor",
+          "kind": "lcars.bar",
+          "props": {
+            "caps": "none",
+            "tone": "info"
+          }
+        }
+      },
+      {
+        "rect": {
+          "x": 0,
+          "y": 0.7,
+          "w": 0.22,
+          "h": 0.3
+        },
+        "node": {
+          "id": "elbow-bottom",
+          "type": "decor",
+          "kind": "lcars.elbow",
+          "props": {
+            "corner": "bl",
+            "arm": 0.55,
+            "bar": 0.28,
+            "tone": "neutral"
+          }
+        }
+      },
+      {
+        "rect": {
+          "x": 0.225,
+          "y": 0.916,
+          "w": 0.775,
+          "h": 0.084
+        },
+        "node": {
+          "id": "bar-bottom",
+          "type": "decor",
+          "kind": "lcars.bar",
+          "props": {
+            "caps": "right",
+            "tone": "secondary"
+          }
+        }
+      },
+      {
+        "rect": {
+          "x": 0.2,
+          "y": 0.34,
+          "w": 0.7,
+          "h": 0.14
+        },
+        "node": {
+          "id": "standby-title",
+          "type": "widget",
+          "kind": "title",
+          "props": {
+            "text": "LCARS access 4774",
+            "tone": "primary"
+          }
+        }
+      },
+      {
+        "rect": {
+          "x": 0.2,
+          "y": 0.52,
+          "w": 0.7,
+          "h": 0.12
+        },
+        "node": {
+          "id": "standby-text",
+          "type": "widget",
+          "kind": "text",
+          "props": {
+            "text": "Please stand by",
+            "size": "large",
+            "tone": "secondary"
+          },
+          "when": [
+            {
+              "state": "red-alert",
+              "props": {
+                "text": "Red alert",
+                "tone": "danger"
+              }
+            },
+            {
+              "state": "yellow-alert",
+              "props": {
+                "text": "Yellow alert",
+                "tone": "warning"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

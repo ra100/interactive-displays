@@ -4,13 +4,16 @@ Self-hosted sci-fi interface displays for film and video sets. One server drives
 (TVs, tablets, monitors) in real time; screens are documents you can hand-write, generate or let AI edit, and
 the look comes from swappable theme packs (Star Trek LCARS first, other UI families later).
 
-> **Status: v2 rebuild, Phase 0 (walking skeleton).** The design and roadmap live in
+> **Status: v2 rebuild, Phase 2 (editor and operator console).** The design and roadmap live in
 > [docs/plans/2026-10-14-feat-interactive-displays-v2-plan.md](docs/plans/2026-10-14-feat-interactive-displays-v2-plan.md).
 > What works today and how to try it: [docs/showcase](docs/showcase/README.md) and
 > [docs/ACCEPTANCE-TESTING.md](docs/ACCEPTANCE-TESTING.md). The v1 code is archived in [legacy/](legacy/README.md).
 
 <p align="center">
-  <img src="docs/showcase/phase-0/welcome-16x9.png" alt="The demo screen on a 16:9 display" width="720" />
+  <img src="docs/showcase/phase-1/bridge-sidebar.png" alt="The LCARS bridge screen of the demo show" width="720" />
+</p>
+<p align="center">
+  <img src="docs/showcase/phase-2/editor.png" alt="The screen editor" width="720" />
 </p>
 
 ## Run it
@@ -40,6 +43,27 @@ pnpm start            # http://localhost:3010/d
   show's default screen.
 - If the network drops or the server restarts, the display keeps its last screen and shows a small
   `RECONNECTING` badge until it is back.
+- Show states (normal, yellow alert, red alert, damaged, blackout in the demo) switch every display at once.
+- `/d/<id>?theme=base` or `?variant=nemesis` previews another look on that display only; `/gallery` shows every
+  frame, widget and decor piece of a theme.
+
+## Running the show
+
+- **`/operator`** on a phone or tablet: show states (normal, alerts, damaged) and a blackout panic button; every
+  display with a live thumbnail, its screen, Identify, Reload, Rename and a QR code to open it on a tablet.
+- **`/builder`** on a laptop: the screen library and the editor. Edits are saved as a draft; displays change only
+  when you press Publish. "Send to display" shows a draft on one display first; History restores any earlier
+  revision; Live edit (for rehearsals) puts every edit on air at once.
+- Set `EDITOR_TOKEN` to protect both; displays never need it. Open `/operator?token=<token>` once on a device (or
+  scan its QR code) and the token is remembered.
+
+Everything the tools do is also a REST call, for scripts:
+
+```bash
+curl -X POST http://<server>:3010/api/state -H 'content-type: application/json' -d '{"state":"red-alert"}'
+curl -X PUT http://<server>:3010/api/displays/bridge-2 -H 'content-type: application/json' -d '{"screen":"tactical"}'
+# with EDITOR_TOKEN set, add: -H 'authorization: Bearer <token>'
+```
 
 ## Configuration
 
@@ -49,11 +73,15 @@ pnpm start            # http://localhost:3010/d
 | `HOST` | `0.0.0.0` | Interface to listen on |
 | `DATA_DIR` | `./data` (`/data` in Docker) | Shows and screens; seeded with a demo show on first start |
 | `LOG_LEVEL` | `info` | `fatal` … `trace`, or `silent` |
+| `EDITOR_TOKEN` | unset | Protects `/operator`, `/builder` and every change (at least 8 characters); displays never need it |
+| `PUBLIC_URL` | unset | The address tablets use to reach the server (`http://10.0.0.5:3010`), for QR codes |
+
+With Docker, put them in a `.env` file next to `docker-compose.yml`.
 
 ## Development
 
 ```bash
-pnpm dev          # server :3010 + Vite :5176 with hot reload (open http://localhost:5176/d/test)
+pnpm dev          # server :3010 + Vite :5176 with hot reload (http://localhost:5176/d/test, /operator, /builder)
 pnpm test         # unit and integration tests
 pnpm test:e2e     # Playwright e2e (after pnpm build)
 pnpm lint && pnpm typecheck && pnpm knip

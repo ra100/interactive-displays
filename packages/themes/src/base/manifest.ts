@@ -1,9 +1,11 @@
 import { defineTheme } from "@interactive-displays/core";
 
-// Neutral fallback theme: renders every widget and keeps the model honest about not depending on one look.
+// Neutral fallback theme: renders every widget and frame, and keeps the model honest about not depending
+// on one look. It doubles as the editor's wireframe view.
 export const base = defineTheme({
   id: "base",
   name: "Base",
+  description: "Neutral, readable wireframe look. Every other theme falls back to it.",
   tokens: {
     palette: {
       primary: "#5b9dff",
@@ -22,5 +24,29 @@ export const base = defineTheme({
       body: "system-ui, 'Segoe UI', Roboto, sans-serif",
     },
     radius: "small",
+  },
+  effects: {
+    warning: { tokens: { palette: { primary: "#f2c94c" } } },
+    alert: { tokens: { palette: { primary: "#ff5c5c", secondary: "#ff9c9c" }, background: "#1a0b0d" } },
+    damaged: { tokens: { palette: { primary: "#6b7480", secondary: "#59616b", accent: "#7a6a55" } } },
+  },
+  archetypes: ["sidebar", "header-main", "dashboard"],
+  sounds: {
+    press: { steps: [{ freq: 1200, ms: 25, wave: "triangle", gain: 0.12 }] },
+    confirm: { steps: [{ freq: 660, to: 990, ms: 120, gain: 0.15 }] },
+    warning: {
+      steps: [
+        { freq: 740, ms: 160, wave: "triangle", gain: 0.15 },
+        { freq: 740, ms: 120, gain: 0 },
+      ],
+      repeat: 2,
+    },
+    alert: {
+      steps: [
+        { freq: 880, ms: 220, wave: "square", gain: 0.06 },
+        { freq: 660, ms: 220, wave: "square", gain: 0.06 },
+      ],
+      repeat: 2,
+    },
   },
 });

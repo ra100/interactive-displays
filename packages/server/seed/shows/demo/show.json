@@ -2,7 +2,170 @@
   "schemaVersion": 1,
   "id": "demo",
   "name": "Demo Show",
-  "theme": { "id": "base" },
-  "defaultScreen": "welcome",
-  "displays": [{ "id": "test", "name": "Test display" }]
+  "theme": {
+    "id": "lcars"
+  },
+  "states": [
+    {
+      "id": "normal",
+      "label": "Normal",
+      "effect": "none"
+    },
+    {
+      "id": "yellow-alert",
+      "label": "Yellow alert",
+      "effect": "warning",
+      "banner": "YELLOW ALERT",
+      "sound": "warning"
+    },
+    {
+      "id": "red-alert",
+      "label": "Red alert",
+      "effect": "alert",
+      "banner": "RED ALERT",
+      "sound": "alert"
+    },
+    {
+      "id": "damaged",
+      "label": "Damaged",
+      "effect": "damaged",
+      "banner": "HULL BREACH"
+    },
+    {
+      "id": "blackout",
+      "label": "Blackout",
+      "effect": "blackout"
+    }
+  ],
+  "defaultScreen": "bridge",
+  "displays": [
+    {
+      "id": "test",
+      "name": "Test display"
+    },
+    {
+      "id": "engineering-1",
+      "name": "Engineering 1",
+      "screen": "engineering"
+    },
+    {
+      "id": "tactical-1",
+      "name": "Tactical 1",
+      "screen": "tactical"
+    },
+    {
+      "id": "corridor-1",
+      "name": "Corridor panel",
+      "screen": "standby"
+    },
+    {
+      "id": "viewscreen-1",
+      "name": "Viewscreen",
+      "screen": "viewscreen"
+    }
+  ],
+  "signals": [
+    {
+      "id": "warp.output",
+      "label": "Warp core output",
+      "unit": "%",
+      "scope": "shared",
+      "source": {
+        "kind": "walk",
+        "min": 88,
+        "max": 99,
+        "volatility": 0.3
+      },
+      "byState": {
+        "red-alert": {
+          "min": 99,
+          "max": 106,
+          "volatility": 0.7
+        },
+        "damaged": {
+          "min": 35,
+          "max": 75,
+          "volatility": 0.9
+        }
+      }
+    },
+    {
+      "id": "eps.load",
+      "label": "EPS load",
+      "unit": "%",
+      "scope": "ambient",
+      "source": {
+        "kind": "walk",
+        "min": 40,
+        "max": 80,
+        "volatility": 0.4
+      },
+      "byState": {
+        "damaged": {
+          "min": 75,
+          "max": 99,
+          "volatility": 0.9
+        }
+      }
+    },
+    {
+      "id": "coolant.temp",
+      "label": "Coolant temperature",
+      "unit": "K",
+      "scope": "ambient",
+      "source": {
+        "kind": "wave",
+        "min": 302,
+        "max": 318,
+        "periodMs": 9000
+      }
+    },
+    {
+      "id": "shields",
+      "label": "Shield strength",
+      "unit": "%",
+      "scope": "shared",
+      "source": {
+        "kind": "manual",
+        "initial": 0,
+        "min": 0,
+        "max": 100,
+        "step": 5
+      }
+    },
+    {
+      "id": "hull",
+      "label": "Hull integrity",
+      "unit": "%",
+      "scope": "shared",
+      "source": {
+        "kind": "manual",
+        "initial": 100,
+        "min": 0,
+        "max": 100,
+        "step": 1
+      }
+    },
+    {
+      "id": "warp.factor",
+      "label": "Warp factor",
+      "scope": "shared",
+      "source": {
+        "kind": "manual",
+        "initial": 6.2,
+        "min": 0,
+        "max": 9.9,
+        "step": 0.1
+      }
+    },
+    {
+      "id": "stardate",
+      "label": "Stardate",
+      "scope": "ambient",
+      "source": {
+        "kind": "clock",
+        "format": "stardate"
+      }
+    }
+  ]
 }
