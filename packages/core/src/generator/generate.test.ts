@@ -304,3 +304,97 @@ describe("rerolling a panel", () => {
     expect(changed).toBe(true);
   });
 });
+
+describe("instruments and panels", () => {
+  const tacticalPack = ContentPackSchema.parse({
+    ...pack,
+    id: "tac",
+    blocks: [
+      {
+        id: "instrument-panel",
+        label: "Instrument panel",
+        fits: ["main", "aside"],
+        size: "large",
+        needs: { instruments: 1 },
+        layout: { part: "panel", children: [{ part: "heading" }, { part: "instrument", weight: 3 }, { part: "metrics", show: ["readout"], max: 1 }] },
+      },
+      {
+        id: "pair",
+        label: "Pair",
+        fits: ["main"],
+        size: "large",
+        needs: { instruments: 2 },
+        layout: { part: "panel", shape: "sweep-right", children: [{ part: "heading" }, { part: "stack", direction: "row", children: [{ part: "instrument" }, { part: "instrument" }] }] },
+      },
+    ],
+    recipes: [
+      {
+        id: "tactical",
+        label: "Tactical",
+        code: "TAC",
+        archetypes: { dashboard: 1 },
+        titles: ["TACTICAL"],
+        nav: ["SHIELDS", "PHASERS", "TARGETING"],
+        status: ["WEAPONS ON STANDBY"],
+        systems: [
+          {
+            id: "shields",
+            label: "Shields",
+            metrics: [{ id: "strength", label: "STRENGTH", unit: "%", range: [95, 100], alertRange: [20, 60] }],
+            instruments: ["shield-status"],
+          },
+          {
+            id: "weapons",
+            label: "Phasers",
+            metrics: [{ id: "charge", label: "CHARGE", unit: "%", range: [80, 100] }],
+            instruments: ["weapons", "target-lock"],
+          },
+          {
+            id: "helm",
+            label: "Helm",
+            metrics: [{ id: "warp", label: "WARP", range: [5, 7] }],
+            instruments: ["speed-ladder", "heading", "star-chart", "reactor"],
+          },
+        ],
+      },
+    ],
+  });
+  const tactical = tacticalPack.recipes[0];
+  if (!tactical) throw new Error("fixture");
+  const screens = [1, 2, 3, 4, 5, 6, 7, 8].map((seed) => generateScreen({ ...base, pack: tacticalPack, recipe: tactical, seed, density: "dense", archetype: "dashboard" }));
+  const all = screens.flatMap((screen) => nodes(screen.root));
+  const widget = (kind: string) => all.find((node) => node.type === "widget" && node.kind === kind);
+
+  it("stays valid and lint-clean", () => {
+    for (const screen of screens) {
+      expect(validateScreen(screen, catalog).ok).toBe(true);
+      expect(lintScreen(screen).filter((issue) => issue.level !== "info")).toEqual([]);
+    }
+  });
+
+  it("builds the systems' instruments with live values that run to their alert range", () => {
+    const shields = widget("shield-status");
+    expect(shields?.type === "widget" && Object.keys(shields.bind ?? {})).toEqual(["forward", "aft", "port", "starboard"]);
+    expect(JSON.stringify(shields?.type === "widget" ? shields.bind : {})).toContain('"red-alert":{"min":20,"max":60');
+    const ladder = widget("speed-ladder");
+    expect(ladder?.type === "widget" && ladder.props["label"]).toBe("WARP");
+  });
+
+  it("arms the weapons and locks the target in an alert", () => {
+    const weapons = widget("weapons");
+    expect(weapons?.when?.find((entry) => entry.state === "red-alert")?.props).toEqual({ armed: true });
+    const lock = widget("target-lock");
+    expect(lock?.when?.find((entry) => entry.state === "red-alert")?.props).toMatchObject({ locked: true });
+  });
+
+  it("puts each block in a panel frame with its heading in the title slot", () => {
+    const panels = all.filter((node) => node.type === "container" && node.layout.kind === "frame" && node.layout.archetype === "panel");
+    expect(panels.length).toBeGreaterThan(0);
+    for (const panel of panels) {
+      if (panel.type !== "container") continue;
+      expect(panel.children.map((child) => child.slot)).toEqual(["title", "main"]);
+      expect(panel.children[0]?.node.type === "widget" && panel.children[0].node.kind).toBe("title");
+    }
+    expect(panels.some((panel) => panel.type === "container" && panel.layout.kind === "frame" && panel.layout.variant === "sweep-right")).toBe(true);
+  });
+});

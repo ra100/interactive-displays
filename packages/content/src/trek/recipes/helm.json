@@ -102,6 +102,9 @@
       ],
       "notes": [
         "Course plotted through the Mutara sector"
+      ],
+      "instruments": [
+        "speed-ladder"
       ]
     },
     {
@@ -152,6 +155,10 @@
           "label": "EVASIVE",
           "danger": true
         }
+      ],
+      "instruments": [
+        "heading",
+        "star-chart"
       ]
     },
     {
@@ -225,11 +232,16 @@
         {
           "label": "BOOST DEFLECTOR"
         }
+      ],
+      "instruments": [
+        "spectrum"
       ]
     }
   ],
   "blocks": {
     "prefer": [
+      "instrument-pair",
+      "instrument-panel",
       "summary-strip",
       "control-panel",
       "telemetry"

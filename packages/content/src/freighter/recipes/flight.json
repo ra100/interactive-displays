@@ -111,6 +111,10 @@
         "Navigation beacon acquired",
         "Course correction 0.04° applied",
         "Gravity assist window in 6 hours"
+      ],
+      "instruments": [
+        "heading",
+        "star-chart"
       ]
     },
     {
@@ -248,6 +252,8 @@
   ],
   "blocks": {
     "prefer": [
+      "instrument-pair",
+      "instrument-panel",
       "telemetry",
       "control-panel",
       "readout-column"

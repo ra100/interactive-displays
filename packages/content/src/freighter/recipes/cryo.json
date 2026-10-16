@@ -139,6 +139,9 @@
       "short": "VITALS",
       "notes": [
         "Biomonitors reporting every 30 s"
+      ],
+      "instruments": [
+        "waveform"
       ]
     },
     {
@@ -184,11 +187,15 @@
           ]
         }
       ],
-      "short": "WAKE"
+      "short": "WAKE",
+      "instruments": [
+        "scan-progress"
+      ]
     }
   ],
   "blocks": {
     "prefer": [
+      "instrument-panel",
       "telemetry",
       "status-board",
       "hero-gauge"

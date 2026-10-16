@@ -191,5 +191,94 @@
         { "part": "lights", "max": 3, "weight": 1 }
       ]
     }
+  },
+  {
+    "id": "instrument-panel",
+    "label": "Instrument panel",
+    "description": "A panel with its own sweep around one of the system's instruments, with two readouts under it.",
+    "fits": ["main"],
+    "size": "large",
+    "needs": { "instruments": 1 },
+    "tags": ["instrument", "shields", "weapons", "course", "scan", "core"],
+    "layout": {
+      "part": "panel",
+      "children": [
+        { "part": "heading" },
+        { "part": "instrument", "weight": 4 },
+        { "part": "metrics", "show": ["readout"], "max": 2, "direction": "row", "weight": 1 }
+      ]
+    }
+  },
+  {
+    "id": "instrument-pair",
+    "label": "Instrument pair",
+    "description": "Two of the system's instruments side by side in one panel, its buttons beneath.",
+    "fits": ["main"],
+    "size": "large",
+    "needs": { "instruments": 2 },
+    "tags": ["instrument", "tactical", "navigation"],
+    "layout": {
+      "part": "panel",
+      "shape": "sweep",
+      "children": [
+        { "part": "heading" },
+        {
+          "part": "stack",
+          "direction": "row",
+          "gap": "medium",
+          "weight": 4,
+          "children": [{ "part": "instrument" }, { "part": "instrument" }]
+        },
+        { "part": "actions", "max": 3, "direction": "row", "weight": 1 }
+      ]
+    }
+  },
+  {
+    "id": "instrument-aside",
+    "label": "Side instrument",
+    "description": "One instrument in a bracketed side panel.",
+    "fits": ["aside"],
+    "size": "medium",
+    "needs": { "instruments": 1 },
+    "tags": ["instrument"],
+    "layout": { "part": "panel", "shape": "bracket", "children": [{ "part": "heading" }, { "part": "instrument" }] }
+  },
+  {
+    "id": "panel-gauges",
+    "label": "Gauge panel",
+    "description": "Up to three gauges in a row inside a panel of their own.",
+    "fits": ["main"],
+    "size": "medium",
+    "needs": { "metrics": 2 },
+    "tags": ["gauge", "level", "power"],
+    "layout": {
+      "part": "panel",
+      "children": [{ "part": "heading" }, { "part": "metrics", "show": ["gauge"], "max": 3, "direction": "row" }]
+    }
+  },
+  {
+    "id": "scope-strip",
+    "label": "Scope strip",
+    "description": "A running trace or spectrum between brackets, with readouts beside it.",
+    "fits": ["main", "aside"],
+    "size": "medium",
+    "needs": { "metrics": 1 },
+    "tags": ["trend", "scan", "signal", "wave"],
+    "layout": {
+      "part": "panel",
+      "shape": "bracket",
+      "children": [
+        { "part": "heading" },
+        {
+          "part": "stack",
+          "direction": "row",
+          "gap": "medium",
+          "children": [
+            { "part": "ambient", "show": ["waveform", "spectrum"], "weight": 3 },
+            { "part": "metrics", "show": ["readout"], "max": 2, "direction": "column", "weight": 1 }
+          ]
+        }
+      ]
+    }
   }
 ]

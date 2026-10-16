@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ActionsSchema } from "./action.ts";
-import { ARCHETYPE_IDS, type ArchetypeId } from "./archetypes.ts";
+import { ARCHETYPE_IDS, type ArchetypeId, PANEL_SHAPES } from "./archetypes.ts";
 import { IdSchema } from "./ids.ts";
 import { SpaceSchema } from "./node.ts";
 import { SignalIdSchema } from "./signal.ts";
@@ -37,6 +37,24 @@ export const MetricSchema = z.object({
   signal: SignalIdSchema.optional(),
 });
 
+// Instruments a system can show: a widget that stands for the system itself (its shields, its course, its core)
+// rather than one reading. The generator builds them with live values in the system's ranges.
+export const INSTRUMENT_WIDGETS = [
+  "shield-status",
+  "weapons",
+  "target-lock",
+  "heading",
+  "speed-ladder",
+  "star-chart",
+  "reactor",
+  "waveform",
+  "spectrum",
+  "globe",
+  "scan-progress",
+] as const;
+
+export const InstrumentWidgetSchema = z.enum(INSTRUMENT_WIDGETS);
+
 export const RecipeActionSchema = z.object({
   label: LabelSchema,
   danger: z.boolean().default(false),
@@ -51,6 +69,8 @@ export const SystemSchema = z.object({
   short: NavLabelSchema.optional(),
   metrics: z.array(MetricSchema).min(1).max(8),
   actions: z.array(RecipeActionSchema).max(6).default([]),
+  // The instruments this system is shown with, in order of preference.
+  instruments: z.array(InstrumentWidgetSchema).max(4).default([]),
   // Lines of technobabble about this system.
   notes: z.array(z.string().min(1).max(200)).max(6).default([]),
 });
@@ -134,9 +154,12 @@ const ActionsPartSchema = z.object({
 // Something that looks busy without meaning anything.
 const AmbientPartSchema = z.object({
   part: z.literal("ambient"),
-  show: z.array(z.enum(["data-cascade", "status-matrix", "bar-graph"])).min(1),
+  show: z.array(z.enum(["data-cascade", "status-matrix", "bar-graph", "waveform", "spectrum"])).min(1),
   weight,
 });
+
+// The system's next instrument (its shields, heading, core…); left out when it has none left.
+const InstrumentPartSchema = z.object({ part: z.literal("instrument"), weight });
 
 const NotesPartSchema = z.object({ part: z.literal("notes"), weight });
 
@@ -148,6 +171,16 @@ const StackPartSchema = z.object({
   part: z.literal("stack"),
   direction: z.enum(["row", "column"]),
   gap: SpaceSchema.optional(),
+  weight,
+  get children(): z.ZodArray<typeof PartSchema> {
+    return z.array(PartSchema).min(1).max(8);
+  },
+});
+
+// A titled section with chrome of its own (a panel frame): its heading goes in the title, the rest below it.
+const PanelPartSchema = z.object({
+  part: z.literal("panel"),
+  shape: z.enum(PANEL_SHAPES).optional(),
   weight,
   get children(): z.ZodArray<typeof PartSchema> {
     return z.array(PartSchema).min(1).max(8);
@@ -166,6 +199,8 @@ export const PartSchema: z.ZodDiscriminatedUnion<
     typeof LogPartSchema,
     typeof ClockPartSchema,
     typeof StackPartSchema,
+    typeof InstrumentPartSchema,
+    typeof PanelPartSchema,
   ]
 > = z.discriminatedUnion("part", [
   HeadingPartSchema,
@@ -178,6 +213,8 @@ export const PartSchema: z.ZodDiscriminatedUnion<
   LogPartSchema,
   ClockPartSchema,
   StackPartSchema,
+  InstrumentPartSchema,
+  PanelPartSchema,
 ]);
 
 export const BLOCK_SIZES = ["small", "medium", "large"] as const;
@@ -191,8 +228,12 @@ export const BlockSchema = z.object({
   size: z.enum(BLOCK_SIZES),
   // What a system must have for the block to make sense.
   needs: z
-    .object({ metrics: z.number().int().min(0).max(8).default(0), actions: z.number().int().min(0).max(6).default(0) })
-    .default({ metrics: 0, actions: 0 }),
+    .object({
+      metrics: z.number().int().min(0).max(8).default(0),
+      actions: z.number().int().min(0).max(6).default(0),
+      instruments: z.number().int().min(0).max(4).default(0),
+    })
+    .default({ metrics: 0, actions: 0, instruments: 0 }),
   // Words a placeholder's intent can match, such as "trend" or "controls".
   tags: z.array(z.string().min(1).max(24)).max(12).default([]),
   layout: PartSchema,
@@ -255,6 +296,7 @@ export const mergePack = (pack: ContentPack, overlay: ContentOverlay) =>
 export type ContentOverlay = z.infer<typeof ContentOverlaySchema>;
 export type Metric = z.infer<typeof MetricSchema>;
 export type MetricWidget = z.infer<typeof MetricWidgetSchema>;
+export type InstrumentWidget = z.infer<typeof InstrumentWidgetSchema>;
 export type RecipeAction = z.infer<typeof RecipeActionSchema>;
 export type System = z.infer<typeof SystemSchema>;
 export type Recipe = z.infer<typeof RecipeSchema>;

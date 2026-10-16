@@ -85,6 +85,9 @@
       "short": "CYCLE",
       "notes": [
         "Inner hatch interlock armed"
+      ],
+      "instruments": [
+        "scan-progress"
       ]
     },
     {

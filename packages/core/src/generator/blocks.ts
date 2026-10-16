@@ -1,4 +1,4 @@
-import type { Block, Metric, MetricWidget, Part, System } from "../schema/content.ts";
+import type { Block, InstrumentWidget, Metric, MetricWidget, Part, System } from "../schema/content.ts";
 import type { ChildEntry, Node, When, WidgetNode } from "../schema/node.ts";
 import type { Binding } from "../schema/signal.ts";
 import type { Tone } from "../schema/tone.ts";
@@ -50,6 +50,14 @@ const bindingOf = (metric: Metric, context: Context, random: Random): Binding =>
   if (!alert || states.length === 0) return { ambient };
   const swing = metric.motion === "wave" ? { periodMs: random.int(2, 4) * 1000 } : { volatility: 0.85 };
   return { ambient, byState: Object.fromEntries(states.map((state) => [state, { min: alert[0], max: alert[1], ...swing }])) };
+};
+
+// A value that wanders inside a range on its own, and to an alert range in the show's alert states.
+const wandering = (range: readonly [number, number], alert: readonly [number, number] | undefined, context: Context, random: Random, volatility = 0.3): Binding => {
+  const ambient = { kind: "walk", min: range[0], max: range[1], volatility: round(volatility + random.next() * 0.2, 2) } as const;
+  const states = alertStates(context.show);
+  if (!alert || states.length === 0) return { ambient };
+  return { ambient, byState: Object.fromEntries(states.map((state) => [state, { min: alert[0], max: alert[1], volatility: 0.85 }])) };
 };
 
 const emphasised = (metric: Metric, context: Context) => context.recipe.alert.emphasise.includes(metric.id);
@@ -105,6 +113,78 @@ const metricWidget = (show: MetricWidget, metric: Metric, system: System, tone: 
   }
 };
 
+const percentOf = (metric: Metric | undefined): { range: [number, number]; alert?: [number, number] } => {
+  if (metric && metric.unit === "%" && metric.range[0] >= 0 && metric.range[1] <= 100) {
+    return metric.alertRange ? { range: metric.range, alert: metric.alertRange } : { range: metric.range };
+  }
+  return { range: [88, 100], alert: [25, 70] };
+};
+
+const word = (context: Context, random: Random, max = 24): string => random.pick(context.pack.vocab.words).toUpperCase().slice(0, max);
+
+// An instrument stands for the system as a whole. Its live parts follow the system's first reading where that
+// fits (a level in percent, a speed), and otherwise wander in believable ranges; alerts arm, lock and swing them.
+const instrumentWidget = (kind: InstrumentWidget, system: System, tone: Tone, context: Context, random: Random): WidgetNode => {
+  const id = freshId(context, `${system.id}-${kind}`);
+  const label = system.label;
+  const lead = system.metrics[0];
+  const level = percentOf(lead);
+  switch (kind) {
+    case "shield-status": {
+      const facings = ["forward", "aft", "port", "starboard"] as const;
+      const bind = Object.fromEntries(facings.map((facing) => [facing, wandering(level.range, level.alert, context, random)]));
+      return widget(id, kind, { label, tone }, { bind });
+    }
+    case "weapons": {
+      const when = inAlert(context, { armed: true });
+      const bind = { charge: wandering([70, 100], [40, 100], context, random, 0.4) };
+      const props = { label, ordnance: random.int(40, 250), tubes: random.int(1, 3), tone };
+      return widget(id, kind, props, when ? { bind, when } : { bind });
+    }
+    case "target-lock": {
+      const bearing = random.int(0, 359);
+      const when = inAlert(context, { locked: true, target: word(context, random, 32) });
+      const bind = { bearing: wandering([bearing - 6, bearing + 6], undefined, context, random, 0.1), range: wandering([18000, 60000], [2000, 9000], context, random) };
+      return widget(id, kind, { label, bearing, mark: random.int(-12, 12), range: 40000, tone }, when ? { bind, when } : { bind });
+    }
+    case "heading": {
+      const bearing = random.int(0, 359);
+      const bind = { bearing: wandering([bearing - 3, bearing + 3], undefined, context, random, 0.05), mark: wandering([-2, 4], undefined, context, random, 0.05) };
+      return widget(id, kind, { label, bearing, mark: 2, variant: random.pick(["tape", "tape", "rose"] as const), tone }, { bind });
+    }
+    case "speed-ladder": {
+      const fits = lead && lead.range[1] <= 12 && lead.range[0] >= 0;
+      const value = fits ? round((lead.range[0] + lead.range[1]) / 2, 1) : random.int(4, 8);
+      const extra = fits ? { bind: { value: bindingOf(lead, context, random) } } : {};
+      return widget(id, kind, { label: fits ? lead.label.slice(0, 40) : label, value, steps: 9, tone }, extra);
+    }
+    case "star-chart":
+      return widget(
+        id,
+        kind,
+        { label, destination: word(context, random, 32), waypoints: random.int(3, 6), stars: random.int(40, 90), tone },
+        { bind: { progress: wandering([25, 65], undefined, context, random, 0.05) } },
+      );
+    case "reactor": {
+      const extra = lead ? { bind: { level: wandering(percentOf(lead).range, percentOf(lead).alert, context, random) } } : {};
+      return widget(id, kind, { label, segments: random.int(10, 18), tone }, extra);
+    }
+    case "waveform": {
+      const when = inAlert(context, { speed: "fast" });
+      const props = { label: `${word(context, random, 20)} ${label}`.slice(0, 40), shape: lead?.unit === "bpm" ? "heartbeat" : random.pick(["sine", "noise", "pulse"] as const), traces: random.int(1, 3), tone };
+      return widget(id, kind, props, when ? { when } : {});
+    }
+    case "spectrum": {
+      const when = inAlert(context, { activity: "busy" });
+      return widget(id, kind, { label, bands: random.pick([24, 32, 48]), tone }, when ? { when } : {});
+    }
+    case "globe":
+      return widget(id, kind, { label, sites: random.int(2, 5), tone });
+    case "scan-progress":
+      return widget(id, kind, { label: `${label} SCAN`.slice(0, 40), seconds: random.int(8, 20), tone });
+  }
+};
+
 // The widget a reading shows as: one the part allows, preferring what the reading asks for.
 const showAs = (allowed: readonly MetricWidget[], metric: Metric, random: Random): MetricWidget => {
   const preferred = metric.prefer.filter((each) => allowed.includes(each));
@@ -117,6 +197,7 @@ interface Supply {
   system: System;
   metrics: Metric[];
   actions: System["actions"];
+  instruments: InstrumentWidget[];
   tone: Tone;
   offset: number;
 }
@@ -177,13 +258,39 @@ const buildPart = (part: Part, supply: Supply, context: Context, random: Random)
       const kind = random.pick(part.show);
       const id = freshId(context, `${system.id}-${kind}`);
       const activity = random.pick(["calm", "busy"] as const);
-      const props =
-        kind === "data-cascade"
-          ? { columns: random.int(4, 8), speed: random.pick(["slow", "normal", "fast"] as const), tone }
-          : kind === "status-matrix"
-            ? { label: random.pick(vocab.words).toUpperCase().slice(0, 24), columns: random.int(6, 10), rows: random.int(2, 4), activity, tone }
-            : { label: random.pick(vocab.words).toUpperCase().slice(0, 24), bars: random.int(8, 14), activity, tone };
+      const label = random.pick(vocab.words).toUpperCase().slice(0, 24);
+      const props = (() => {
+        switch (kind) {
+          case "data-cascade":
+            return { columns: random.int(4, 8), speed: random.pick(["slow", "normal", "fast"] as const), tone };
+          case "status-matrix":
+            return { label, columns: random.int(6, 10), rows: random.int(2, 4), activity, tone };
+          case "bar-graph":
+            return { label, bars: random.int(8, 14), activity, tone };
+          case "waveform":
+            return { label, shape: random.pick(["sine", "noise"] as const), traces: random.int(1, 3), tone };
+          case "spectrum":
+            return { label, bands: random.pick([24, 32]), activity, tone };
+        }
+      })();
       return { node: widget(id, kind, props), ...weight };
+    }
+    case "instrument": {
+      const [kind] = take(supply.instruments, 1);
+      if (!kind) return undefined;
+      return { node: instrumentWidget(kind, system, tone, context, random), ...weight };
+    }
+    case "panel": {
+      const built = part.children
+        .map((child) => ({ child, built: buildPart(child, supply, context, random) }))
+        .filter((each): each is { child: Part; built: NonNullable<Built> } => each.built !== undefined);
+      const heading = built.find((each) => each.child.part === "heading");
+      const body = built.filter((each) => each !== heading).map(({ built: each }) => ({ node: each.node, ...(each.weight === undefined ? {} : { weight: each.weight }) }));
+      if (body.length === 0) return undefined;
+      const main = body.length === 1 && body[0] ? body[0].node : stack(context, `${system.id}-panel-body`, "column", body);
+      const children: ChildEntry[] = [...(heading ? [{ slot: "title" as const, node: heading.built.node }] : []), { slot: "main" as const, node: main }];
+      const layout = { kind: "frame", archetype: "panel", ...(part.shape ? { variant: part.shape } : {}) } as const;
+      return { node: { id: freshId(context, `${system.id}-panel`), type: "container", layout, children }, ...weight };
     }
     case "notes": {
       const text = system.notes.length > 0 && random.next() < 0.6 ? random.pick(system.notes) : phrase(vocab, system.label, random);
@@ -232,7 +339,10 @@ const stack = (
 
 // Whether a block makes sense for a system in a slot.
 export const blockFits = (block: Block, system: System, slot: "main" | "aside"): boolean =>
-  block.fits.includes(slot) && block.needs.metrics <= system.metrics.length && block.needs.actions <= system.actions.length;
+  block.fits.includes(slot) &&
+  block.needs.metrics <= system.metrics.length &&
+  block.needs.actions <= system.actions.length &&
+  block.needs.instruments <= system.instruments.length;
 
 // Picks a block for a system: preferred ones more often, avoided ones never, repeats on one screen rarely.
 export const chooseBlock = (
@@ -266,7 +376,7 @@ export const buildBlock = (
   random: Random,
   id?: string,
 ): Node | undefined => {
-  const supply: Supply = { system, metrics: [...system.metrics], actions: [...system.actions], tone, offset };
+  const supply: Supply = { system, metrics: [...system.metrics], actions: [...system.actions], instruments: [...system.instruments], tone, offset };
   const built = buildPart(block.layout, supply, context, random);
   if (!built) return undefined;
   const node = built.node;

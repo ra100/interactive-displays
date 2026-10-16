@@ -91,6 +91,10 @@
       ],
       "notes": [
         "Lateral array compensating for nebula interference"
+      ],
+      "instruments": [
+        "globe",
+        "scan-progress"
       ]
     },
     {
@@ -147,6 +151,9 @@
         {
           "label": "RECORD DATA"
         }
+      ],
+      "instruments": [
+        "waveform"
       ]
     },
     {
@@ -183,6 +190,9 @@
         {
           "label": "ISOLATE SIGNAL"
         }
+      ],
+      "instruments": [
+        "scan-progress"
       ]
     },
     {
@@ -215,11 +225,16 @@
           ]
         }
       ],
-      "actions": []
+      "actions": [],
+      "instruments": [
+        "spectrum"
+      ]
     }
   ],
   "blocks": {
     "prefer": [
+      "instrument-panel",
+      "scope-strip",
       "telemetry",
       "trend-panel",
       "data-log"

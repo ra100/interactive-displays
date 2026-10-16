@@ -116,6 +116,9 @@
             }
           ]
         }
+      ],
+      "instruments": [
+        "shield-status"
       ]
     },
     {
@@ -161,6 +164,9 @@
         {
           "label": "LOCK TARGET"
         }
+      ],
+      "instruments": [
+        "weapons"
       ]
     },
     {
@@ -198,6 +204,9 @@
           "label": "FIRE SPREAD",
           "danger": true
         }
+      ],
+      "instruments": [
+        "target-lock"
       ]
     },
     {
@@ -261,6 +270,8 @@
   ],
   "blocks": {
     "prefer": [
+      "instrument-pair",
+      "instrument-panel",
       "control-panel",
       "hero-gauge",
       "button-column"

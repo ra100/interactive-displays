@@ -79,6 +79,9 @@
       ],
       "notes": [
         "Heuristic routines loaded"
+      ],
+      "instruments": [
+        "spectrum"
       ]
     },
     {
@@ -168,6 +171,9 @@
       "notes": [
         "Company channel encrypted",
         "Distress beacon on standby"
+      ],
+      "instruments": [
+        "waveform"
       ]
     }
   ],
