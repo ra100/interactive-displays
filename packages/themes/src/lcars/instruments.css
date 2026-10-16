@@ -26,7 +26,7 @@
   justify-self: start;
   width: fit-content;
   max-width: 100%;
-  padding: 0.12em 1.2em 0.08em 0.9em;
+  padding: 0.1em 1.2em 0.1em 0.9em;
   border-radius: 999px 0 0 999px;
   background: var(--tone);
   color: var(--theme-bg);
@@ -198,7 +198,7 @@
 }
 
 .screen[data-theme="lcars"] .base-target__status {
-  padding: 0.12em 1em 0.08em;
+  padding: 0.1em 1em;
   border-radius: 0 999px 999px 0;
   background: var(--tone);
   color: var(--theme-bg);

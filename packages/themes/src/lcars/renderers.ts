@@ -8,8 +8,7 @@ import { LcarsConsoleFrame, LcarsDashboardFrame, LcarsHeaderMainFrame, LcarsSide
 import { LcarsPanelFrame } from "./LcarsPanel.tsx";
 import { LcarsText } from "./LcarsText.tsx";
 import { LcarsTitle } from "./LcarsTitle.tsx";
-import "@fontsource/antonio/latin-400.css";
-import "@fontsource/antonio/latin-700.css";
+import "./font.css";
 import "./lcars.css";
 import "./instruments.css";
 

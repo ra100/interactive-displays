@@ -1288,9 +1288,13 @@
 }
 
 .lcars-panel > * {
-  direction: ltr;
   min-width: 0;
   min-height: 0;
+}
+
+/* Chrome keeps the panel's direction so its curves mirror; only the contents read left to right. */
+.lcars-panel > :is(.lcars-panel__title, .lcars-panel__main, .lcars-panel__status) {
+  direction: ltr;
 }
 
 .lcars-panel__corner {
@@ -1429,13 +1433,18 @@
   overflow: hidden;
 }
 
+/* The reference number sits near the foot of the block, centred and above where a rounded end starts to curve,
+   small enough to fit the column. */
 .lcars-panel__code {
   position: absolute;
-  inset-inline-end: calc(0.3 * var(--u));
-  bottom: calc(0.2 * var(--u));
+  inset-inline: 0;
+  bottom: calc(var(--p-radius) * 0.75);
   color: var(--theme-bg);
+  direction: ltr;
   font-family: var(--font-display);
-  font-size: calc(1.1 * var(--u));
+  font-size: min(calc(1 * var(--u)), calc(var(--p-arm) / 4.6));
+  line-height: 1;
+  text-align: center;
   white-space: nowrap;
 }
 
