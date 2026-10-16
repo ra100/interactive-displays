@@ -27,6 +27,19 @@ centimetres (see `docs/deviations/2026-10-16-physical-button-size.md`).
 - [Supergraphic panel design system](https://brycewatson.com/blog/23-supergraphic-panel-design-system):
   asymmetric elbows (equal radii look wrong), half-pill sidebar buttons, condensed all-caps type.
 
+- [lcars.co.uk](https://www.lcars.co.uk) by Craig Hayes: a long-running catalogue of LCARS screens and
+  layouts; dense panels where bars and sweeps divide the screen into many titled sections.
+- [mewho.com](https://www.mewho.com) projects: *Titan.DS* (star chart MAP, stellar cartography, ship line art
+  drawn stroke by stroke, warp injectors and coils, DNA), *Project RITOS* (Lower Decks master systems display,
+  sickbay readouts, warp core, and frames that flow through the page as several bounding shapes, not one
+  border) and *System 47* (sector map, warp speed display, schematics, 3D disc grids).
+- Memory Alpha, *Tactical station* and *Deflector shield*: shields read per facing as percentages, phaser banks
+  and torpedo launchers, target lock with bearing and mark.
+- The *Star Trek: The Next Generation Technical Manual* (Sternbach and Okuda): Conn and Ops panels, heading
+  given as bearing and mark, warp factor scales.
+- [EmptyEpsilon](https://daid.github.io/EmptyEpsilon/): playable helm, weapons and science stations, for which
+  readings a station needs to be usable.
+
 ## Eras
 
 | Era | Where | Look | Here |
@@ -57,8 +70,24 @@ centimetres (see `docs/deviations/2026-10-16-physical-button-size.md`).
 | Readout tags: capped label with number, value beside it | Every era | `readout` widget |
 | Ship cutaway (Okudagram) | Every era | `image` widget with an asset (the demo's ship schematic) |
 | Alert banner | Every era | `alert-banner` widget |
+| Sections inside a frame: a sweep, top or bottom bar, bracket or rails with its own title and tone blocks | TNG Engineering, VOY Astrometrics, Lower Decks (RITOS) | `panel` layout, eight shapes |
+| Oscilloscope traces: sine, carrier, ECG | TNG Sickbay, Science | `waveform` widget |
+| Spectrum analyser bars with peak marks | TNG Science, VOY Astrometrics | `spectrum` widget |
+| Planet scan: globe with grid, scan line and survey sites | TNG Science, VOY Astrometrics | `globe` widget |
+| Scan in progress with percentage and result | Every era | `scan-progress` widget |
+| Shields by facing around a ship outline | TNG and VOY Tactical | `shield-status` widget |
+| Phaser banks and torpedo tubes | TNG Tactical, Defiant | `weapons` widget |
+| Targeting scanner: rings, brackets, lock, bearing and range | TNG Tactical | `target-lock` widget |
+| Heading as bearing and mark, tape or rose | TNG Conn | `heading` widget |
+| Warp factor scale | TNG Conn, Titan.DS | `speed-ladder` widget |
+| Star chart with plotted course and waypoints | VOY Astrometrics, Titan.DS MAP, System 47 | `star-chart` widget |
+| Warp core column pulsing towards the chamber | TNG Engineering, RITOS | `reactor` widget |
 
 ## Not drawn yet
+
+- A keypad for codes and authorisations.
+- Ship line art that draws itself stroke by stroke (Titan.DS), and a DNA helix.
+- Transporter pad and pattern buffer readouts.
 
 - Picard double elbows (two thin parallel sweeps) and the rounded-rectangle Picard panels.
 - Callout elbows (an elbow with a block hanging off its bar).

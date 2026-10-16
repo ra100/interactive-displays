@@ -977,3 +977,56 @@ test.describe("showcase portrait", () => {
     await page.screenshot({ path: out("editor-turned-preview") });
   });
 });
+
+test.describe("showcase instruments", () => {
+  test.skip(phase !== "instruments", "set SHOWCASE=instruments to capture screenshots");
+
+  const K4 = { width: 3840, height: 2160 };
+
+  test.afterEach(async ({ request }) => {
+    expect((await request.put("/api/show/theme", { data: { id: "lcars" } })).ok()).toBe(true);
+    await setState(request, "normal");
+  });
+
+  const onScreen = async (page: Page, request: APIRequestContext, name: string, screen: string) => {
+    expect((await request.put("/api/displays/test", { data: { screen } })).ok()).toBe(true);
+    await page.setViewportSize(K4);
+    await page.goto("/d/test");
+    await expect(page.locator(".screen")).toBeVisible();
+    await settle(page);
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: out(name) });
+  };
+
+  test("weapons, helm and astrometrics in LCARS", async ({ page, request }) => {
+    await onScreen(page, request, "4k-weapons", "weapons-control");
+    await onScreen(page, request, "4k-conn", "conn");
+    await onScreen(page, request, "4k-astrometrics", "astrometrics");
+    await setState(request, "red-alert");
+    await onScreen(page, request, "4k-weapons-red-alert", "weapons-control");
+  });
+
+  test("the same screens in the other looks", async ({ page, request }) => {
+    expect((await request.put("/api/show/theme", { data: { id: "hud" } })).ok()).toBe(true);
+    await onScreen(page, request, "4k-weapons-hud", "weapons-control");
+    await onScreen(page, request, "4k-astrometrics-hud", "astrometrics");
+    expect((await request.put("/api/show/theme", { data: { id: "crt" } })).ok()).toBe(true);
+    await onScreen(page, request, "4k-conn-crt", "conn");
+    await onScreen(page, request, "4k-weapons-crt", "weapons-control");
+  });
+
+  test("the new widgets in the gallery", async ({ page }) => {
+    test.setTimeout(120_000);
+    await page.setViewportSize({ width: 1600, height: 900 });
+    for (const theme of ["lcars", "hud", "crt"]) {
+      await page.goto(`/gallery?theme=${theme}`);
+      await expect(page.locator(".gallery__row").first()).toBeVisible({ timeout: 30_000 });
+      await settle(page);
+      for (const label of ["Shield status", "Weapon banks", "Star chart", "Waveform"]) {
+        const row = page.locator(".gallery__row").filter({ has: page.getByRole("heading", { name: label, exact: true }) });
+        await row.scrollIntoViewIfNeeded();
+        await row.screenshot({ path: out(`gallery-${theme}-${label.toLowerCase().replaceAll(" ", "-")}`) });
+      }
+    }
+  });
+});
