@@ -180,7 +180,7 @@ describe("lcars renderers", () => {
     expect(screen.getByRole("heading", { level: 2, name: "ENGINEERING" })).toBeInTheDocument();
   });
 
-  it("passes elbow proportions to CSS", () => {
+  it("passes elbow proportions to CSS as shares of the box", () => {
     const Elbow = resolveDecorRenderer("lcars", "lcars.elbow");
     if (!Elbow) throw new Error("missing elbow renderer");
     const { container } = render(
@@ -189,7 +189,7 @@ describe("lcars renderers", () => {
 
     const elbow = container.firstElementChild as HTMLElement;
     expect(elbow).toHaveAttribute("data-corner", "br");
-    expect(elbow.style.getPropertyValue("--arm")).toBe("40%");
-    expect(elbow.style.getPropertyValue("--bar")).toBe("20%");
+    expect(elbow.style.getPropertyValue("--arm")).toBe("0.4");
+    expect(elbow.style.getPropertyValue("--bar")).toBe("0.2");
   });
 });
