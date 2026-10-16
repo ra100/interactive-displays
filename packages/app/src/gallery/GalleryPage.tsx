@@ -1,6 +1,6 @@
 import { ARCHETYPE_IDS, ARCHETYPES, EFFECTS, type Effect, SLOTS, type SlotName, type WidgetKind, widgets } from "@interactive-displays/core";
 import { getThemeManifest, themeManifests } from "@interactive-displays/themes/manifest";
-import type { CSSProperties, ReactNode } from "react";
+import { type CSSProperties, type ReactNode, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { SlotProvider } from "../runtime/context.ts";
 import { ScreenView } from "../runtime/ScreenView.tsx";
@@ -72,11 +72,19 @@ export const GalleryPage = () => {
   const effectParam = params.get("effect");
   const effect: Effect = isEffect(effectParam) ? effectParam : "none";
 
+  // Builds on the last params asked for, not this render's: two quick changes in a row must both stick.
+  const latest = useRef(params);
+  const seen = useRef(params.toString());
+  if (params.toString() !== seen.current) {
+    seen.current = params.toString();
+    latest.current = params;
+  }
   const update = (key: string, value: string) => {
-    const next = new URLSearchParams(params);
+    const next = new URLSearchParams(latest.current);
     if (value) next.set(key, value);
     else next.delete(key);
     if (key === "theme") next.delete("variant");
+    latest.current = next;
     setParams(next, { replace: true });
   };
 
