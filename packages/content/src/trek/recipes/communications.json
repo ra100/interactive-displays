@@ -88,6 +88,10 @@
       ],
       "notes": [
         "Relay station 47 acknowledging"
+      ],
+      "instruments": [
+        "waveform",
+        "spectrum"
       ]
     },
     {
@@ -202,6 +206,8 @@
   ],
   "blocks": {
     "prefer": [
+      "scope-strip",
+      "instrument-panel",
       "data-log",
       "trend-panel",
       "button-column"

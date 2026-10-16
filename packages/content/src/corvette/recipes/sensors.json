@@ -78,6 +78,9 @@
       "short": "LIDAR",
       "notes": [
         "Painting sector 4 with lidar"
+      ],
+      "instruments": [
+        "waveform"
       ]
     },
     {
@@ -130,6 +133,9 @@
         {
           "label": "HAIL CONTACT"
         }
+      ],
+      "instruments": [
+        "star-chart"
       ]
     },
     {
@@ -169,11 +175,16 @@
       ],
       "notes": [
         "Thermal bloom filtered"
+      ],
+      "instruments": [
+        "spectrum"
       ]
     }
   ],
   "blocks": {
     "prefer": [
+      "instrument-panel",
+      "scope-strip",
       "trend-panel",
       "telemetry",
       "status-board"

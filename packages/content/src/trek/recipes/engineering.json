@@ -123,6 +123,9 @@
         "Dilithium matrix at 97% efficiency",
         "Antimatter injectors synchronised",
         "Magnetic constriction segments aligned"
+      ],
+      "instruments": [
+        "reactor"
       ]
     },
     {
@@ -175,6 +178,9 @@
       ],
       "notes": [
         "Secondary conduits on standby"
+      ],
+      "instruments": [
+        "waveform"
       ]
     },
     {
@@ -278,6 +284,8 @@
   ],
   "blocks": {
     "prefer": [
+      "instrument-panel",
+      "panel-gauges",
       "hero-gauge",
       "control-panel",
       "gauge-bank"

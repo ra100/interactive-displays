@@ -104,6 +104,9 @@
       "notes": [
         "Magnetic confinement holding",
         "Fuel pellet feed nominal"
+      ],
+      "instruments": [
+        "reactor"
       ]
     },
     {
@@ -229,6 +232,7 @@
   ],
   "blocks": {
     "prefer": [
+      "instrument-panel",
       "hero-gauge",
       "gauge-bank",
       "control-panel"

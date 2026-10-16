@@ -98,6 +98,9 @@
       "short": "REACTOR",
       "notes": [
         "Magnetic bottle holding"
+      ],
+      "instruments": [
+        "reactor"
       ]
     },
     {
@@ -203,6 +206,8 @@
   ],
   "blocks": {
     "prefer": [
+      "instrument-panel",
+      "panel-gauges",
       "hero-gauge",
       "gauge-bank",
       "control-panel"

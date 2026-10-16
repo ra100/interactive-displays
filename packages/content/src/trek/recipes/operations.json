@@ -143,6 +143,9 @@
           "label": "ABORT",
           "danger": true
         }
+      ],
+      "instruments": [
+        "scan-progress"
       ]
     },
     {

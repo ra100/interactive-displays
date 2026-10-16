@@ -82,6 +82,9 @@
       ],
       "notes": [
         "Gyros aligned to ecliptic"
+      ],
+      "instruments": [
+        "heading"
       ]
     },
     {
@@ -210,11 +213,16 @@
           ]
         }
       ],
-      "short": "VECTOR"
+      "short": "VECTOR",
+      "instruments": [
+        "star-chart"
+      ]
     }
   ],
   "blocks": {
     "prefer": [
+      "instrument-pair",
+      "instrument-panel",
       "telemetry",
       "hero-gauge",
       "readout-column"

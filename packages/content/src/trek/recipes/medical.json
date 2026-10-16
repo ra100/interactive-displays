@@ -110,6 +110,9 @@
       ],
       "notes": [
         "Synaptic patterns within normal parameters"
+      ],
+      "instruments": [
+        "waveform"
       ]
     },
     {
@@ -146,6 +149,9 @@
           "label": "STASIS",
           "danger": true
         }
+      ],
+      "instruments": [
+        "scan-progress"
       ]
     },
     {
@@ -198,6 +204,8 @@
   ],
   "blocks": {
     "prefer": [
+      "instrument-panel",
+      "scope-strip",
       "trend-panel",
       "readout-column",
       "status-board"

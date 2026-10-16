@@ -97,6 +97,9 @@
       "short": "PDC",
       "notes": [
         "All four turrets on line"
+      ],
+      "instruments": [
+        "weapons"
       ]
     },
     {
@@ -150,6 +153,9 @@
             }
           ]
         }
+      ],
+      "instruments": [
+        "target-lock"
       ]
     },
     {
@@ -195,11 +201,16 @@
       ],
       "notes": [
         "Stealth coating intact"
+      ],
+      "instruments": [
+        "spectrum"
       ]
     }
   ],
   "blocks": {
     "prefer": [
+      "instrument-pair",
+      "instrument-panel",
       "control-panel",
       "status-board",
       "gauge-bank"
