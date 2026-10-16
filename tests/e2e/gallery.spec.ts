@@ -5,7 +5,7 @@ test.describe("gallery", () => {
     await page.goto("/gallery");
 
     await expect(page.getByRole("heading", { name: "Gallery" })).toBeVisible();
-    await expect(page.locator(".frame")).toHaveCount(5);
+    await expect(page.locator(".frame")).toHaveCount(6);
     await expect(page.locator(".decor-slot")).toHaveCount(6);
     await expect(page.locator(".widget-fallback")).toHaveCount(0);
   });
