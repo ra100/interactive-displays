@@ -29,7 +29,7 @@
           "type": "widget",
           "kind": "title",
           "props": {
-            "text": "Ship schematic",
+            "text": "Master systems display",
             "code": "07-3254"
           }
         }
@@ -37,13 +37,209 @@
       {
         "slot": "main",
         "node": {
-          "id": "schematic",
-          "type": "widget",
-          "kind": "image",
-          "props": {
-            "asset": "schematic.svg",
-            "alt": "Dorsal schematic of the ship"
-          }
+          "id": "msd",
+          "type": "container",
+          "layout": {
+            "kind": "stack",
+            "direction": "column",
+            "gap": "medium"
+          },
+          "children": [
+            {
+              "weight": 3,
+              "node": {
+                "id": "msd-profile",
+                "type": "container",
+                "layout": {
+                  "kind": "frame",
+                  "archetype": "panel",
+                  "variant": "sweep"
+                },
+                "children": [
+                  {
+                    "slot": "title",
+                    "node": {
+                      "id": "msd-profile-title",
+                      "type": "widget",
+                      "kind": "title",
+                      "props": {
+                        "text": "Power distribution",
+                        "tone": "primary"
+                      }
+                    }
+                  },
+                  {
+                    "slot": "main",
+                    "node": {
+                      "id": "msd-side",
+                      "type": "widget",
+                      "kind": "ship-schematic",
+                      "props": {
+                        "label": "U.S.S. Minas Tirith",
+                        "view": "side",
+                        "mode": "engineering",
+                        "tone": "info"
+                      },
+                      "bind": {
+                        "power": {
+                          "signal": "warp.output"
+                        }
+                      },
+                      "when": [
+                        {
+                          "state": "damaged",
+                          "props": {
+                            "mode": "damage",
+                            "damaged": [
+                              "nacelles",
+                              "impulse"
+                            ],
+                            "offline": [
+                              "shuttlebay"
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "weight": 2,
+              "node": {
+                "id": "msd-lower",
+                "type": "container",
+                "layout": {
+                  "kind": "stack",
+                  "direction": "row",
+                  "gap": "medium"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "msd-dorsal",
+                      "type": "container",
+                      "layout": {
+                        "kind": "frame",
+                        "archetype": "panel",
+                        "variant": "sweep-right"
+                      },
+                      "children": [
+                        {
+                          "slot": "title",
+                          "node": {
+                            "id": "msd-dorsal-title",
+                            "type": "widget",
+                            "kind": "title",
+                            "props": {
+                              "text": "Tactical",
+                              "tone": "info"
+                            }
+                          }
+                        },
+                        {
+                          "slot": "main",
+                          "node": {
+                            "id": "msd-top",
+                            "type": "widget",
+                            "kind": "ship-schematic",
+                            "props": {
+                              "label": "Shield grid",
+                              "view": "top",
+                              "mode": "tactical",
+                              "tone": "info"
+                            },
+                            "bind": {
+                              "shields": {
+                                "signal": "shields"
+                              }
+                            },
+                            "when": [
+                              {
+                                "state": "red-alert",
+                                "props": {
+                                  "armed": true
+                                }
+                              },
+                              {
+                                "state": "damaged",
+                                "props": {
+                                  "mode": "damage",
+                                  "damaged": [
+                                    "nacelles",
+                                    "impulse"
+                                  ],
+                                  "offline": [
+                                    "shuttlebay"
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "node": {
+                      "id": "msd-forward",
+                      "type": "container",
+                      "layout": {
+                        "kind": "frame",
+                        "archetype": "panel",
+                        "variant": "bracket"
+                      },
+                      "children": [
+                        {
+                          "slot": "title",
+                          "node": {
+                            "id": "msd-forward-title",
+                            "type": "widget",
+                            "kind": "title",
+                            "props": {
+                              "text": "Sensors",
+                              "tone": "secondary"
+                            }
+                          }
+                        },
+                        {
+                          "slot": "main",
+                          "node": {
+                            "id": "msd-front",
+                            "type": "widget",
+                            "kind": "ship-schematic",
+                            "props": {
+                              "label": "Navigational deflector",
+                              "view": "front",
+                              "highlight": [
+                                "deflector"
+                              ],
+                              "tone": "info"
+                            },
+                            "when": [
+                              {
+                                "state": "damaged",
+                                "props": {
+                                  "mode": "damage",
+                                  "damaged": [
+                                    "nacelles"
+                                  ],
+                                  "offline": [
+                                    "deflector"
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
         }
       },
       {
@@ -57,6 +253,35 @@
             "gap": "small"
           },
           "children": [
+            {
+              "weight": 3,
+              "node": {
+                "id": "msd-turn",
+                "type": "widget",
+                "kind": "ship-schematic",
+                "props": {
+                  "label": "Norway class",
+                  "view": "turn",
+                  "labels": false,
+                  "highlight": [
+                    "bridge"
+                  ],
+                  "tone": "secondary"
+                },
+                "when": [
+                  {
+                    "state": "damaged",
+                    "props": {
+                      "mode": "damage",
+                      "damaged": [
+                        "nacelles",
+                        "impulse"
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
             {
               "node": {
                 "id": "readouts-title",
@@ -133,9 +358,25 @@
           "type": "widget",
           "kind": "text",
           "props": {
-            "text": "DORSAL VIEW \u00b7 ALL SECTIONS REPORTING",
+            "text": "ALL SECTIONS REPORTING · CORE POWER NOMINAL",
             "size": "small"
-          }
+          },
+          "when": [
+            {
+              "state": "red-alert",
+              "props": {
+                "text": "RED ALERT · WEAPONS HOT · SHIELDS TO TACTICAL",
+                "tone": "danger"
+              }
+            },
+            {
+              "state": "damaged",
+              "props": {
+                "text": "HULL BREACH · NACELLES AND IMPULSE DAMAGED · SHUTTLEBAY SEALED",
+                "tone": "danger"
+              }
+            }
+          ]
         }
       }
     ]

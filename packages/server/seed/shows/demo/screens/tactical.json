@@ -60,69 +60,120 @@
             {
               "weight": 4,
               "node": {
-                "id": "weapons-grid",
+                "id": "weapons-row",
                 "type": "container",
                 "layout": {
-                  "kind": "grid",
-                  "columns": [
-                    "1fr",
-                    "1fr"
-                  ],
-                  "rows": [
-                    "1fr",
-                    "1fr"
-                  ],
+                  "kind": "stack",
+                  "direction": "row",
                   "gap": "medium"
                 },
                 "children": [
                   {
+                    "weight": 2,
                     "node": {
-                      "id": "w-phasers",
-                      "type": "widget",
-                      "kind": "button",
-                      "props": {
-                        "label": "Phasers",
-                        "tone": "primary"
-                      }
-                    }
-                  },
-                  {
-                    "node": {
-                      "id": "w-torpedoes",
-                      "type": "widget",
-                      "kind": "button",
-                      "props": {
-                        "label": "Photon torpedoes",
-                        "tone": "danger"
-                      }
-                    }
-                  },
-                  {
-                    "node": {
-                      "id": "w-lock",
-                      "type": "widget",
-                      "kind": "button",
-                      "props": {
-                        "label": "Target lock",
-                        "tone": "warning"
+                      "id": "weapons-grid",
+                      "type": "container",
+                      "layout": {
+                        "kind": "grid",
+                        "columns": [
+                          "1fr",
+                          "1fr"
+                        ],
+                        "rows": [
+                          "1fr",
+                          "1fr"
+                        ],
+                        "gap": "medium"
                       },
-                      "actions": [
+                      "children": [
                         {
-                          "do": "sound",
-                          "sound": "confirm"
+                          "node": {
+                            "id": "w-phasers",
+                            "type": "widget",
+                            "kind": "button",
+                            "props": {
+                              "label": "Phasers",
+                              "tone": "primary"
+                            }
+                          }
+                        },
+                        {
+                          "node": {
+                            "id": "w-torpedoes",
+                            "type": "widget",
+                            "kind": "button",
+                            "props": {
+                              "label": "Photon torpedoes",
+                              "tone": "danger"
+                            }
+                          }
+                        },
+                        {
+                          "node": {
+                            "id": "w-lock",
+                            "type": "widget",
+                            "kind": "button",
+                            "props": {
+                              "label": "Target lock",
+                              "tone": "warning"
+                            },
+                            "actions": [
+                              {
+                                "do": "sound",
+                                "sound": "confirm"
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "node": {
+                            "id": "w-evasive",
+                            "type": "widget",
+                            "kind": "button",
+                            "props": {
+                              "label": "Evasive pattern",
+                              "tone": "info"
+                            }
+                          }
                         }
                       ]
                     }
                   },
                   {
+                    "weight": 3,
                     "node": {
-                      "id": "w-evasive",
+                      "id": "tac-ship",
                       "type": "widget",
-                      "kind": "button",
+                      "kind": "ship-schematic",
                       "props": {
-                        "label": "Evasive pattern",
+                        "label": "Tactical plot",
+                        "view": "top",
+                        "mode": "tactical",
                         "tone": "info"
-                      }
+                      },
+                      "bind": {
+                        "shields": {
+                          "signal": "shields"
+                        }
+                      },
+                      "when": [
+                        {
+                          "state": "red-alert",
+                          "props": {
+                            "armed": true
+                          }
+                        },
+                        {
+                          "state": "damaged",
+                          "props": {
+                            "mode": "damage",
+                            "damaged": [
+                              "phasers",
+                              "nacelles"
+                            ]
+                          }
+                        }
+                      ]
                     }
                   }
                 ]
@@ -304,7 +355,7 @@
           "type": "widget",
           "kind": "text",
           "props": {
-            "text": "NO CONTACTS \u00b7 LONG RANGE SENSORS CLEAR",
+            "text": "NO CONTACTS · LONG RANGE SENSORS CLEAR",
             "size": "small",
             "tone": "secondary"
           },
@@ -312,21 +363,21 @@
             {
               "state": "yellow-alert",
               "props": {
-                "text": "YELLOW ALERT \u00b7 SHIELDS UP \u00b7 ALL DECKS STAND BY",
+                "text": "YELLOW ALERT · SHIELDS UP · ALL DECKS STAND BY",
                 "tone": "warning"
               }
             },
             {
               "state": "red-alert",
               "props": {
-                "text": "RED ALERT \u00b7 ALL HANDS TO BATTLE STATIONS",
+                "text": "RED ALERT · ALL HANDS TO BATTLE STATIONS",
                 "tone": "danger"
               }
             },
             {
               "state": "damaged",
               "props": {
-                "text": "HULL BREACH DECK 12 \u00b7 DAMAGE CONTROL TEAMS REPORT",
+                "text": "HULL BREACH DECK 12 · DAMAGE CONTROL TEAMS REPORT",
                 "tone": "danger"
               }
             }
