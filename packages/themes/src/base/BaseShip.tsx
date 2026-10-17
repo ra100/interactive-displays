@@ -287,8 +287,7 @@ const TurnShip = ({ ship, props, fit, now }: ViewProps & { now: number }) => {
 export const BaseShipSchematic = ({ props }: WidgetRendererProps<ShipProps>) => {
   const ship = ships[props.ship];
   const still = useStill();
-  const turning = props.view === "turn";
-  const now = useNow(turning && !still ? 50 : null);
+  const now = useNow(props.view === "turn" && !still ? 50 : null);
   const { area, head, fit } = useFit();
   const style = { "--ship-flow": `${flowSeconds(props.power)}s` } as CSSProperties;
   return (
@@ -306,7 +305,7 @@ export const BaseShipSchematic = ({ props }: WidgetRendererProps<ShipProps>) => 
         <span className="base-ship__view">{VIEW_NAMES[props.view]}</span>
       </div>
       <div className="base-ship__area" ref={area}>
-        {turning ? (
+        {props.view === "turn" ? (
           <TurnShip ship={ship} props={props} fit={fit} now={still ? 0 : now} />
         ) : (
           <FlatShip ship={ship} view={props.view} props={props} fit={fit} still={still} />
