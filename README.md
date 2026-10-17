@@ -110,3 +110,10 @@ Architecture, conventions and how to add widgets or themes: [AGENTS.md](AGENTS.m
 ## Releases
 
 Pushing a tag like `v0.1.0` publishes `ghcr.io/ra100/interactive-displays` for amd64 and arm64.
+
+## License
+
+[PolyForm Noncommercial 1.0.0](LICENSE.md) (see [NOTICE](NOTICE)): free to use, change and share for any
+noncommercial purpose, including personal projects, fan films, study, and schools, charities or public bodies.
+Commercial use needs a separate license from the author. Star Trek and LCARS are trademarks of CBS Studios and
+are not covered by this license; this project is not affiliated with or endorsed by them.
