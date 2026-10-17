@@ -6,6 +6,44 @@ Docker smoke test); these steps are for a person with real displays.
 Report problems or ideas as a GitHub issue (label `v2`) or in the project thread, with the display type,
 browser, the URL you opened and a photo or screenshot if possible.
 
+## Scripted interactions between displays
+
+### Setup
+
+Start the server on a fresh data directory (or copy `tactical.json` from
+`packages/server/seed/shows/demo/screens/`). Open `/d/tactical-1`, `/d/viewscreen-1` and `/d/engineering-1`,
+ideally on three real panels, and `/operator`. Turn sounds on in the operator's Look section to hear them.
+
+### Checks
+
+1. **The demo beat.** On Tactical press **Photon torpedoes**. Tactical beeps; the viewscreen's **Replay** button
+   flashes and the sensor feed starts again from the top; 1.5 seconds later Engineering sounds the alert and moves
+   to the master systems display. Its Back button returns it to Main engineering.
+2. **Editor.** Open Tactical in the editor and select Photon torpedoes. Each action shows **Runs on** and **Wait
+   (seconds)**. Change the trigger's displays and screens: the summary line under Runs on follows. The Control list
+   offers only controls that do something on the screens it reaches.
+3. **Build your own.** On the bridge screen give **Sensor sweep** a Play a sound action that runs on **Every other
+   display**, and a Go to screen (Ship schematic) for **Displays and screens I choose** → Tactical 1 with a wait of
+   2. Publish, press it on `/d/test`: every other display beeps, and Tactical moves two seconds later.
+4. **Use a control elsewhere.** Add **Use a control on another display** to a button and pick a control on another
+   screen (for example Engineering's Core eject). Pressing it flashes Core eject on Engineering and puts the show
+   in the damaged state.
+5. **Display buttons off.** In the operator console switch off display buttons. Actions that reach other displays
+   do nothing; navigating this display still works. Switch them back on.
+6. **Dropped beats.** Give an action a wait of 30, press it, then press **Back to top** in the operator's cues:
+   the delayed action never runs.
+7. **Loops.** Make two controls on two displays trigger each other: pressing one flashes each a few times and
+   stops.
+
+### Known limitations
+
+- Delayed actions are kept in memory: a server restart drops any that have not run, and the operator console does
+  not list them yet.
+- The editor's Control and Video lists come from the screens the chosen displays show now; a display that will be
+  on another screen later can be targeted by screen instead.
+- A trigger presses a control without a value, so a slider or toggle reached this way runs only actions that set a
+  fixed value.
+
 ## Ship schematic
 
 ### Setup

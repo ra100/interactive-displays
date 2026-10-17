@@ -18,6 +18,49 @@ The recording (`tests/e2e/video.spec.ts`) runs its own server, drives the app th
 (`tests/e2e/support/director.html`: the app in a frame, a live display picture-in-picture, captions and fades) and
 encodes Chrome's screencast frames at their real times into a 30 fps H.264 video.
 
+## Scripted interactions between displays
+
+A control on one display can now act on others. Navigate, back, video and sound actions say **where they run**:
+this display (as before), every other display, every display, or the displays and screens chosen ("any display
+showing Viewscreen"). A new **Use a control on another display** action presses a control over there: it flashes
+as if touched and runs its own actions on that display, so a button can set off a whole beat across the set.
+Any action can **wait** a number of seconds first, so the beat plays out: tap here, and a moment later the other
+screen reacts. `SHOWCASE=interactions pnpm test:e2e showcase` captures these.
+
+**One button, three displays.** The demo's **Photon torpedoes** button on Tactical confirms with a beep, uses
+the viewscreen's own **Replay** button (it flashes and the sensor feed starts again), and 1.5 seconds later sounds
+the alert on every display showing Main engineering and takes them to the master systems display.
+
+| Tactical: Photon torpedoes | Engineering before |
+|---|---|
+| ![Tactical with the Photon torpedoes button](interactions/1-tactical-before.png) | ![Main engineering before the beat](interactions/2-engineering-before.png) |
+
+| Viewscreen: Replay used from Tactical | Engineering 1.5 s later |
+|---|---|
+| ![The viewscreen's Replay button flashing](interactions/3-viewscreen-replayed.png) | ![Engineering moved to the master systems display](interactions/4-engineering-damage-view.png) |
+
+**In the editor.** Each action has **Runs on** and **Wait (seconds)**. Choosing displays and screens shows them
+as checklists with a one-line summary; a trigger lists the controls with actions on the screens it reaches.
+
+| The trigger | The delayed actions |
+|---|---|
+| ![Editor: Use a control on another display](interactions/editor-torpedoes.png) | ![Editor: delayed navigate on chosen screens](interactions/editor-delayed.png) |
+
+### Under the hood
+
+- Actions gain `on` (`self`, `others`, `all` or `{ displays, screens }`) on navigate, back, video, sound and the
+  new `trigger { target, on }`, and `after` (0–600 s) on every action. Old screens are unchanged: no `on` means
+  this display, no `after` means at once.
+- The display still plays its own undelayed sounds and videos; everything else goes to the server in the same
+  `press`. The server works out the target displays, navigates them, sends `sound` and `video` to them, and for a
+  trigger sends `trigger { nodeId }` (the display flashes the control and runs its local actions) and runs the
+  control's other actions as if pressed there. Protocol version 5.
+- Reaching another display counts as show-wide, so the operator's display-buttons switch stops it. Triggers nest
+  three deep, so two controls that trigger each other stop. Delayed actions live in the server's memory (at most
+  64 waiting) and are dropped when the cues go back to the top or the server stops.
+- Lint checks what one screen can: screens named in `on` exist, and a trigger on this display names a control
+  here. MCP clients get the same actions; the guide explains them.
+
 ## Ship schematic: the Norway class from its model
 
 A new **ship schematic** element draws a real ship, traced from the Norway class Blender model: from above,
