@@ -20,7 +20,8 @@
     .base-ladder__label,
     .base-chart__label,
     .base-reactor__label,
-    .base-scan__label
+    .base-scan__label,
+    .base-ship__label
   ) {
   align-self: start;
   justify-self: start;
@@ -241,4 +242,36 @@
 
 .screen[data-theme="lcars"] .base-globe__rim {
   stroke-width: 3;
+}
+
+/* Ship schematic: an Okudagram master systems display. The name is a tag, readouts are pills, the hull a fine
+   line over a dark fill, and labels hang off square leaders. */
+.screen[data-theme="lcars"] .base-ship__label {
+  flex: 0 1 auto;
+}
+
+.screen[data-theme="lcars"] .base-ship__view {
+  color: var(--tone-secondary);
+  opacity: 1;
+}
+
+.screen[data-theme="lcars"] .base-ship__readout {
+  padding: 0 0.7em;
+  border-radius: 999px;
+  background: var(--tone);
+  color: var(--theme-bg);
+}
+
+.screen[data-theme="lcars"] .base-ship__hull {
+  fill: color-mix(in srgb, var(--tone) 14%, var(--theme-bg));
+}
+
+.screen[data-theme="lcars"] .base-ship__leader {
+  stroke-linecap: square;
+  opacity: 1;
+}
+
+.screen[data-theme="lcars"] .base-ship__shield {
+  stroke-width: calc(0.4 * var(--u));
+  stroke-dasharray: calc(3 * var(--u)) calc(0.6 * var(--u));
 }
