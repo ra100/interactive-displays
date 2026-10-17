@@ -7,7 +7,7 @@ import type { Panel, Show, StateDef } from "../schema/show.ts";
 import type { SignalDef, SignalValue } from "../schema/signal.ts";
 
 // Bumped on any breaking change to events or payloads; a display reloads when the server's differs.
-export const PROTOCOL_VERSION = 4;
+export const PROTOCOL_VERSION = 5;
 
 const ProtocolSchema = z.number().int();
 const TokenSchema = z.string().min(1).max(200).optional();
@@ -159,6 +159,11 @@ export interface ServerToClientEvents {
   signals: (update: { values: SignalValues }) => void;
   // From the operator: play, pause or restart a video widget on this display.
   video: (command: { target: string; command: VideoCommand }) => void;
+  // From a control on another display (or a delayed one here): play a theme sound.
+  sound: (command: { sound: string }) => void;
+  // A control on another display used this display's control `nodeId`: flash it and run its sounds and videos;
+  // the server has run the rest of its actions.
+  trigger: (command: { nodeId: string }) => void;
   error: (error: ProtocolError) => void;
 }
 

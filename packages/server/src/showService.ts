@@ -1,5 +1,7 @@
 import {
   type Action,
+  type ActionTarget,
+  actionTarget,
   applyOps,
   catalog,
   type DecorCatalog,
@@ -32,6 +34,8 @@ import {
   type Cue,
   CueListSchema,
   nextCue,
+  isRemoteAction,
+  type WidgetNode,
 } from "@interactive-displays/core";
 import { themeManifests } from "@interactive-displays/themes/manifest";
 import type { FastifyBaseLogger } from "fastify";
@@ -71,7 +75,11 @@ export type ShowEvent =
   | { type: "cue"; cueId: string | null }
   // Shared signal values changed; only the changed ones.
   | { type: "signals"; values: SignalValues }
-  | { type: "video"; displayId: string; target: string; command: VideoCommand };
+  | { type: "video"; displayId: string; target: string; command: VideoCommand }
+  // A control elsewhere (or a delayed action) plays a theme sound on this display.
+  | { type: "sound"; displayId: string; sound: string }
+  // A control elsewhere used this display's control: it flashes and plays its own sounds and videos.
+  | { type: "trigger"; displayId: string; nodeId: string };
 
 export type Failure = {
   ok: false;
@@ -99,6 +107,12 @@ const noScreen = (screenId: string): Failure => ({
   status: 404,
   message: `Screen "${screenId}" does not exist`,
 });
+
+// How deep one control can set off another (a trigger of a trigger of a trigger), so two controls that trigger
+// each other cannot loop forever.
+const MAX_TRIGGER_DEPTH = 3;
+// Delayed actions waiting to run at once; more are dropped, so a runaway script cannot pile up timers.
+const MAX_SCHEDULED = 64;
 
 // Runtime state that changes often (displays seen, a slider dragged) is written at most this often.
 const RUNTIME_WRITE_DELAY_MS = 2000;
@@ -146,6 +160,8 @@ export const createShowService = ({
   // displayId -> screens a control on it navigated to, oldest first. In memory too: a restart sends displays home.
   const navigation = new Map<string, string[]>();
   const signals = createSignals(loaded?.runtime.signals ?? {});
+  // Actions waiting for their `after`.
+  const scheduled = new Set<NodeJS.Timeout>();
   let lastCue: string | null = loaded?.runtime.cue ?? null;
 
   const persistRuntime = async (current: LoadedShow) => {
@@ -284,6 +300,117 @@ export const createShowService = ({
     await persistRuntime(current);
     emit({ type: "cue", cueId: cue.id });
     return { ok: true, value: { cue: cue.id, skipped } };
+  };
+
+  // Every display the show knows: named in the show or seen since.
+  const knownDisplays = (current: LoadedShow): string[] => [
+    ...new Set([...current.show.displays.map((display) => display.id), ...Object.keys(current.runtime.seen)]),
+  ];
+
+  // The displays an action runs on, for a control used on `displayId`.
+  const targetsOf = (current: LoadedShow, displayId: string, target: ActionTarget): string[] => {
+    if (target === "self") return [displayId];
+    const known = knownDisplays(current);
+    if (target === "all") return [...new Set([displayId, ...known])];
+    if (target === "others") return known.filter((id) => id !== displayId);
+    const named = target.displays ?? [];
+    const screens = target.screens ?? [];
+    const showing = known.filter((id) => {
+      const shown = screenFor(current, id).screen?.id;
+      return shown !== undefined && screens.includes(shown);
+    });
+    return [...new Set([...named, ...showing])];
+  };
+
+  const cancelScheduled = (): void => {
+    for (const timer of scheduled) clearTimeout(timer);
+    scheduled.clear();
+  };
+
+  // Runs one action of a control used on `displayId`, on every display it names. The display that was touched
+  // has already played its own undelayed sounds and videos. `depth` counts triggers that led here.
+  const runAction = async (current: LoadedShow, displayId: string, action: Action, value: number | undefined, depth: number): Promise<boolean> => {
+    const global = current.show.settings.displayGlobalActions;
+    const targets = targetsOf(current, displayId, actionTarget(action));
+    // Changing other displays is show-wide, like the show state.
+    if (!global && targets.some((id) => id !== displayId)) return false;
+    let ran = false;
+    switch (action.do) {
+      case "navigate":
+        for (const id of targets) if (!previews.has(id) && navigate(current, id, action.screen)) ran = true;
+        return ran;
+      case "back":
+        for (const id of targets) if (!previews.has(id) && back(id)) ran = true;
+        return ran;
+      case "setState":
+        return global && (await stateFromDisplay(action.state)).ok;
+      case "cue":
+        return global && (await serialize(() => runCue(action.cue))).ok;
+      case "setSignal": {
+        if (!global) return false;
+        // A fixed value or delta from the action, or else the control's own value.
+        const fixed = action.value ?? (action.delta === undefined ? value : undefined);
+        const change = action.delta === undefined ? (fixed === undefined ? undefined : { value: fixed }) : { delta: action.delta };
+        return change !== undefined && setSignal(action.signal, change).ok;
+      }
+      case "sound":
+        if (!isRemoteAction(action)) return false;
+        for (const id of targets) emit({ type: "sound", displayId: id, sound: action.sound });
+        return targets.length > 0;
+      case "video":
+        if (!isRemoteAction(action)) return false;
+        for (const id of targets) {
+          if (!videoIds(screenFor(current, id).screen).includes(action.target)) continue;
+          emit({ type: "video", displayId: id, target: action.target, command: action.command });
+          ran = true;
+        }
+        return ran;
+      case "trigger":
+        if (depth >= MAX_TRIGGER_DEPTH) return false;
+        for (const id of targets) {
+          const shown = screenFor(current, id).screen;
+          const node = shown ? pressTarget(shown, action.target, state) : undefined;
+          if (!node) continue;
+          // The display flashes it and plays its sounds and videos; the server runs the rest.
+          emit({ type: "trigger", displayId: id, nodeId: node.id });
+          await runActions(current, id, node, {}, depth + 1);
+          ran = true;
+        }
+        return ran;
+    }
+  };
+
+  // Runs the actions of a control used on a display, in order; delayed ones are scheduled. Returns what ran or
+  // was scheduled. While a control is `moving` only its shared values follow it.
+  const runActions = async (
+    current: LoadedShow,
+    displayId: string,
+    node: WidgetNode,
+    input: { value?: number | undefined; moving?: boolean | undefined },
+    depth: number,
+  ): Promise<Action["do"][]> => {
+    const ran: Action["do"][] = [];
+    for (const action of node.actions ?? []) {
+      if (input.moving && (action.do !== "setSignal" || action.after)) continue;
+      if (action.after) {
+        if (scheduled.size >= MAX_SCHEDULED) {
+          log.warn({ displayId, nodeId: node.id }, "Too many delayed actions waiting; dropped one");
+          continue;
+        }
+        const timer = setTimeout(() => {
+          scheduled.delete(timer);
+          runAction(current, displayId, action, input.value, depth).catch((error: unknown) =>
+            log.warn({ err: error }, "A delayed action failed"),
+          );
+        }, action.after * 1000);
+        timer.unref();
+        scheduled.add(timer);
+        ran.push(action.do);
+        continue;
+      }
+      if (await runAction(current, displayId, action, input.value, depth)) ran.push(action.do);
+    }
+    return ran;
   };
 
   const publishDraft = async (current: LoadedShow, draft: Screen): Promise<Screen> => {
@@ -598,10 +725,11 @@ export const createShowService = ({
         return runCue(cue.id);
       }),
 
-    // Back to the top of the running order; nothing on the displays changes.
+    // Back to the top of the running order; nothing on the displays changes, and delayed actions are dropped.
     resetCues: (): Promise<CommandResult<null>> =>
       serialize(async () => {
         if (!loaded) return NO_SHOW;
+        cancelScheduled();
         lastCue = null;
         await persistRuntime(loaded);
         emit({ type: "cue", cueId: null });
@@ -647,25 +775,16 @@ export const createShowService = ({
     // change them. The display plays its own sounds and videos. Returns what ran.
     press: async (displayId: string, input: Press): Promise<Action["do"][]> => {
       if (!loaded) return [];
-      const { screen, preview } = screenFor(loaded, displayId);
+      const { screen } = screenFor(loaded, displayId);
       const node = screen ? pressTarget(screen, input.nodeId, state) : undefined;
-      const ran: Action["do"][] = [];
-      const global = loaded.show.settings.displayGlobalActions;
-      for (const action of node?.actions ?? []) {
-        if (input.moving && action.do !== "setSignal") continue;
-        if (action.do === "navigate" && !preview && navigate(loaded, displayId, action.screen)) ran.push(action.do);
-        if (action.do === "back" && !preview && back(displayId)) ran.push(action.do);
-        if (action.do === "setState" && global && (await stateFromDisplay(action.state)).ok) ran.push(action.do);
-        if (action.do === "cue" && global && (await serialize(() => runCue(action.cue))).ok) ran.push(action.do);
-        if (action.do === "setSignal" && global) {
-          // A fixed value or delta from the action, or else the control's own value.
-          const value = action.value ?? (action.delta === undefined ? input.value : undefined);
-          const change = action.delta === undefined ? (value === undefined ? undefined : { value }) : { delta: action.delta };
-          if (change && setSignal(action.signal, change).ok) ran.push(action.do);
-        }
-      }
-      return ran;
+      return node ? runActions(loaded, displayId, node, input, 0) : [];
     },
+
+    // Delayed actions still waiting to run.
+    scheduled: (): number => scheduled.size,
+
+    // Drops every delayed action that has not run yet.
+    cancelScheduled,
 
     // Plays, pauses or restarts a video widget on the screen a display shows.
     video: (displayId: string, target: string, command: VideoCommand): CommandResult<string> => {
@@ -782,6 +901,7 @@ export const createShowService = ({
     },
 
     flush: async (): Promise<void> => {
+      cancelScheduled();
       if (runtimeTimer) clearTimeout(runtimeTimer);
       runtimeTimer = undefined;
       if (loaded) await persistRuntime(loaded);

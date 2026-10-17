@@ -1,5 +1,6 @@
 import {
   type Action,
+  actionTarget,
   type AmbientSource,
   type Binding,
   type Bindings,
@@ -14,6 +15,7 @@ import {
 } from "@interactive-displays/core";
 import { themeSoundIds } from "@interactive-displays/themes/manifest";
 import { useState } from "react";
+import { AfterField, isTargeted, TargetFields, TriggerFields, triggerOptions, useTargetScreens, videoOptions } from "./ActionTarget.tsx";
 import { useEditor } from "./EditorContext.ts";
 import { NumberBox, Section } from "./inspectorParts.tsx";
 
@@ -154,6 +156,7 @@ const ACTION_LABELS: Record<Action["do"], string> = {
   cue: "Run a cue",
   video: "Control a video",
   sound: "Play a sound",
+  trigger: "Use a control on another display",
 };
 
 const ACTION_KINDS = Object.keys(ACTION_LABELS) as Action["do"][];
@@ -199,9 +202,35 @@ const ActionFields = ({
   action: Action;
   onChange: (action: Action) => void;
 }) => {
+  const { overview } = useEditor();
+  return (
+    <>
+      <ActionDetails node={node} action={action} onChange={onChange} />
+      {isTargeted(action) ? <TargetFields action={action} onChange={onChange} /> : null}
+      <AfterField action={action} onChange={onChange} />
+      {actionTarget(action) !== "self" && overview.displays.length === 0 ? (
+        <p className="panel-note">No displays have connected yet, so there is nowhere else for it to run.</p>
+      ) : null}
+    </>
+  );
+};
+
+const ActionDetails = ({
+  node,
+  action,
+  onChange,
+}: {
+  node: WidgetNode;
+  action: Action;
+  onChange: (action: Action) => void;
+}) => {
   const { overview, screen } = useEditor();
   const show = overview.show;
+  // The screens the action reaches, for the videos on them.
+  const reached = useTargetScreens(actionTarget(action));
   switch (action.do) {
+    case "trigger":
+      return <TriggerFields action={action} onChange={onChange} nodeId={node.id} />;
     case "back":
       return <p className="panel-note">Returns to the screen the display showed before.</p>;
     case "navigate":
@@ -274,7 +303,7 @@ const ActionFields = ({
           <Select
             label="Video"
             value={action.target}
-            options={widgetIds(screen.root, "video").map((id) => ({ value: id, label: id }))}
+            options={videoOptions(reached)}
             onChange={(value) => onChange({ ...action, target: value })}
           />
           <Select
@@ -309,6 +338,9 @@ export const ActionsEditor = ({ node }: { node: WidgetNode }) => {
   const save = (next: Action[]) => apply([{ op: "set", id: node.id, actions: next.length > 0 ? next : null }]);
 
   const otherScreen = overview.screens.find((each) => each.id !== screen.id);
+  // A control on a screen another display shows, for a new trigger: those screens load once it is chosen.
+  const reachable = useTargetScreens(adding === "trigger" ? "others" : "self");
+  const elsewhere = triggerOptions(reachable.filter((each) => each.id !== screen.id), node.id)[0];
   const settable = show.signals.find(isSettable);
   const video = widgetIds(screen.root, "video")[0];
   const sounds = themeSoundIds(show.theme.id);
@@ -332,6 +364,10 @@ export const ActionsEditor = ({ node }: { node: WidgetNode }) => {
         const sound = sounds.includes("confirm") ? "confirm" : sounds[0];
         return sound ? { do: "sound", sound } : undefined;
       }
+      case "trigger":
+        // Offered while there are other displays; the control is found once their screens have loaded.
+        if (adding !== "trigger") return overview.displays.length > 0 ? { do: "trigger", target: node.id, on: "others" } : undefined;
+        return elsewhere ? { do: "trigger", target: elsewhere.value, on: "others" } : undefined;
     }
   };
 
@@ -385,8 +421,9 @@ export const ActionsEditor = ({ node }: { node: WidgetNode }) => {
           </button>
         </div>
       ) : null}
-      {actions.some((action) => action.do === "setState" || action.do === "setSignal" || action.do === "cue") && !show.settings.displayGlobalActions ? (
-        <p className="panel-note">The operator has display buttons switched off, so show-wide actions do nothing for now.</p>
+      {actions.some((action) => action.do === "setState" || action.do === "setSignal" || action.do === "cue" || actionTarget(action) !== "self") &&
+      !show.settings.displayGlobalActions ? (
+        <p className="panel-note">The operator has display buttons switched off, so show-wide actions and actions on other displays do nothing for now.</p>
       ) : null}
     </Section>
   );

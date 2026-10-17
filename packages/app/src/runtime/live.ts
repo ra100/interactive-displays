@@ -1,4 +1,4 @@
-import { isServerAction, type SignalDef, type SignalValues, type WidgetNode } from "@interactive-displays/core";
+import { isRemoteAction, isServerAction, type SignalDef, type SignalValues, type WidgetNode } from "@interactive-displays/core";
 import { createMediaBus, type MediaBus } from "@interactive-displays/themes/react";
 import { createContext, useContext, useSyncExternalStore } from "react";
 
@@ -66,10 +66,18 @@ export const runControl = (live: Live, node: WidgetNode, value?: number, moving 
     if (live.press && actions.some((action) => action.do === "setSignal")) live.press(node.id, value, true);
     return;
   }
+  runLocal(live, node);
+  if (live.press && actions.some(isServerAction)) live.press(node.id, value);
+};
+
+// What a display does itself for a control used here or, through a trigger, from another display: the press
+// sound, and the control's sounds and video commands that are for this display and run at once. The server
+// runs the rest, including the delayed ones and those for other displays.
+export const runLocal = (live: Live, node: WidgetNode): void => {
   live.playSound?.("press");
-  for (const action of actions) {
+  for (const action of node.actions ?? []) {
+    if (isRemoteAction(action)) continue;
     if (action.do === "sound") live.playSound?.(action.sound);
     if (action.do === "video") live.media.send(action.target, action.command);
   }
-  if (live.press && actions.some(isServerAction)) live.press(node.id, value);
 };

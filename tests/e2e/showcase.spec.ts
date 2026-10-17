@@ -1127,3 +1127,51 @@ test.describe("showcase ship", () => {
     }
   });
 });
+
+test.describe("showcase interactions", () => {
+  test.skip(phase !== "interactions", "set SHOWCASE=interactions to capture screenshots");
+
+  const SIZE = { width: 1600, height: 900 };
+
+  test.afterEach(async ({ request }) => {
+    await request.put("/api/displays/engineering-1", { data: { screen: "engineering" } });
+  });
+
+  const display = async (browser: Browser, id: string) => {
+    const page = await browser.newPage({ viewport: SIZE });
+    await page.goto(`/d/${id}`);
+    await expect(page.locator(".screen")).toBeVisible();
+    await settle(page);
+    return page;
+  };
+
+  test("one button on tactical plays out across three displays", async ({ browser }) => {
+    const tactical = await display(browser, "tactical-1");
+    const viewscreen = await display(browser, "viewscreen-1");
+    const engineering = await display(browser, "engineering-1");
+    await tactical.screenshot({ path: out("1-tactical-before") });
+    await engineering.screenshot({ path: out("2-engineering-before") });
+
+    await tactical.getByRole("button", { name: /photon torpedoes/i }).click();
+    // The viewscreen's Replay button is used there: it flashes, and the feed starts again.
+    await viewscreen.screenshot({ path: out("3-viewscreen-replayed") });
+    await expect(engineering.getByRole("button", { name: /back/i })).toBeVisible({ timeout: 4000 });
+    await settle(engineering);
+    await engineering.screenshot({ path: out("4-engineering-damage-view") });
+    await Promise.all([tactical, viewscreen, engineering].map((page) => page.close()));
+  });
+
+  test("the editor says where each action runs and when", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    await page.goto("/builder/tactical");
+    await page.getByRole("tree", { name: "Outline" }).getByRole("treeitem", { name: /Button · Photon torpedoes/ }).click();
+    const actions = page.getByRole("region", { name: "When used" });
+    await actions.getByRole("combobox", { name: "Control" }).scrollIntoViewIfNeeded();
+    await settle(page);
+    await page.screenshot({ path: out("editor-torpedoes") });
+    // The delayed actions further down the list.
+    await actions.getByRole("combobox", { name: "Screen" }).scrollIntoViewIfNeeded();
+    await settle(page);
+    await page.screenshot({ path: out("editor-delayed") });
+  });
+});

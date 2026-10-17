@@ -1,5 +1,5 @@
 import type { Effect, VideoCommand } from "@interactive-displays/core";
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 
 // What renderers may know about the world around them, provided by the display runtime. Renderers stay
 // plain components: tests and galleries render them without any of this and get sensible defaults.
@@ -94,20 +94,37 @@ export type MediaListener = (command: VideoCommand) => void;
 export interface MediaBus {
   send: (target: string, command: VideoCommand) => void;
   subscribe: (target: string, listener: MediaListener) => () => void;
+  // A control on another display used this one: the control flashes as if touched.
+  flash: (target: string) => void;
+  onFlash: (target: string, listener: () => void) => () => void;
 }
 
-export const createMediaBus = (): MediaBus => {
-  const listeners = new Map<string, Set<MediaListener>>();
+// Listeners by node id.
+const createChannel = <Listener extends (...args: never[]) => void>() => {
+  const listeners = new Map<string, Set<Listener>>();
   return {
-    send: (target, command) => {
-      for (const listener of listeners.get(target) ?? []) listener(command);
-    },
-    subscribe: (target, listener) => {
-      const set = listeners.get(target) ?? new Set<MediaListener>();
+    each: (target: string): Iterable<Listener> => listeners.get(target) ?? [],
+    add: (target: string, listener: Listener) => {
+      const set = listeners.get(target) ?? new Set<Listener>();
       set.add(listener);
       listeners.set(target, set);
       return () => set.delete(listener);
     },
+  };
+};
+
+export const createMediaBus = (): MediaBus => {
+  const commands = createChannel<MediaListener>();
+  const flashes = createChannel<() => void>();
+  return {
+    send: (target, command) => {
+      for (const listener of commands.each(target)) listener(command);
+    },
+    subscribe: commands.add,
+    flash: (target) => {
+      for (const listener of flashes.each(target)) listener();
+    },
+    onFlash: flashes.add,
   };
 };
 
@@ -121,19 +138,20 @@ export const useMediaCommands = (nodeId: string, listener: MediaListener): void 
   useEffect(() => bus?.subscribe(nodeId, (command) => latest.current(command)), [bus, nodeId]);
 };
 
-// A short, camera-visible flash on press: :active alone can be too brief to see on a quick tap.
-export const usePressFlash = (): { flashing: boolean; flash: () => void } => {
+// A short, camera-visible flash on press: :active alone can be too brief to see on a quick tap. With the
+// control's node id it also flashes when a control on another display uses it.
+export const usePressFlash = (nodeId?: string): { flashing: boolean; flash: () => void } => {
   const [flashing, setFlashing] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const bus = useContext(MediaBusContext);
   useEffect(() => () => clearTimeout(timer.current), []);
-  return {
-    flashing,
-    flash: () => {
-      clearTimeout(timer.current);
-      setFlashing(true);
-      timer.current = setTimeout(() => setFlashing(false), 180);
-    },
-  };
+  const flash = useCallback(() => {
+    clearTimeout(timer.current);
+    setFlashing(true);
+    timer.current = setTimeout(() => setFlashing(false), 180);
+  }, []);
+  useEffect(() => (nodeId ? bus?.onFlash(nodeId, flash) : undefined), [bus, nodeId, flash]);
+  return { flashing, flash };
 };
 
 // How long a control keeps showing what the actor chose before it shows its props again.
