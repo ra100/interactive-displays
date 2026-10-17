@@ -45,6 +45,8 @@ packages/
             lcars/      LCARS: TNG palette + variants, effects, sounds, three frames, four decor pieces, Antonio font
             hud/        Holo HUD: translucent panels, Rajdhani + Share Tech Mono, reticle/corners/scale/arcs decor
             crt/        Terminal: green phosphor CRT (amber and ice variants), VT323, rules/brackets/radar decor
+            ships/      ship line art per class (norway.json: views, systems, lines plan) and its layout; drawn by
+                        the ship-schematic widget
   server/   Fastify + Socket.io + static app, one process, one port; runs TS directly (no build)
             showService.ts  the command layer: every change is validated, persisted and broadcast here;
                             drafts, publish, revisions, previews, assets, signals, display presses
@@ -72,6 +74,7 @@ packages/
                       buttons, inspector with live values and actions, history, assets, send to display)
             tools/    shared by operator and builder: connection, token gate, API client, dialogs
 tests/e2e/  Playwright, against the built app served by the real server
+tools/ships/ Python (Blender's bpy) that traces a ship model into packages/themes/src/ships/<class>.json
 data/       runtime data (gitignored): settings.json, shows/<id>/{show,runtime}.json, shows/<id>/screens/
             (drafts and .history/), shows/<id>/published/, shows/<id>/assets/
 ```
@@ -221,4 +224,4 @@ Date, Original Plan, What Changed, Justification and Impact.
 
 Task-specific guidance lives in `.claude/skills/`: `widgets` (catalog and renderers), `themes` (theme packs,
 frames, decor, effects), `server` (command layer, REST API, data, protocol, deployment), `content` (content packs,
-recipes, blocks and the generator).
+recipes, blocks and the generator), `ships` (tracing a 3D model into ship schematic line art).

@@ -6,6 +6,43 @@ Docker smoke test); these steps are for a person with real displays.
 Report problems or ideas as a GitHub issue (label `v2`) or in the project thread, with the display type,
 browser, the URL you opened and a photo or screenshot if possible.
 
+## Ship schematic
+
+### Setup
+
+Start the server on a fresh data directory (or copy `schematic.json` and `tactical.json` from
+`packages/server/seed/shows/demo/screens/`) and open `/operator` and a display at `/d/<id>`, ideally on a real
+4K panel.
+
+### Checks
+
+1. **Master systems display.** Assign **Ship schematic** to a display. The port profile, dorsal and forward
+   views and the turning ship all show the Norway class; each sweeps in behind a scan line when the screen
+   appears; labels never overlap and are as big as the text around them.
+2. **Tactical.** Move the operator's **Shield strength** slider: the dorsal bubble on the master systems display
+   and on **Tactical** follows it, thinning and turning amber below 50 and red below 25, and SHIELDS shows the
+   value. At 0 the bubble is dashed.
+3. **Red alert.** Phaser arrays and the torpedo launcher light and pulse and WEAPONS ARMED shows; the launcher,
+   on the ship's belly, stays see-through from above.
+4. **Damaged.** Every ship view turns to damage control: nacelles and impulse blink, the shuttlebay goes dark, the
+   readouts count damaged and offline systems, and the status line reports the breach.
+5. **Power.** On the port profile, power flows along dashed conduits from the warp core; it follows the
+   `warp.output` signal, slower when power is low, and stops at 0 (CORE OFFLINE).
+6. **Bow up.** In the editor, put a dorsal view in a box taller than wide (a narrow grid column or the aside):
+   the ship stands bow up with port on the left and the labels stay upright. Widen the box and it turns back.
+7. **Other looks.** Switch to Holo HUD and Terminal: the same screens redraw in that look.
+8. **Editor.** Add a **Ship schematic** from the Add panel (Tactical): change View, Mode, and type systems one per
+   line in Highlight, Damaged or Offline (bridge, deflector, warp-core, nacelles, impulse, phasers, torpedoes,
+   shuttlebay); a misspelt system is refused. Bind Shields or Power to a signal.
+9. **Generate.** Generate Tactical or Main engineering a few times: some seeds include the ship, following the
+   shields or the core's power.
+
+### Known limitations
+
+- One ship class so far (Norway). Other classes need a model and a run of `tools/ships` (see the `ships` skill).
+- The warp core and the power conduits are placed by hand in the extraction config; the model has no interior.
+- The display bundle carries every class's data (about 55 KB compressed each).
+
 ## Instruments and panels
 
 ### Setup
