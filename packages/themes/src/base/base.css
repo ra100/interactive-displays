@@ -1422,6 +1422,280 @@
   font-size: 0.7em;
 }
 
+/* ---- Ship schematic ---- */
+
+.base-ship {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: calc(0.4 * var(--u));
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  color: var(--tone);
+  font-family: var(--font-display);
+  text-transform: uppercase;
+}
+
+.base-ship__head,
+.base-ship__status {
+  display: flex;
+  align-items: baseline;
+  gap: calc(1 * var(--u));
+  min-width: 0;
+  overflow: hidden;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.base-ship__head {
+  justify-content: space-between;
+  font-size: min(10cqh, 5cqw, calc(2.4 * var(--u)));
+}
+
+.base-ship__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.base-ship__view {
+  flex: none;
+  opacity: 0.7;
+}
+
+.base-ship__status {
+  font-size: min(8cqh, 4cqw, calc(2 * var(--u)));
+  font-variant-numeric: tabular-nums;
+}
+
+.base-ship__readout {
+  color: var(--tone);
+}
+
+.base-ship__area {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
+.base-ship__drawing {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.base-ship__drawing :is(path, ellipse, circle, rect) {
+  vector-effect: non-scaling-stroke;
+}
+
+.base-ship__hull {
+  fill: color-mix(in srgb, var(--tone) 10%, transparent);
+  stroke: var(--tone);
+  stroke-width: calc(0.22 * var(--u));
+  stroke-linejoin: round;
+}
+
+.base-ship__lines,
+.base-ship__detail,
+.base-ship__decks,
+.base-ship__hull-far,
+.base-ship__hull-near,
+.base-ship__leader,
+.base-ship__flow {
+  fill: none;
+  stroke: var(--tone);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.base-ship__lines {
+  stroke-width: calc(0.1 * var(--u));
+  opacity: 0.85;
+}
+
+.base-ship__detail {
+  stroke-width: calc(0.07 * var(--u));
+  opacity: 0.5;
+}
+
+.base-ship__windows {
+  fill: var(--tone);
+  opacity: 0.7;
+}
+
+.base-ship__decks {
+  stroke-width: calc(0.07 * var(--u));
+  stroke-dasharray: calc(0.6 * var(--u)) calc(0.4 * var(--u));
+  opacity: 0.5;
+}
+
+/* Systems: filled in their tone; see-through where the hull hides them in this view. */
+.base-ship__part {
+  fill: color-mix(in srgb, var(--tone) 45%, transparent);
+  stroke: var(--tone);
+  stroke-width: calc(0.14 * var(--u));
+}
+
+.base-ship__part[data-hidden="true"] {
+  fill: color-mix(in srgb, var(--tone) 15%, transparent);
+  stroke-dasharray: calc(0.4 * var(--u)) calc(0.3 * var(--u));
+}
+
+.base-ship__part[data-state="quiet"] {
+  fill: none;
+  opacity: 0.5;
+}
+
+.base-ship__marker[data-state="quiet"] {
+  opacity: 0.45;
+}
+
+.base-ship__part[data-state="offline"] {
+  fill: none;
+  stroke-dasharray: calc(0.3 * var(--u)) calc(0.3 * var(--u));
+  opacity: 0.7;
+}
+
+.base-ship__part[data-state="damaged"],
+.base-ship__marker[data-state="damaged"] {
+  animation: base-blink 0.9s steps(2, jump-none) infinite;
+}
+
+/* Weapons hot: arrays and launchers light and pulse. */
+.base-ship[data-armed="true"] :is(.base-ship__part, .base-ship__marker)[data-state="active"]:is([data-system="phasers"], [data-system="torpedoes"]) {
+  fill: var(--tone);
+  animation: base-ship-charge 1.6s ease-in-out infinite;
+}
+
+@keyframes base-ship-charge {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* The warp core breathes with the power it gives; power runs along the conduits from it. */
+.base-ship[data-mode="engineering"][data-power="on"] .base-ship__part[data-system="warp-core"]:is([data-state="active"], [data-state="marked"]) {
+  fill: var(--tone);
+  animation: base-ship-charge var(--ship-flow) ease-in-out infinite;
+}
+
+.base-ship__flow {
+  stroke-width: calc(0.3 * var(--u));
+  stroke-dasharray: calc(0.8 * var(--u)) calc(1.2 * var(--u));
+  animation: base-ship-flow var(--ship-flow) linear infinite;
+}
+
+.base-ship[data-power="off"] .base-ship__flow,
+.base-ship__flow:is([data-state="offline"], [data-state="damaged"]) {
+  animation: none;
+  opacity: 0.35;
+}
+
+@keyframes base-ship-flow {
+  to {
+    stroke-dashoffset: calc(-2 * var(--u));
+  }
+}
+
+.base-ship__shield {
+  fill: color-mix(in srgb, var(--tone) 7%, transparent);
+  stroke: var(--tone);
+  stroke-width: calc(0.25 * var(--u));
+  transition: opacity 400ms;
+}
+
+.base-ship__shield--rings {
+  fill: none;
+  stroke-width: calc(0.12 * var(--u));
+}
+
+.base-ship__shield[data-down="true"] {
+  fill: none;
+  stroke-dasharray: calc(0.5 * var(--u)) calc(0.8 * var(--u));
+}
+
+.base-ship__leader {
+  stroke-width: calc(0.1 * var(--u));
+  opacity: 0.8;
+}
+
+.base-ship__pin {
+  fill: var(--tone);
+}
+
+.base-ship__tag-text {
+  fill: var(--tone);
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.base-ship__tag-text[data-anchor="start"] {
+  text-anchor: start;
+}
+
+.base-ship__tag-text[data-anchor="end"] {
+  text-anchor: end;
+}
+
+/* Turning: the near side of the lines plan bright, the far side faint. */
+.base-ship__hull-far {
+  stroke-width: calc(0.07 * var(--u));
+  opacity: 0.3;
+}
+
+.base-ship__hull-near {
+  stroke-width: calc(0.1 * var(--u));
+  opacity: 0.9;
+}
+
+.base-ship__marker {
+  fill: var(--tone);
+  stroke: var(--theme-bg);
+  stroke-width: calc(0.1 * var(--u));
+}
+
+.base-ship__marker[data-far="true"] {
+  opacity: 0.45;
+}
+
+/* Drawn in once, bow to stern, behind a scan line, when the schematic appears. */
+.base-ship__reveal {
+  transform-box: fill-box;
+  transform-origin: left center;
+  animation: base-ship-reveal 2.4s cubic-bezier(0.3, 0.1, 0.3, 1) both;
+}
+
+@keyframes base-ship-reveal {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.base-ship__sweep {
+  fill: var(--tone);
+  opacity: 0;
+  animation: base-ship-sweep 2.4s cubic-bezier(0.3, 0.1, 0.3, 1) both;
+}
+
+@keyframes base-ship-sweep {
+  from {
+    opacity: 0.9;
+    transform: translateX(0);
+  }
+  95% {
+    opacity: 0.9;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(var(--ship-sweep));
+  }
+}
+
 /* ---- Navigation ---- */
 
 .base-heading {

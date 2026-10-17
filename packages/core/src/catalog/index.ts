@@ -15,6 +15,7 @@ import { reactor } from "./reactor.ts";
 import { readout } from "./readout.ts";
 import { scanProgress } from "./scanProgress.ts";
 import { shieldStatus } from "./shieldStatus.ts";
+import { shipSchematic } from "./shipSchematic.ts";
 import { slider } from "./slider.ts";
 import { sparkline } from "./sparkline.ts";
 import { spectrum } from "./spectrum.ts";
@@ -54,6 +55,7 @@ export const widgets = {
   "shield-status": shieldStatus,
   weapons,
   "target-lock": targetLock,
+  "ship-schematic": shipSchematic,
   heading,
   "speed-ladder": speedLadder,
   "star-chart": starChart,
@@ -63,6 +65,8 @@ export const widgets = {
   video,
   placeholder,
 } as const;
+
+export { SHIP_CLASSES, SHIP_SYSTEMS, ShipSystemSchema, type ShipSystem } from "./shipSchematic.ts";
 
 export type WidgetKind = keyof typeof widgets;
 export type WidgetPropsOf<Kind extends WidgetKind> = WidgetProps<(typeof widgets)[Kind]>;
