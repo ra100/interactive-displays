@@ -5,7 +5,7 @@ against the real server and built app (`pnpm build && SHOWCASE=phase-N pnpm test
 
 ## Video tour
 
-[**showcase.mp4**](video/showcase.mp4) (4 minutes, 1080p): the consoles of the demo show in LCARS, the show
+[**showcase.mp4**](video/showcase.mp4) (3½ minutes, 1080p): the consoles of the demo show in LCARS, the show
 states from yellow alert to a hull breach, the ship schematic, every LCARS era and the Holo HUD and Terminal
 looks, the operator console running cues with a display live in the corner, and the editor changing a widget,
 publishing it and generating screens. Everything in it is the real app, recorded from a fresh demo show:
