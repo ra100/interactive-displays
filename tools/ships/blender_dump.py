@@ -66,36 +66,36 @@ for part in config["parts"]:
     print(part["id"], len(tris))
     arrays["part:" + part["id"]] = tris.astype(np.float32)
 
-# Windows: one entry per loose part (centre and extent), so the views can draw them as dashes.
-windows = triangles(config["windows"])
-keys = {}
-parent = list(range(len(windows)))
-
-
-def find(i):
-    while parent[i] != i:
-        parent[i] = parent[parent[i]]
-        i = parent[i]
-    return i
-
-
-for index, tri in enumerate(windows):
-    for vertex in tri:
-        key = tuple(np.round(vertex, 3))
-        if key in keys:
-            a, b = find(index), find(keys[key])
-            if a != b:
-                parent[a] = b
-        else:
-            keys[key] = index
-groups = {}
-for index in range(len(windows)):
-    groups.setdefault(find(index), []).append(index)
+# Windows: one entry per loose part (centre and extent), so the views can draw them as dashes. A model
+# without a windows object has none.
 rows = []
-for members in groups.values():
-    points = windows[members].reshape(-1, 3)
-    rows.append(np.concatenate([points.mean(axis=0), points.min(axis=0), points.max(axis=0)]))
-arrays["windows"] = np.array(rows, dtype=np.float32)
+if config.get("windows"):
+    windows = triangles(config["windows"])
+    keys = {}
+    parent = list(range(len(windows)))
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    for index, tri in enumerate(windows):
+        for vertex in tri:
+            key = tuple(np.round(vertex, 3))
+            if key in keys:
+                a, b = find(index), find(keys[key])
+                if a != b:
+                    parent[a] = b
+            else:
+                keys[key] = index
+    groups = {}
+    for index in range(len(windows)):
+        groups.setdefault(find(index), []).append(index)
+    for members in groups.values():
+        points = windows[members].reshape(-1, 3)
+        rows.append(np.concatenate([points.mean(axis=0), points.min(axis=0), points.max(axis=0)]))
+arrays["windows"] = np.array(rows, dtype=np.float32).reshape(-1, 9)
 print("windows", len(rows))
 
 # Depth maps: the first surface hit from each side along each axis, on a grid of `step` metres.

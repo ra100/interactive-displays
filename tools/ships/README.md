@@ -27,17 +27,19 @@ python3 -m venv .venv
 
 MODEL=path/to/Norway_2023_MinasTirith_003.blend
 OUT=/tmp/norway
+.venv/bin/python blender_survey.py $MODEL $OUT/survey          # first look: objects, loose parts, six renders
 .venv/bin/python blender_dump.py $MODEL norway.config.json $OUT
 for view in top side front; do .venv/bin/python blender_lineart.py $MODEL norway.config.json $OUT $view; done
 .venv/bin/python build.py norway.config.json $OUT ../../packages/themes/src/ships/norway.json
+.venv/bin/python preview.py ../../packages/themes/src/ships/norway.json $OUT/preview.png
 ```
 
 The dump takes seconds, each line-art render about a minute (they can run in parallel), the build about 20 s.
+`preview.py` draws the result without the app: the three views with every system in its colour, and the lines
+plan from four angles.
 
 ## Another ship
 
-Copy `norway.config.json`: name the objects that make up the structure and the line art, the windows object,
-and each system's objects (a `box` keeps only the triangles whose centre lies inside it, in Blender
-coordinates; a `cylinder` stands in for something the model does not have, such as a warp core). Add the class
-to `SHIP_CLASSES` in `packages/core/src/catalog/shipSchematic.ts` and its data to `ships` in
-`packages/themes/src/ships/model.ts`; the tests check every system is marked.
+The `ships` skill (`.claude/skills/ships/SKILL.md`) is the playbook: survey, config, confirming the systems with
+the model's owner, tracing, tuning, wiring the class in and checking it in every view, mode and theme, and what
+changes for other kinds of models.
