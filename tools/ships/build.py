@@ -269,6 +269,8 @@ def parts():
 def windows(view):
     axis, side = VIEW_AXIS[view]
     rows = data["windows"].astype(np.float64)
+    if len(rows) == 0:
+        return ""
     centre, low, high = rows[:, 0:3], rows[:, 3:6], rows[:, 6:9]
     u, v = [a for a in range(3) if a != axis]
     extent = high - low
