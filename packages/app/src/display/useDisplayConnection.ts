@@ -23,11 +23,16 @@ export interface DisplayConnection {
   entered: { state: string; at: number } | null;
   // Shared signal values, updated without re-rendering the page.
   signals: SignalStore;
-  // Video commands from the operator, for the video widgets on this display.
+  // Video commands from the operator, for the video widgets on this display, and flashes for its controls.
   media: MediaBus;
+  // Commands from controls on other displays (or delayed ones): use one of this display's controls, play a
+  // sound. Returns the unsubscribe.
+  onCommand: (listener: (command: DisplayCommand) => void) => () => void;
   // Tells the server a control was used.
   press: (nodeId: string, value?: number) => void;
 }
+
+export type DisplayCommand = { type: "trigger"; nodeId: string } | { type: "sound"; sound: string };
 
 type Socketish = Socket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -48,7 +53,14 @@ const reloadForProtocol = (serverProtocol: number): boolean => {
 
 export const useDisplayConnection = (displayId: string): DisplayConnection => {
   const socketRef = useRef<Socketish | null>(null);
+  const [commandListeners] = useState(() => new Set<(command: DisplayCommand) => void>());
   const [live] = useState(() => ({
+    onCommand: (listener: (command: DisplayCommand) => void) => {
+      commandListeners.add(listener);
+      return () => {
+        commandListeners.delete(listener);
+      };
+    },
     signals: createSignalStore(),
     media: createMediaBus(),
     press: (nodeId: string, value?: number, moving?: boolean) => {
@@ -107,6 +119,14 @@ export const useDisplayConnection = (displayId: string): DisplayConnection => {
       live.media.send(target, command);
     });
 
+    socket.on("sound", ({ sound }) => {
+      for (const listener of commandListeners) listener({ type: "sound", sound });
+    });
+
+    socket.on("trigger", ({ nodeId }) => {
+      for (const listener of commandListeners) listener({ type: "trigger", nodeId });
+    });
+
     // Show-wide state changes arrive as a small event, not a snapshot, to stay inside the 100 ms budget.
     socket.on("state", ({ state }) => {
       setConnection((current) => {
@@ -133,7 +153,7 @@ export const useDisplayConnection = (displayId: string): DisplayConnection => {
       socketRef.current = null;
       socket.disconnect();
     };
-  }, [displayId, live]);
+  }, [displayId, live, commandListeners]);
 
   return { ...connection, ...live };
 };

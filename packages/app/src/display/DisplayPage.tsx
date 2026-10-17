@@ -1,6 +1,7 @@
-import { IdSchema } from "@interactive-displays/core";
-import { useEffect, useMemo } from "react";
+import { findNode, IdSchema } from "@interactive-displays/core";
+import { useEffect, useMemo, useRef } from "react";
 import { Navigate, useParams, useSearchParams } from "react-router-dom";
+import { runLocal } from "../runtime/live.ts";
 import { ScreenView } from "../runtime/ScreenView.tsx";
 import { getOrCreateDisplayId, rememberDisplayId } from "./displayId.ts";
 import { IdentifyOverlay } from "./IdentifyOverlay.tsx";
@@ -14,7 +15,7 @@ import "./display.css";
 const NONE: never[] = [];
 
 const ConnectedDisplay = ({ displayId }: { displayId: string }) => {
-  const { status, snapshot, error, identify, entered, signals, media, press } = useDisplayConnection(displayId);
+  const { status, snapshot, error, identify, entered, signals, media, press, onCommand } = useDisplayConnection(displayId);
   // ?theme=base&variant=nemesis previews the show in another look on this display only.
   const [params] = useSearchParams();
   // ?fullscreen goes fullscreen on the first touch.
@@ -30,6 +31,25 @@ const ConnectedDisplay = ({ displayId }: { displayId: string }) => {
   useEffect(() => {
     rememberDisplayId(displayId);
   }, [displayId]);
+
+  // A control on another display used one of ours: it flashes and plays its own sounds and videos here.
+  const current = useRef({ screen: snapshot?.screen ?? null, live });
+  current.current = { screen: snapshot?.screen ?? null, live };
+  useEffect(
+    () =>
+      onCommand((command) => {
+        const { screen, live: now } = current.current;
+        if (command.type === "sound") {
+          now.playSound(command.sound);
+          return;
+        }
+        const node = screen ? findNode(screen.root, command.nodeId)?.node : undefined;
+        if (node?.type !== "widget") return;
+        now.media.flash(node.id);
+        runLocal(now, node);
+      }),
+    [onCommand],
+  );
 
   if (!snapshot) {
     return error ? (

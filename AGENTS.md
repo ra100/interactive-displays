@@ -96,9 +96,12 @@ and `zod`. The server imports `core`, `content`, `@interactive-displays/themes/m
 - Live values are signals: `ambient` ones (walk, wave, clock) are worked out on every display from a seed and cost
   no network; `shared` ones are owned by the server (set by the operator or display buttons, or ticked) and
   broadcast at most every 100 ms. Widgets follow them through `bind`; per-state ranges go in `byState`.
-- Controls (button, button group, toggle, slider) carry `actions`: navigate and back (that display only),
-  setState, setSignal and cue (show-wide, behind the `displayGlobalActions` setting), video and sound (run on
-  the display).
+- Controls (button, button group, toggle, slider) carry `actions`: navigate and back, setState, setSignal and cue
+  (show-wide, behind the `displayGlobalActions` setting), video and sound, and trigger (use a control on another
+  display, which flashes and runs its own actions there). Navigate, back, video, sound and trigger take
+  `on` (`self` by default, `others`, `all`, or `{ displays, screens }`: named displays and any display showing a
+  named screen); any action takes `after` (seconds). Reaching other displays counts as show-wide; triggers nest
+  three deep at most; delayed actions are dropped when the cues go back to the top.
 - A show has a running order of `cues`; each sets the state, shared values, display screens and videos at once.
   The operator's GO runs the next one; the last cue run survives a restart. A press goes to the server as `press { nodeId, value? }`; the server decides what it may do.
 - One-click generation: a content pack recipe (systems, readings with alert ranges, buttons, nav labels) plus a

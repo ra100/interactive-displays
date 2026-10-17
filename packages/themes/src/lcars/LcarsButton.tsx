@@ -6,7 +6,7 @@ import { lcarsCode } from "./code.ts";
 // Slot-aware: a flush block with a reference number in the sidebar, a pill in toolbars and content.
 export const LcarsButton = ({ props, nodeId, slot, onUse }: WidgetRendererProps<WidgetPropsOf<"button">>) => {
   const shape = slot === "nav" ? "block" : "pill";
-  const { flashing, flash } = usePressFlash();
+  const { flashing, flash } = usePressFlash(nodeId);
   return (
     <button
       type="button"

@@ -1168,3 +1168,38 @@
   margin: 0;
   line-height: 1.5;
 }
+
+/* Where an action runs */
+.target-picks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.target-picks__group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  max-height: 180px;
+  margin: 0;
+  padding: 6px 8px;
+  overflow-y: auto;
+  border: 1px solid var(--tool-border);
+  border-radius: 6px;
+}
+
+.target-picks__group .check {
+  flex-wrap: nowrap;
+  font-size: 12px;
+}
+
+.target-picks__group .check input {
+  flex: none;
+}
+
+.action-wait {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 6px;
+}

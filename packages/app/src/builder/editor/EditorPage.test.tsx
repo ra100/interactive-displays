@@ -30,6 +30,24 @@ const bridge = (): Screen =>
     },
   });
 
+// The screen another display shows, with a control a trigger can use.
+const engineering = (): Screen =>
+  ScreenSchema.parse({
+    schemaVersion: 2,
+    id: "engineering",
+    name: "Engineering",
+    revision: 2,
+    root: {
+      id: "root",
+      type: "container",
+      layout: { kind: "stack", direction: "column" },
+      children: [
+        { node: { id: "eject", type: "widget", kind: "button", props: { label: "EJECT" }, actions: [{ do: "sound", sound: "alert" }] } },
+        { node: { id: "idle", type: "widget", kind: "button", props: { label: "IDLE" } } },
+      ],
+    },
+  });
+
 // A small stand-in for the server: it applies ops like the real one and counts revisions.
 let draft: Screen;
 let conflicts = 0;
@@ -52,6 +70,7 @@ beforeEach(() => {
     }
     if (path === "/api/assets") return { body: { assets: [] } };
     if (method === "GET" && path === "/api/screens/bridge") return { body: { screen: draft, lint: [], onAir: [] } };
+    if (method === "GET" && path === "/api/screens/engineering") return { body: { screen: engineering(), lint: [], onAir: [] } };
     if (method === "POST" && path === "/api/screens/bridge/ops") {
       const { baseRevision, ops } = body as { baseRevision: number; ops: Op[] };
       if (conflicts > 0 || baseRevision !== draft.revision) {
@@ -428,6 +447,42 @@ describe("live values and actions", () => {
     await userEvent.click(actions().getByRole("button", { name: "Remove Go to screen" }));
     await userEvent.click(actions().getByRole("button", { name: "Remove Set a shared value" }));
     await waitFor(() => expect(lastOps()).toEqual([{ op: "set", id: "helm", actions: null }]));
+  });
+
+  it("aims actions at other displays, waits before them, and uses a control on another display", async () => {
+    draft = liveBridge();
+    await open();
+    await selectInOutline(/Button · HELM/);
+    const actions = () => section("When used");
+
+    // Choosing it loads the screens the other displays show; then their controls can be triggered.
+    await userEvent.selectOptions(actions().getByRole("combobox", { name: "New action" }), "Use a control on another display");
+    await waitFor(() => expect(actions().getByRole("button", { name: "Add" })).toBeEnabled());
+    await userEvent.click(actions().getByRole("button", { name: "Add" }));
+    await waitFor(() => expect(lastOps()).toEqual([{ op: "set", id: "helm", actions: [{ do: "trigger", target: "eject", on: "others" }] }]));
+    const control = await actions().findByRole("combobox", { name: "Control" });
+    // Only controls that do something are offered.
+    expect(within(control).queryByRole("option", { name: /IDLE/ })).toBeNull();
+
+    await userEvent.selectOptions(actions().getByRole("combobox", { name: "Runs on" }), "Displays and screens I choose");
+    await waitFor(() => expect(lastOps()?.[0]).toMatchObject({ actions: [{ do: "trigger", on: { displays: ["eng-1"] } }] }));
+    await userEvent.click(await actions().findByRole("checkbox", { name: "Bridge" }));
+    await waitFor(() => expect(lastOps()?.[0]).toMatchObject({ actions: [{ on: { displays: ["eng-1"], screens: ["bridge"] } }] }));
+
+    const wait = actions().getByRole("spinbutton", { name: "Wait (seconds)" });
+    await userEvent.type(wait, "1.5{Enter}");
+    await waitFor(() => expect(lastOps()?.[0]).toMatchObject({ actions: [{ do: "trigger", after: 1.5 }] }));
+
+    await userEvent.selectOptions(actions().getByRole("combobox", { name: "New action" }), "Play a sound");
+    await userEvent.click(actions().getByRole("button", { name: "Add" }));
+    await waitFor(() => expect(lastOps()?.[0]).toMatchObject({ actions: [{ do: "trigger" }, { do: "sound" }] }));
+    const runsOn = actions().getAllByRole("combobox", { name: "Runs on" })[1];
+    if (!runsOn) throw new Error("no target for the sound");
+    await userEvent.selectOptions(runsOn, "Every display");
+    await waitFor(() => expect(lastOps()?.[0]).toMatchObject({ actions: [{ do: "trigger" }, { do: "sound", on: "all" }] }));
+    await userEvent.selectOptions(runsOn, "This display");
+    await waitFor(() => expect(lastOps()?.[0]).toMatchObject({ actions: [{ do: "trigger" }, { do: "sound" }] }));
+    expect(lastOps()?.[0]).not.toMatchObject({ actions: [{}, { on: expect.anything() }] });
   });
 
   it("only offers actions the show can do", async () => {

@@ -2,7 +2,7 @@ import type { WidgetNode } from "@interactive-displays/core";
 import { createMediaBus } from "@interactive-displays/themes/react";
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { createSignalStore, type Live, runControl, useSignalValues } from "./live.ts";
+import { createSignalStore, type Live, runControl, runLocal, useSignalValues } from "./live.ts";
 
 const control = (actions: WidgetNode["actions"]): WidgetNode => ({
   id: "go",
@@ -65,6 +65,37 @@ describe("runControl", () => {
     expect(playSound.mock.calls).toEqual([["press"], ["hail"]]);
     expect(live.sent).toEqual([["feed", "restart"]]);
     // Nothing for the server to do.
+    expect(press).not.toHaveBeenCalled();
+  });
+
+  it("leaves sounds and videos for other displays, or for later, to the server", () => {
+    const playSound = vi.fn();
+    const press = vi.fn();
+    const live = liveWith({ playSound, press });
+
+    runControl(
+      live,
+      control([
+        { do: "sound", sound: "alert", on: "others" },
+        { do: "sound", sound: "hail", after: 2 },
+        { do: "video", target: "feed", command: "restart", on: { screens: ["viewscreen"] } },
+      ]),
+    );
+
+    expect(playSound.mock.calls).toEqual([["press"]]);
+    expect(live.sent).toEqual([]);
+    expect(press).toHaveBeenCalledWith("go", undefined);
+  });
+
+  it("runs a triggered control's own sounds and videos without telling the server again", () => {
+    const playSound = vi.fn();
+    const press = vi.fn();
+    const live = liveWith({ playSound, press });
+
+    runLocal(live, control([{ do: "sound", sound: "hail" }, { do: "video", target: "feed", command: "play" }, { do: "back" }]));
+
+    expect(playSound.mock.calls).toEqual([["press"], ["hail"]]);
+    expect(live.sent).toEqual([["feed", "play"]]);
     expect(press).not.toHaveBeenCalled();
   });
 

@@ -185,6 +185,22 @@ describe("live values and controls", () => {
     expect(otherMoved).toBe(false);
   });
 
+  it("uses a control on another display, and plays a delayed sound where the action says", async () => {
+    await boot();
+    const tactical = await server.display("tactical-1");
+    const viewscreen = await server.display("viewscreen-1");
+    const engineering = await server.display("engineering-1");
+    const triggered = nextEvent(viewscreen.client, "trigger");
+    const sound = nextEvent(engineering.client, "sound");
+    const moved = nextEvent(engineering.client, "snapshot");
+
+    tactical.client.emit("press", { nodeId: "w-torpedoes" });
+
+    expect(await triggered).toEqual({ nodeId: "view-restart" });
+    expect(await sound).toEqual({ sound: "alert" });
+    expect(await moved).toMatchObject({ navigated: true, screen: { id: "schematic" } });
+  });
+
   it("changes the show state from a display button", async () => {
     await boot();
     const pressed = await server.display("test");

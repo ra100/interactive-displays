@@ -29,8 +29,12 @@ decor is theme-only ornament. Documents store meaning; the theme decides the loo
   Per-state ranges go in "byState".
 
 ## Controls
-- Buttons, toggles, sliders and button groups carry "actions": navigate/back (that display only), setState,
-  setSignal and cue (show-wide), video, sound. Only point at states, signals, cues and screens that exist.
+- Buttons, toggles, sliders and button groups carry "actions": navigate/back, setState, setSignal and cue
+  (show-wide), video, sound, and trigger {target, on} (uses a control on other displays, which runs its own
+  actions there). navigate, back, video, sound and trigger take "on": "self" (default), "others", "all", or
+  {"displays": [...], "screens": [...]} (displays showing those screens). Any action takes "after" in seconds,
+  for a scripted beat: tap here, the other screen reacts a moment later. Only point at states, signals, cues,
+  screens and controls that exist.
 
 ## Sizing
 - Target panels are large 4K screens; the show draws everything at its scale (70% by default) and a display can

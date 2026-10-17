@@ -180,6 +180,21 @@ describe("lintScreen", () => {
       ]);
     });
 
+    it("checks what it can of actions on other displays", () => {
+      const fine = control(undefined, [
+        { do: "video", target: "elsewhere", command: "play", on: { screens: ["bridge"] } },
+        { do: "trigger", target: "launch", on: "others" },
+        { do: "trigger", target: "go", on: "self" },
+      ]);
+      expect(rules(fine, { show, screens: new Set(["bridge"]) })).toEqual([]);
+
+      const wrong = control(undefined, [
+        { do: "sound", sound: "alert", on: { screens: ["nowhere"] } },
+        { do: "trigger", target: "clip", on: "self" },
+      ]);
+      expect(rules(wrong, { show, screens: new Set(["bridge"]) })).toEqual(["unknown-screen", "trigger-target"]);
+    });
+
     it("flags controls that try to set a signal nobody can set", () => {
       expect(rules(control(undefined, [{ do: "setSignal", signal: "warp" }]), { show })).toEqual(["signal-not-settable"]);
     });
