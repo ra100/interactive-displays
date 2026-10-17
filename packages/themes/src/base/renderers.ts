@@ -10,6 +10,7 @@ import { BaseHeading, BaseReactor, BaseSpeedLadder, BaseStarChart } from "./Base
 import { BasePlaceholder } from "./BasePlaceholder.tsx";
 import { BaseGlobe, BaseScanProgress, BaseSpectrum, BaseWaveform } from "./BaseScans.tsx";
 import { BaseShieldStatus, BaseTargetLock, BaseWeapons } from "./BaseTactical.tsx";
+import { BaseShipSchematic } from "./BaseShip.tsx";
 import { BaseText } from "./BaseText.tsx";
 import { BaseTitle } from "./BaseTitle.tsx";
 import { BaseVideo } from "./BaseVideo.tsx";
@@ -40,6 +41,7 @@ export const baseRenderers: BaseThemeRenderers = defineRenderers({
     "shield-status": BaseShieldStatus,
     weapons: BaseWeapons,
     "target-lock": BaseTargetLock,
+    "ship-schematic": BaseShipSchematic,
     heading: BaseHeading,
     "speed-ladder": BaseSpeedLadder,
     "star-chart": BaseStarChart,

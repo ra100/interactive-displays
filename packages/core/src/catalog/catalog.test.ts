@@ -36,6 +36,7 @@ describe("catalog", () => {
       "shield-status",
       "weapons",
       "target-lock",
+      "ship-schematic",
       "heading",
       "speed-ladder",
       "star-chart",
@@ -194,6 +195,35 @@ describe("scans, tactical and navigation widgets", () => {
     expect(widgets["target-lock"].props.parse({})).toMatchObject({ locked: false, bearing: 127, mark: 4, unit: "KM" });
   });
 
+  it("draws the Norway class from above with every system in order", () => {
+    expect(widgets["ship-schematic"].props.parse({})).toEqual({
+      label: "NORWAY CLASS",
+      ship: "norway",
+      view: "top",
+      mode: "schematic",
+      highlight: [],
+      damaged: [],
+      offline: [],
+      shields: 100,
+      armed: false,
+      power: 100,
+      labels: true,
+      seconds: 40,
+      tone: "info",
+    });
+    expect(widgets["ship-schematic"].bindable).toEqual(["shields", "armed", "power"]);
+  });
+
+  it("marks only systems a ship has, in views and modes it knows", () => {
+    const parse = (props: Record<string, unknown>) => widgets["ship-schematic"].props.safeParse(props).success;
+    expect(parse({ view: "turn", mode: "engineering", highlight: ["warp-core", "nacelles"], damaged: ["phasers"] })).toBe(true);
+    expect(parse({ highlight: ["holodeck"] })).toBe(false);
+    expect(parse({ view: "aft" })).toBe(false);
+    expect(parse({ mode: "science" })).toBe(false);
+    expect(parse({ ship: "galaxy" })).toBe(false);
+    expect(parse({ seconds: 1 })).toBe(false);
+  });
+
   it("shows heading as a tape unless asked for a rose", () => {
     expect(widgets.heading.props.parse({}).variant).toBe("tape");
     expect(widgets.heading.props.safeParse({ variant: "dial" }).success).toBe(false);
@@ -224,6 +254,7 @@ describe("scans, tactical and navigation widgets", () => {
       "shield-status": "tactical",
       weapons: "tactical",
       "target-lock": "tactical",
+      "ship-schematic": "tactical",
       heading: "navigation",
       "speed-ladder": "navigation",
       "star-chart": "navigation",
