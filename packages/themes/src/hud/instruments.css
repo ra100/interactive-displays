@@ -109,7 +109,10 @@
     .base-target__brackets path,
     .base-heading__dial,
     .base-chart__course,
-    .base-globe__rim
+    .base-globe__rim,
+    .base-ship__hull,
+    .base-ship__shield,
+    .base-ship__flow
   ) {
   filter: drop-shadow(0 0 calc(0.4 * var(--u)) var(--tone));
 }
@@ -121,7 +124,8 @@
     .base-weapons__count,
     .base-target__row dd,
     .base-heading__value,
-    .base-ladder__value
+    .base-ladder__value,
+    .base-ship__readout
   ) {
   font-family: "Share Tech Mono", monospace;
   text-shadow: 0 0 var(--hud-glow) var(--tone);
@@ -193,4 +197,28 @@
 
 .screen[data-theme="hud"] .base-globe__disc {
   fill: color-mix(in srgb, var(--tone) 14%, transparent);
+}
+
+/* Ship schematic: glass hull, hairline structure, systems as glowing glass. */
+.screen[data-theme="hud"] .base-ship__hull {
+  fill: color-mix(in srgb, var(--tone) 6%, transparent);
+  stroke-width: calc(0.14 * var(--u));
+}
+
+.screen[data-theme="hud"] .base-ship__lines {
+  stroke-width: calc(0.07 * var(--u));
+}
+
+.screen[data-theme="hud"] .base-ship__part {
+  fill: color-mix(in srgb, var(--tone) 28%, transparent);
+  stroke-width: calc(0.1 * var(--u));
+}
+
+.screen[data-theme="hud"] .base-ship__shield {
+  fill: color-mix(in srgb, var(--tone) 4%, transparent);
+  stroke-width: calc(0.12 * var(--u));
+}
+
+.screen[data-theme="hud"] .base-ship__tag-text {
+  font-family: "Share Tech Mono", monospace;
 }

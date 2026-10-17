@@ -155,3 +155,28 @@
 .screen[data-theme="crt"] :is(.base-heading__pointer) {
   border-top-color: var(--tone);
 }
+
+/* Ship schematic: vector strokes only, as a plotter would draw it. */
+.screen[data-theme="crt"] :is(.base-ship__hull, .base-ship__part, .base-ship__shield) {
+  fill: none;
+}
+
+.screen[data-theme="crt"] .base-ship__part {
+  stroke-width: calc(0.22 * var(--u));
+}
+
+.screen[data-theme="crt"] .base-ship__part[data-hidden="true"] {
+  stroke-dasharray: calc(0.5 * var(--u)) calc(0.5 * var(--u));
+}
+
+.screen[data-theme="crt"] :is(.base-ship__lines, .base-ship__detail, .base-ship__flow, .base-ship__leader) {
+  stroke-linecap: square;
+}
+
+.screen[data-theme="crt"] .base-ship__shield {
+  stroke-dasharray: calc(1 * var(--u)) calc(0.6 * var(--u));
+}
+
+.screen[data-theme="crt"] .base-ship__readout::before {
+  content: "> ";
+}
