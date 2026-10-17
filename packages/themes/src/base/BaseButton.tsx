@@ -2,8 +2,8 @@ import type { WidgetPropsOf } from "@interactive-displays/core";
 import type { WidgetRendererProps } from "../contract.ts";
 import { usePressFlash } from "../runtime.ts";
 
-export const BaseButton = ({ props, onUse }: WidgetRendererProps<WidgetPropsOf<"button">>) => {
-  const { flashing, flash } = usePressFlash();
+export const BaseButton = ({ props, nodeId, onUse }: WidgetRendererProps<WidgetPropsOf<"button">>) => {
+  const { flashing, flash } = usePressFlash(nodeId);
   return (
     <button
       type="button"

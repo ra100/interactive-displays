@@ -344,6 +344,27 @@ describe("live values and controls", () => {
     expect(fake.emitted.map((each) => each.event)).not.toContain("press");
   });
 
+  it("flashes a control another display used, runs its videos here, and does not press it again", async () => {
+    const play = vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
+    renderAt("/d/bridge-1");
+    serverSends("connect");
+    serverSends("snapshot", liveSnapshot());
+    const replay = screen.getByRole("button", { name: "REPLAY" });
+    expect(replay).toHaveAttribute("data-flash", "false");
+
+    serverSends("trigger", { nodeId: "replay" });
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(replay).toHaveAttribute("data-flash", "true");
+    expect(play).toHaveBeenCalledTimes(1);
+    expect(fake.emitted.map((each) => each.event)).not.toContain("press");
+    // A control this display does not show is ignored.
+    serverSends("trigger", { nodeId: "missing" });
+    expect(play).toHaveBeenCalledTimes(1);
+  });
+
   it("sounds a state's alarm when the show enters it, only with sounds on", () => {
     const oscillators = vi.fn(() => ({
       type: "sine",

@@ -245,6 +245,12 @@ export const attachRealtime = (
         return;
       case "video":
         io.to(displayRoom(event.displayId)).emit("video", { target: event.target, command: event.command });
+        break;
+      case "sound":
+        io.to(displayRoom(event.displayId)).emit("sound", { sound: event.sound });
+        break;
+      case "trigger":
+        io.to(displayRoom(event.displayId)).emit("trigger", { nodeId: event.nodeId });
         return;
     }
   });

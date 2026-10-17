@@ -35,7 +35,11 @@ server and the displays agree.
 **Controls.** A display emits `press { nodeId, value? }`. `press.ts` finds the node on the screen that display
 shows and accepts it only if it is a visible interactive widget with actions. The server runs `navigate` and
 `back` (not while previewing a draft) and, when the show setting `displayGlobalActions` is on, `setState` and
-`setSignal`; the display runs `sound` and `video` itself. Navigation is a per-display stack in memory: what a
+`setSignal`; the display runs its own undelayed `sound` and `video` itself. Actions with `on` (other displays:
+`others`, `all`, `{ displays, screens }`) or `after` (seconds) are the server's: `runActions` in `showService.ts`
+resolves the targets, emits `sound`/`video`/`trigger` events to them, and schedules delayed ones (max 64, dropped
+on `resetCues`). `trigger` runs the target control's actions as if pressed on that display, at most three deep;
+reaching another display needs `displayGlobalActions`. Navigation is a per-display stack in memory: what a
 display shows is its draft preview, else where its buttons took it, else its assignment, else the show default.
 A new assignment, a preview or forgetting the display clears it.
 
@@ -147,14 +151,15 @@ show down. All writes are atomic (temp file + rename) and serialized per file.
 
 ## Protocol
 
-Typed in `packages/core/src/protocol` (`PROTOCOL_VERSION` 4). Clients emit `hello` with a role:
+Typed in `packages/core/src/protocol` (`PROTOCOL_VERSION` 5). Clients emit `hello` with a role:
 
 - `display { displayId }` joins `display:<id>` and gets a `snapshot` (show with theme, states, signals, the
   sounds setting and sound pack, current state, shared signal values, display with its effective `scale` and `panel`, screen,
   `preview` and `navigated` flags). A new
   snapshot follows whenever what it shows changes or the show's settings or signals change; `state { state }` for
   show-wide changes, `signals { values }` with changed shared values, `video { target, command }`,
-  `identify { label }` and `reload`. A display emits `press { nodeId, value? }` when a control is used.
+  `identify { label }`, `reload`, `sound { sound }` (a theme sound from a control elsewhere) and
+  `trigger { nodeId }` (flash that control and run its own sounds and videos). A display emits `press { nodeId, value? }` when a control is used.
 - `operator { token }` and `builder { token }` join `operators` / `builders` and get the show `overview` (the
   same shape as `GET /api/show`) on hello and after every change, and `signals` like the displays. A wrong token gets `error { code: "UNAUTHORIZED" }`.
 - A builder emits `watch { screenId }` to join `screen:<id>` and receive `screen { screenId, screen, lint }` for

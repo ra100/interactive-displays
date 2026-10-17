@@ -26,8 +26,8 @@ export const HudText = ({ props }: WidgetRendererProps<WidgetPropsOf<"text">>) =
 );
 
 // A chamfered outline that fills with light when pressed. In the nav it is a tab with a marker on its left edge.
-export const HudButton = ({ props, slot, onUse }: WidgetRendererProps<WidgetPropsOf<"button">>) => {
-  const { flashing, flash } = usePressFlash();
+export const HudButton = ({ props, nodeId, slot, onUse }: WidgetRendererProps<WidgetPropsOf<"button">>) => {
+  const { flashing, flash } = usePressFlash(nodeId);
   return (
     <button
       type="button"

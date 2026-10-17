@@ -1,4 +1,5 @@
 import type { DecorCatalog } from "../catalog/defineDecor.ts";
+import { actionTarget } from "../schema/action.ts";
 import type { ContainerNode, Node, WidgetNode } from "../schema/node.ts";
 import type { Screen } from "../schema/screen.ts";
 import type { Show } from "../schema/show.ts";
@@ -95,7 +96,13 @@ const lintContainer = (node: ContainerNode, issues: LintIssue[]) => {
 };
 
 // Bindings and actions that point at things the show does not have.
-const lintLiveParts = (node: WidgetNode, videos: ReadonlySet<string>, context: LintContext, issues: LintIssue[]) => {
+const lintLiveParts = (
+  node: WidgetNode,
+  videos: ReadonlySet<string>,
+  controls: ReadonlySet<string>,
+  context: LintContext,
+  issues: LintIssue[],
+) => {
   const { show, screens } = context;
   const warn = (rule: string, message: string) => issues.push({ level: "warning", rule, nodeId: node.id, message });
 
@@ -115,8 +122,18 @@ const lintLiveParts = (node: WidgetNode, videos: ReadonlySet<string>, context: L
     if (action.do === "navigate" && screens && !screens.has(action.screen)) {
       warn("unknown-screen", `There is no screen "${action.screen}" to go to`);
     }
-    if (action.do === "video" && !videos.has(action.target)) {
+    const target = actionTarget(action);
+    // Only this screen can be checked here; videos and controls on other displays are looked up when it runs.
+    if (action.do === "video" && target === "self" && !videos.has(action.target)) {
       warn("video-target", `"${action.target}" is not a video on this screen`);
+    }
+    if (action.do === "trigger" && target === "self" && !controls.has(action.target)) {
+      warn("trigger-target", `"${action.target}" is not a control with actions on this screen`);
+    }
+    if (typeof target === "object" && screens) {
+      for (const id of target.screens ?? []) {
+        if (!screens.has(id)) warn("unknown-screen", `There is no screen "${id}" for it to run on`);
+      }
     }
     if (action.do === "setSignal" && show) {
       const signal = show.signals.find((each) => each.id === action.signal);
@@ -132,6 +149,10 @@ export const lintScreen = (screen: Screen, context: LintContext = {}): LintIssue
   const issues: LintIssue[] = [];
   const states = context.show ? new Set(context.show.states.map((state) => state.id)) : undefined;
   const videos = new Set(widgetIds(screen.root, "video"));
+  const controls = new Set<string>();
+  walkNodes(screen.root, (node) => {
+    if (node.type === "widget" && node.actions?.length) controls.add(node.id);
+  });
 
   walkNodes(screen.root, (node) => {
     if (node.type === "container") lintContainer(node, issues);
@@ -145,7 +166,7 @@ export const lintScreen = (screen: Screen, context: LintContext = {}): LintIssue
       });
     }
 
-    if (node.type === "widget") lintLiveParts(node, videos, context, issues);
+    if (node.type === "widget") lintLiveParts(node, videos, controls, context, issues);
 
     if (node.type === "widget" && node.kind === "placeholder" && !node.hidden) {
       const intent = node.props["intent"];

@@ -63,6 +63,35 @@ test.describe("display controls", () => {
     await expect(page.getByRole("heading", { name: /bridge operations/i })).toBeVisible();
   });
 
+  test("a button on one display replays the viewscreen and, a beat later, sends engineering to its damage view", async ({ page, browser }) => {
+    const viewscreen = await browser.newPage();
+    const engineering = await browser.newPage();
+    await viewscreen.goto("/d/viewscreen-1");
+    await engineering.goto("/d/engineering-1");
+    await expect(engineering.getByRole("heading", { name: /main engineering/i })).toBeVisible();
+    await page.goto("/d/tactical-1");
+    // The flash is brief, so the viewscreen notes it as it happens.
+    await expect(viewscreen.getByRole("button", { name: /replay/i })).toBeVisible();
+    await viewscreen.evaluate(() => {
+      const replay = [...document.querySelectorAll("button")].find((button) => /replay/i.test(button.textContent ?? ""));
+      if (!replay) return;
+      new MutationObserver(() => {
+        if (replay.dataset["flash"] === "true") document.body.dataset["flashed"] = "replay";
+      }).observe(replay, { attributes: true });
+    });
+
+    await page.getByRole("button", { name: /photon torpedoes/i }).click();
+    // The viewscreen's own Replay button is used: it flashes there.
+    await expect(viewscreen.locator("body")).toHaveAttribute("data-flashed", "replay");
+    // Engineering is still on its own screen for a moment, then moves.
+    await expect(engineering.getByRole("heading", { name: /main engineering/i })).toBeVisible();
+    await expect(engineering.getByRole("button", { name: /back/i })).toBeVisible({ timeout: 4000 });
+
+    await assignDisplay(page.request, "engineering-1", "engineering");
+    await viewscreen.close();
+    await engineering.close();
+  });
+
   test("values move by themselves", async ({ page }) => {
     await page.goto("/d/engineering-1");
     const output = node(page, "core-output");

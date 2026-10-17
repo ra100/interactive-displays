@@ -105,7 +105,42 @@
                             "props": {
                               "label": "Photon torpedoes",
                               "tone": "danger"
-                            }
+                            },
+                            "actions": [
+                              {
+                                "do": "sound",
+                                "sound": "confirm"
+                              },
+                              {
+                                "do": "trigger",
+                                "target": "view-restart",
+                                "on": {
+                                  "screens": [
+                                    "viewscreen"
+                                  ]
+                                }
+                              },
+                              {
+                                "do": "sound",
+                                "sound": "alert",
+                                "on": {
+                                  "screens": [
+                                    "engineering"
+                                  ]
+                                },
+                                "after": 1.5
+                              },
+                              {
+                                "do": "navigate",
+                                "screen": "schematic",
+                                "on": {
+                                  "screens": [
+                                    "engineering"
+                                  ]
+                                },
+                                "after": 1.5
+                              }
+                            ]
                           }
                         },
                         {

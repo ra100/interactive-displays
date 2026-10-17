@@ -26,9 +26,9 @@ export const BaseButtonGroup = ({ props, onUse, bound = false }: WidgetRendererP
   );
 };
 
-export const BaseToggle = ({ props, onUse, bound = false }: WidgetRendererProps<WidgetPropsOf<"toggle">>) => {
+export const BaseToggle = ({ props, nodeId, onUse, bound = false }: WidgetRendererProps<WidgetPropsOf<"toggle">>) => {
   const [on, setOn] = useControlValue(props.on, bound);
-  const { flashing, flash } = usePressFlash();
+  const { flashing, flash } = usePressFlash(nodeId);
   return (
     <button
       type="button"

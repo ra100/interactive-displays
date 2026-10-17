@@ -724,3 +724,147 @@ describe("controls on displays", () => {
     expect(service.video("test", "feed", "play")).toMatchObject({ ok: false, status: 404 });
   });
 });
+
+describe("controls that reach other displays", () => {
+  const button = (id: string, actions: unknown[]) => ({ node: { id, type: "widget", kind: "button", props: { label: id }, actions } });
+
+  // A "console" screen on test, and a "panel" screen on engineering-1 and tactical-1.
+  const setUp = async (consoleButtons: unknown[], panelButtons: unknown[] = []) => {
+    const service = await open();
+    for (const [id, children] of [
+      ["console", consoleButtons],
+      ["panel", panelButtons],
+    ] as const) {
+      await service.createScreen({ ...newScreen(id), root: { ...newScreen(id).root, children } });
+      await service.publish(id);
+    }
+    await service.updateDisplay("test", { screen: "console" });
+    await service.updateDisplay("engineering-1", { screen: "panel" });
+    await service.updateDisplay("tactical-1", { screen: "panel" });
+    return service;
+  };
+
+  it("navigates the displays an action names", async () => {
+    const service = await setUp([
+      button("send", [{ do: "navigate", screen: "schematic", on: { displays: ["engineering-1"] } }]),
+      button("recall", [{ do: "back", on: "others" }]),
+    ]);
+
+    expect(await service.press("test", { nodeId: "send" })).toEqual(["navigate"]);
+    expect(service.navigated("engineering-1")).toBe("schematic");
+    expect(service.navigated("tactical-1")).toBeNull();
+    expect(service.navigated("test")).toBeNull();
+
+    expect(await service.press("test", { nodeId: "recall" })).toEqual(["back"]);
+    expect(service.navigated("engineering-1")).toBeNull();
+  });
+
+  it("finds displays by the screen they show", async () => {
+    const service = await setUp([button("all-panels", [{ do: "navigate", screen: "schematic", on: { screens: ["panel"] } }])]);
+
+    expect(await service.press("test", { nodeId: "all-panels" })).toEqual(["navigate"]);
+    expect(service.navigated("engineering-1")).toBe("schematic");
+    expect(service.navigated("tactical-1")).toBe("schematic");
+    expect(service.navigated("ops-1")).toBeNull();
+  });
+
+  it("plays sounds and videos on other displays, not on the one touched", async () => {
+    const service = await setUp([
+      button("klaxon", [
+        { do: "sound", sound: "alert", on: "all" },
+        { do: "sound", sound: "confirm" },
+        { do: "video", target: "feed", command: "restart", on: { screens: ["viewscreen"] } },
+      ]),
+    ]);
+    const events = record(service);
+
+    expect(await service.press("test", { nodeId: "klaxon" })).toEqual(["sound", "video"]);
+    const sounds = events.filter((event) => event.type === "sound");
+    expect(sounds.map((event) => event.displayId)).toContain("test");
+    expect(sounds.map((event) => event.displayId)).toContain("engineering-1");
+    expect(sounds.every((event) => event.type === "sound" && event.sound === "alert")).toBe(true);
+    expect(events.filter((event) => event.type === "video")).toEqual([
+      { type: "video", displayId: "viewscreen-1", target: "feed", command: "restart" },
+    ]);
+  });
+
+  it("uses a control on another display, which runs its own actions there", async () => {
+    const service = await setUp(
+      [button("launch", [{ do: "trigger", target: "go", on: { displays: ["engineering-1"] } }])],
+      [button("go", [{ do: "navigate", screen: "schematic" }, { do: "sound", sound: "alert" }, { do: "setSignal", signal: "shields", value: 20 }])],
+    );
+    const events = record(service);
+
+    expect(await service.press("test", { nodeId: "launch" })).toEqual(["trigger"]);
+    expect(events).toContainEqual({ type: "trigger", displayId: "engineering-1", nodeId: "go" });
+    expect(service.navigated("engineering-1")).toBe("schematic");
+    expect(service.navigated("tactical-1")).toBeNull();
+    expect(service.signalValues(0)["shields"]).toBe(20);
+    // The display that was triggered plays its control's undelayed sound itself.
+    expect(events.filter((event) => event.type === "sound")).toEqual([]);
+  });
+
+  it("skips a trigger for a control the display does not show", async () => {
+    const service = await setUp([button("launch", [{ do: "trigger", target: "missing", on: "others" }])]);
+    expect(await service.press("test", { nodeId: "launch" })).toEqual([]);
+  });
+
+  it("stops two controls that trigger each other", async () => {
+    const service = await setUp(
+      [button("ping", [{ do: "trigger", target: "pong", on: { screens: ["panel"] } }])],
+      [button("pong", [{ do: "trigger", target: "ping", on: { screens: ["console"] } }])],
+    );
+    const events = record(service);
+
+    expect(await service.press("test", { nodeId: "ping" })).toEqual(["trigger"]);
+    const triggers = events.filter((event) => event.type === "trigger");
+    // ping → pong on two displays → ping twice → pong four times, then the depth limit.
+    expect(triggers).toHaveLength(8);
+  });
+
+  it("runs delayed actions later, and drops them when the cues go back to the top", async () => {
+    vi.useFakeTimers();
+    try {
+      const service = await setUp([
+        button("beat", [
+          { do: "sound", sound: "alert", on: "others", after: 2 },
+          { do: "navigate", screen: "schematic", on: "others", after: 2 },
+        ]),
+      ]);
+      const events = record(service);
+
+      expect(await service.press("test", { nodeId: "beat" })).toEqual(["sound", "navigate"]);
+      expect(service.scheduled()).toBe(2);
+      expect(service.navigated("engineering-1")).toBeNull();
+
+      await vi.advanceTimersByTimeAsync(2000);
+      expect(service.scheduled()).toBe(0);
+      expect(service.navigated("engineering-1")).toBe("schematic");
+      expect(events.some((event) => event.type === "sound" && event.displayId === "engineering-1")).toBe(true);
+
+      await service.press("test", { nodeId: "beat" });
+      await service.resetCues();
+      expect(service.scheduled()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("keeps other displays alone while the show locks display buttons", async () => {
+    const service = await setUp([
+      button("send", [{ do: "navigate", screen: "schematic", on: "others" }]),
+      button("here", [{ do: "navigate", screen: "schematic", on: "self" }]),
+    ]);
+    await service.updateSettings({ displayGlobalActions: false });
+
+    expect(await service.press("test", { nodeId: "send" })).toEqual([]);
+    expect(service.navigated("engineering-1")).toBeNull();
+    expect(await service.press("test", { nodeId: "here" })).toEqual(["navigate"]);
+  });
+
+  it("does not navigate displays that preview a draft", async () => {
+    const service = await setUp([button("send", [{ do: "navigate", screen: "schematic", on: { displays: ["engineering-1"] } }])]);
+    service.setPreview("engineering-1", "bridge");
+    expect(await service.press("test", { nodeId: "send" })).toEqual([]);
+  });
+});

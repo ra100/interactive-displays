@@ -117,8 +117,8 @@ describe("media bus", () => {
 });
 
 describe("usePressFlash", () => {
-  const Flash = () => {
-    const { flashing, flash } = usePressFlash();
+  const Flash = ({ nodeId }: { nodeId?: string }) => {
+    const { flashing, flash } = usePressFlash(nodeId);
     return (
       <button type="button" data-flash={flashing} onClick={flash}>
         press
@@ -136,5 +136,21 @@ describe("usePressFlash", () => {
       vi.advanceTimersByTime(200);
     });
     expect(button).toHaveAttribute("data-flash", "false");
+  });
+
+  it("flashes when the media bus says another display used it", () => {
+    vi.useFakeTimers();
+    const bus = createMediaBus();
+    render(
+      <MediaBusContext.Provider value={bus}>
+        <Flash nodeId="launch" />
+      </MediaBusContext.Provider>,
+    );
+    const button = screen.getByRole("button");
+    act(() => bus.flash("other"));
+    expect(button).toHaveAttribute("data-flash", "false");
+    act(() => bus.flash("launch"));
+    expect(button).toHaveAttribute("data-flash", "true");
+    vi.useRealTimers();
   });
 });

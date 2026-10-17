@@ -26,8 +26,8 @@ export const CrtText = ({ props }: WidgetRendererProps<WidgetPropsOf<"text">>) =
 );
 
 // A menu line in the nav column ("> HELM"), a bracketed key everywhere else ("[ ENGAGE ]"). Pressing inverts it.
-export const CrtButton = ({ props, slot, onUse }: WidgetRendererProps<WidgetPropsOf<"button">>) => {
-  const { flashing, flash } = usePressFlash();
+export const CrtButton = ({ props, nodeId, slot, onUse }: WidgetRendererProps<WidgetPropsOf<"button">>) => {
+  const { flashing, flash } = usePressFlash(nodeId);
   const shape = slot === "nav" ? "menu" : "key";
   return (
     <button
