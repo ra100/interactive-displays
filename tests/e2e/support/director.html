@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Interactive Displays showcase</title>
+<style>
+@font-face { font-family: "Antonio"; font-weight: 700; src: url("/assets/__ANTONIO700__") format("woff2"); }
+@font-face { font-family: "Antonio"; font-weight: 400; src: url("/assets/__ANTONIO400__") format("woff2"); }
+@font-face { font-family: "Rajdhani"; font-weight: 600; src: url("/assets/__RAJDHANI600__") format("woff2"); }
+@font-face { font-family: "Rajdhani"; font-weight: 400; src: url("/assets/__RAJDHANI400__") format("woff2"); }
+:root { --accent: #ff9c00; }
+html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #000; }
+iframe { position: absolute; border: 0; background: #000; }
+#main, #next { left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 1920px 300px; transition: transform 1.2s cubic-bezier(.4,0,.2,1); }
+/* The next page loads out of sight while the current one plays, so a cut only has to swap them. */
+#next { visibility: hidden; }
+#pip {
+  right: 48px; bottom: 48px; width: 768px; height: 432px; opacity: 0;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.45), 0 24px 80px rgba(0,0,0,.9);
+  transition: opacity .5s ease;
+}
+#pip.on { opacity: 1; }
+#pip-tag {
+  position: absolute; right: 48px; bottom: 488px; padding: 6px 14px; opacity: 0;
+  background: var(--accent); color: #000; font: 600 20px/1 "Rajdhani"; letter-spacing: .2em;
+  transition: opacity .5s ease;
+}
+#pip-tag.on { opacity: 1; }
+#caption {
+  position: fixed; left: 56px; bottom: 56px; max-width: 1040px; padding: 18px 30px 20px 24px;
+  background: rgba(0,0,0,.84); border-left: 8px solid var(--accent); color: #fff;
+  opacity: 0; transform: translateY(18px); transition: opacity .45s ease, transform .45s ease;
+}
+#caption.on { opacity: 1; transform: none; }
+#caption.right { left: auto; right: 56px; bottom: auto; top: 96px; max-width: 900px; }
+#kicker { font: 600 21px/1 "Rajdhani"; letter-spacing: .26em; color: var(--accent); text-transform: uppercase; }
+#title { margin-top: 10px; font: 700 54px/1.05 "Antonio"; letter-spacing: .03em; text-transform: uppercase; }
+#subtitle { margin-top: 8px; font: 400 27px/1.3 "Rajdhani"; color: #dde3ec; }
+#subtitle:empty { display: none; }
+#card {
+  position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 28px; background: radial-gradient(ellipse at center, rgba(20,24,40,.9), #000 70%); opacity: 0;
+  transition: opacity .8s ease;
+}
+#card.on { opacity: 1; }
+#card h1 { margin: 0; font: 700 150px/1 "Antonio"; letter-spacing: .07em; color: #ff9c00; text-transform: uppercase; }
+#card p { margin: 0; max-width: 1400px; text-align: center; font: 400 38px/1.35 "Rajdhani"; color: #e8ecf2; }
+#card .bars { display: flex; gap: 12px; }
+#card .bars span { display: block; height: 22px; border-radius: 11px; }
+#fade { position: fixed; inset: 0; background: #000; opacity: 1; transition: opacity .35s ease; }
+#pip, #pip-tag, #caption, #card, #fade { pointer-events: none; }
+</style>
+</head>
+<body>
+<iframe id="main" title="App"></iframe>
+<iframe id="next" title="Next"></iframe>
+<iframe id="pip" title="Display"></iframe>
+<div id="pip-tag">DISPLAY · LIVE</div>
+<div id="caption"><div id="kicker"></div><div id="title"></div><div id="subtitle"></div></div>
+<div id="card">
+  <div class="bars">
+    <span style="width:220px;background:#ff9c00"></span><span style="width:90px;background:#cc99cc"></span>
+    <span style="width:160px;background:#9999ff"></span><span style="width:60px;background:#ffcc99"></span>
+  </div>
+  <h1 id="card-title"></h1>
+  <p id="card-text"></p>
+  <div class="bars">
+    <span style="width:60px;background:#ffcc99"></span><span style="width:160px;background:#9999ff"></span>
+    <span style="width:90px;background:#cc99cc"></span><span style="width:220px;background:#ff9c00"></span>
+  </div>
+</div>
+<div id="fade"></div>
+<script>
+const $ = (id) => document.getElementById(id);
+const load = (frame, src) => new Promise((resolve) => {
+  frame.addEventListener("load", () => resolve(), { once: true });
+  frame.src = src;
+});
+window.director = {
+  go: (src) => load($("main"), src),
+  prepare: (src) => load($("next"), src),
+  swap: () => {
+    const shown = $("main");
+    const waiting = $("next");
+    shown.id = "next";
+    waiting.id = "main";
+    shown.style.transform = "";
+    shown.src = "about:blank";
+  },
+  preloadPip: (src) => ($("pip").getAttribute("src") === src ? Promise.resolve() : load($("pip"), src)),
+  pip: async (src) => {
+    if (!src) {
+      $("pip").classList.remove("on"); $("pip-tag").classList.remove("on");
+      setTimeout(() => { $("pip").src = "about:blank"; }, 600);
+      return;
+    }
+    if ($("pip").getAttribute("src") !== src) await load($("pip"), src);
+    $("pip").classList.add("on"); $("pip-tag").classList.add("on");
+  },
+  zoom: (scale, x = 960, y = 540) => {
+    $("main").style.transformOrigin = `${x}px ${y}px`;
+    $("main").style.transform = scale === 1 ? "" : `scale(${scale})`;
+  },
+  fade: (on) => { $("fade").style.opacity = on ? "1" : "0"; },
+  accent: (colour) => document.documentElement.style.setProperty("--accent", colour),
+  caption: (kicker, title, subtitle = "", place = "") => {
+    $("kicker").textContent = kicker; $("title").textContent = title; $("subtitle").textContent = subtitle;
+    $("caption").classList.toggle("right", place === "right");
+    $("caption").classList.add("on");
+  },
+  hide: () => $("caption").classList.remove("on"),
+  card: (title, text) => {
+    if (!title) { $("card").classList.remove("on"); return; }
+    $("card-title").textContent = title; $("card-text").textContent = text; $("card").classList.add("on");
+  },
+};
+</script>
+</body>
+</html>

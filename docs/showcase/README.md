@@ -3,6 +3,21 @@
 What each phase of the v2 rebuild looks like. Screenshots are captured by `tests/e2e/showcase.spec.ts`
 against the real server and built app (`pnpm build && SHOWCASE=phase-N pnpm test:e2e showcase`).
 
+## Video tour
+
+[**showcase.mp4**](video/showcase.mp4) (4 minutes, 1080p): the consoles of the demo show in LCARS, the show
+states from yellow alert to a hull breach, the ship schematic, every LCARS era and the Holo HUD and Terminal
+looks, the operator console running cues with a display live in the corner, and the editor changing a widget,
+publishing it and generating screens. Everything in it is the real app, recorded from a fresh demo show:
+
+```bash
+pnpm build && SHOWCASE=video pnpm test:e2e video   # needs ffmpeg with libx264
+```
+
+The recording (`tests/e2e/video.spec.ts`) runs its own server, drives the app through a director page
+(`tests/e2e/support/director.html`: the app in a frame, a live display picture-in-picture, captions and fades) and
+encodes Chrome's screencast frames at their real times into a 30 fps H.264 video.
+
 ## Ship schematic: the Norway class from its model
 
 A new **ship schematic** element draws a real ship, traced from the Norway class Blender model: from above,
