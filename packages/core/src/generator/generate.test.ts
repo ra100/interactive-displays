@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { catalog } from "../catalog/index.ts";
+import { catalog, widgets } from "../catalog/index.ts";
 import { lintScreen } from "../lint/lintScreen.ts";
 import { applyOps } from "../ops/applyOps.ts";
 import type { Op } from "../ops/ops.ts";
@@ -341,7 +341,7 @@ describe("instruments and panels", () => {
             id: "shields",
             label: "Shields",
             metrics: [{ id: "strength", label: "STRENGTH", unit: "%", range: [95, 100], alertRange: [20, 60] }],
-            instruments: ["shield-status"],
+            instruments: ["shield-status", "ship-schematic"],
           },
           {
             id: "weapons",
@@ -385,6 +385,25 @@ describe("instruments and panels", () => {
     expect(weapons?.when?.find((entry) => entry.state === "red-alert")?.props).toEqual({ armed: true });
     const lock = widget("target-lock");
     expect(lock?.when?.find((entry) => entry.state === "red-alert")?.props).toMatchObject({ locked: true });
+  });
+
+  it("draws the ship for tactical: shields live, weapons armed in an alert, damage control when damaged", () => {
+    const damagedShow = { ...show, states: [...show.states, { id: "hull-breach", effect: "damaged" as const }] };
+    const ships = [1, 2, 3, 4, 5, 6, 7, 8]
+      .map((seed) => generateScreen({ ...base, show: damagedShow, pack: tacticalPack, recipe: tactical, seed, density: "dense", archetype: "dashboard" }))
+      .flatMap((screen) => nodes(screen.root))
+      .filter((node) => node.type === "widget" && node.kind === "ship-schematic");
+    expect(ships.length).toBeGreaterThan(0);
+    for (const ship of ships) {
+      if (ship.type !== "widget") continue;
+      expect(ship.props).toMatchObject({ mode: "tactical", label: "Shields" });
+      expect(["top", "turn"]).toContain(ship.props["view"]);
+      expect(Object.keys(ship.bind ?? {})).toEqual(["shields"]);
+      expect(ship.when?.find((entry) => entry.state === "red-alert")?.props).toEqual({ armed: true });
+      const breach = ship.when?.find((entry) => entry.state === "hull-breach")?.props;
+      expect(breach).toMatchObject({ mode: "damage", damaged: expect.any(Array) });
+      expect(widgets["ship-schematic"].props.safeParse({ ...ship.props, ...breach }).success).toBe(true);
+    }
   });
 
   it("puts each block in a panel frame with its heading in the title slot", () => {

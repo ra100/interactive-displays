@@ -51,6 +51,7 @@ export const INSTRUMENT_WIDGETS = [
   "spectrum",
   "globe",
   "scan-progress",
+  "ship-schematic",
 ] as const;
 
 export const InstrumentWidgetSchema = z.enum(INSTRUMENT_WIDGETS);
