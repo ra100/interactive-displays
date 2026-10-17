@@ -2,19 +2,33 @@
 
 Self-hosted sci-fi interface displays for film and video sets. One server drives 6–15 browser displays
 (TVs, tablets, monitors) in real time; screens are documents you can hand-write, generate or let AI edit, and
-the look comes from swappable theme packs (Star Trek LCARS first, other UI families later).
-
-> **Status: v2 rebuild, Phase 2 (editor and operator console).** The design and roadmap live in
-> [docs/plans/2026-10-14-feat-interactive-displays-v2-plan.md](docs/plans/2026-10-14-feat-interactive-displays-v2-plan.md).
-> What works today and how to try it: [docs/showcase](docs/showcase/README.md) and
-> [docs/ACCEPTANCE-TESTING.md](docs/ACCEPTANCE-TESTING.md). The v1 code is archived in [legacy/](legacy/README.md).
+the look comes from swappable theme packs: Star Trek LCARS, a holographic HUD and a green-screen terminal.
 
 <p align="center">
-  <img src="docs/showcase/phase-1/bridge-sidebar.png" alt="The LCARS bridge screen of the demo show" width="720" />
+  <a href="docs/showcase/video/showcase.mp4">
+    <img src="docs/showcase/video/teaser.webp" alt="A sped-up tour of the app: LCARS consoles, alerts, the ship schematic, the Holo HUD and Terminal looks, the operator console and the editor" width="720" />
+  </a>
+  <br />
+  <sub>The tour at 4× speed. <a href="docs/showcase/video/showcase.mp4"><b>Watch the full video</b></a> (3½ min, 1080p) ·
+  <a href="docs/showcase/README.md"><b>Showcase</b></a> with screenshots of everything</sub>
 </p>
-<p align="center">
-  <img src="docs/showcase/phase-2/editor.png" alt="The screen editor" width="720" />
-</p>
+
+**Status: v2 complete.** Three looks (LCARS in six eras, Holo HUD, green-screen Terminal), a screen editor with
+drag-and-drop layout, one-click generation from content packs, an operator console with cues, show states from
+yellow alert to a hull breach, a ship schematic traced from a 3D model, portrait displays, and AI editing over MCP.
+See the [showcase](docs/showcase/README.md) for what each part looks like and
+[docs/ACCEPTANCE-TESTING.md](docs/ACCEPTANCE-TESTING.md) for how to try it. The design and roadmap are in
+[docs/plans/2026-10-14-feat-interactive-displays-v2-plan.md](docs/plans/2026-10-14-feat-interactive-displays-v2-plan.md);
+the v1 code is archived in [legacy/](legacy/README.md).
+
+| LCARS | Holo HUD | Terminal |
+|---|---|---|
+| ![LCARS weapons control on a 4K panel](docs/showcase/instruments/4k-weapons.png) | ![Weapons control in the Holo HUD](docs/showcase/instruments/4k-weapons-hud.png) | ![The conn on the green-screen terminal](docs/showcase/instruments/4k-conn-crt.png) |
+| ![The master systems display with the Norway class ship](docs/showcase/ship/4k-msd.png) | ![The bridge in the Holo HUD on red alert](docs/showcase/phase-6/4k-bridge-hud-red-alert.png) | ![The freighter reactor room on the terminal](docs/showcase/phase-6/4k-freighter-reactor-room.png) |
+
+| Operator console | Screen editor |
+|---|---|
+| ![The operator console with cues and the Look panel](docs/showcase/phase-6/operator-cues-and-look.png) | ![The editor with a screen built by drag and drop](docs/showcase/layout-dnd/editor-built.png) |
 
 ## Run it
 
@@ -49,9 +63,12 @@ pnpm start            # http://localhost:3010/d
 
 ## Running the show
 
-- **`/operator`** on a phone or tablet: show states (normal, alerts, damaged) and a blackout panic button; every
-  display with a live thumbnail, its screen, Identify, Reload, Rename and a QR code to open it on a tablet.
-- **`/builder`** on a laptop: the screen library and the editor. Edits are saved as a draft; displays change only
+- **`/operator`** on a phone or tablet: the running order of cues (GO or the space bar runs the next one: state,
+  values, screens and videos at once), show states (normal, alerts, damaged) and a blackout panic button, live
+  value sliders, the Look (theme, variant, size, sound pack), and every display with a live thumbnail, its screen,
+  Identify, Reload, Rename, video transport and a QR code to open it on a tablet.
+- **`/builder`** on a laptop: the screen library, one-click Generate from a ship section, and the editor with
+  drag-and-drop layout and per-state overrides. Edits are saved as a draft; displays change only
   when you press Publish. "Send to display" shows a draft on one display first; History restores any earlier
   revision; Live edit (for rehearsals) puts every edit on air at once.
 - Set `EDITOR_TOKEN` to protect both; displays never need it. Open `/operator?token=<token>` once on a device (or
