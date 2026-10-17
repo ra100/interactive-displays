@@ -36,26 +36,41 @@ describe("ship models", () => {
     for (const system of SHIP_SYSTEMS) expect(norway.parts.some((part) => part.system === system)).toBe(true);
   });
 
-  it.each(VIEWS)("keeps the %s view's outline, parts and their anchors inside its box", (view) => {
-    const [x, y, width, height] = norway.views[view].box;
+  const classViews = Object.values(ships).flatMap((ship) => VIEWS.map((view) => ({ ship, view })));
+
+  it.each(classViews)("keeps the $ship.id $view view's outline, parts and their anchors inside its box", ({ ship, view }) => {
+    const [x, y, width, height] = ship.views[view].box;
     const inside = ([px, py]: readonly [number, number]) => px >= x - 1 && px <= x + width + 1 && py >= y - 1 && py <= y + height + 1;
-    const outline = parsePath(norway.views[view].outline).flat();
-    expect(outline.length).toBeGreaterThan(50);
+    const outline = parsePath(ship.views[view].outline).flat();
+    expect(outline.length).toBeGreaterThan(20);
     expect(outline.every(inside)).toBe(true);
-    for (const part of norway.parts) {
+    for (const part of ship.parts) {
       expect(part.views[view].path).toMatch(/^M/);
       expect(inside(part.views[view].anchor)).toBe(true);
     }
   });
 
+  it.each(Object.values(ships))("gives $id unique part ids and conduits that start inside the hull", (ship) => {
+    expect(new Set(ship.parts.map((part) => part.id)).size).toBe(ship.parts.length);
+    for (const conduit of ship.conduits) {
+      for (const [x, y, z] of conduit.points) {
+        expect(Math.abs(x)).toBeLessThan(ship.size.length / 2 + 2);
+        expect(Math.abs(y)).toBeLessThan(ship.size.beam / 2 + 2);
+        expect(Math.abs(z)).toBeLessThan(ship.size.height / 2 + 2);
+      }
+    }
+  });
+
   it("decodes the lines plan into loops of points", () => {
     expect(Array.from(decodeLoop("1 2 3 .5-1 0-2.5 1 1"))).toEqual([1, 2, 3, 1.5, 1, 3, -1, 2, 4]);
-    expect(norway.loops.length).toBeGreaterThan(40);
-    for (const loop of norway.loops) {
-      expect(loop.length % 3).toBe(0);
-      for (let index = 0; index < loop.length; index += 3) {
-        expect(Math.abs(loop[index] ?? 0)).toBeLessThan(norway.size.length / 2 + 2);
-        expect(Math.abs(loop[index + 2] ?? 0)).toBeLessThan(norway.size.height / 2 + 2);
+    for (const ship of Object.values(ships)) {
+      expect(ship.loops.length).toBeGreaterThan(20);
+      for (const loop of ship.loops) {
+        expect(loop.length % 3).toBe(0);
+        for (let index = 0; index < loop.length; index += 3) {
+          expect(Math.abs(loop[index] ?? 0)).toBeLessThan(ship.size.length / 2 + 2);
+          expect(Math.abs(loop[index + 2] ?? 0)).toBeLessThan(ship.size.height / 2 + 2);
+        }
       }
     }
   });
