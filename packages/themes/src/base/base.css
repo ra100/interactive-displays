@@ -1564,10 +1564,13 @@
   animation: base-blink 0.9s steps(2, jump-none) infinite;
 }
 
-/* Weapons hot: arrays and launchers light and pulse. */
+/* Weapons hot: arrays and launchers pulse, and light up where the hull does not hide them. */
 .base-ship[data-armed="true"] :is(.base-ship__part, .base-ship__marker)[data-state="active"]:is([data-system="phasers"], [data-system="torpedoes"]) {
-  fill: var(--tone);
   animation: base-ship-charge 1.6s ease-in-out infinite;
+}
+
+.base-ship[data-armed="true"] :is(.base-ship__part:not([data-hidden="true"]), .base-ship__marker)[data-state="active"]:is([data-system="phasers"], [data-system="torpedoes"]) {
+  fill: var(--tone);
 }
 
 @keyframes base-ship-charge {

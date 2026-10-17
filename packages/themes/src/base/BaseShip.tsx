@@ -306,7 +306,7 @@ export const BaseShipSchematic = ({ props }: WidgetRendererProps<ShipProps>) => 
         <span className="base-ship__view">{VIEW_NAMES[props.view]}</span>
       </div>
       <div className="base-ship__area" ref={area}>
-        {props.view === "turn" ? (
+        {turning ? (
           <TurnShip ship={ship} props={props} fit={fit} now={still ? 0 : now} />
         ) : (
           <FlatShip ship={ship} view={props.view} props={props} fit={fit} still={still} />
