@@ -1030,3 +1030,100 @@ test.describe("showcase instruments", () => {
     }
   });
 });
+
+test.describe("showcase ship", () => {
+  test.skip(phase !== "ship", "set SHOWCASE=ship to capture screenshots");
+
+  const K4 = { width: 3840, height: 2160 };
+  // Long enough for the line art to sweep in.
+  const DRAWN = 3000;
+
+  test.afterEach(async ({ request }) => {
+    expect((await request.put("/api/show/theme", { data: { id: "lcars" } })).ok()).toBe(true);
+    await setState(request, "normal");
+    await request.put("/api/displays/test", { data: { screen: "bridge" } });
+    await request.delete("/api/screens/showcase-ship");
+  });
+
+  const onScreen = async (page: Page, request: APIRequestContext, name: string, screen: string, size = K4) => {
+    expect((await request.put("/api/displays/test", { data: { screen } })).ok()).toBe(true);
+    await page.setViewportSize(size);
+    await page.goto("/d/test");
+    await expect(page.locator(".base-ship").first()).toBeVisible();
+    await settle(page);
+    await page.waitForTimeout(DRAWN);
+    await page.screenshot({ path: out(name) });
+  };
+
+  test("the master systems display and the tactical plot", async ({ page, request }) => {
+    expect((await request.put("/api/signals/shields/value", { data: { value: 85 } })).ok()).toBe(true);
+    await onScreen(page, request, "4k-msd", "schematic");
+    await onScreen(page, request, "4k-tactical", "tactical");
+    await setState(request, "red-alert");
+    await onScreen(page, request, "4k-tactical-red-alert", "tactical");
+    await onScreen(page, request, "4k-msd-red-alert", "schematic");
+    expect((await request.put("/api/signals/shields/value", { data: { value: 0 } })).ok()).toBe(true);
+  });
+
+  test("the master systems display in the other looks", async ({ page, request }) => {
+    expect((await request.put("/api/show/theme", { data: { id: "hud" } })).ok()).toBe(true);
+    await onScreen(page, request, "4k-msd-hud", "schematic");
+    expect((await request.put("/api/show/theme", { data: { id: "crt" } })).ok()).toBe(true);
+    await onScreen(page, request, "4k-msd-crt", "schematic");
+  });
+
+  // A screen of ship schematics side by side in a grid.
+  const shipScreen = async (request: APIRequestContext, columns: number, cells: Record<string, unknown>[]) => {
+    const response = await request.post("/api/screens", {
+      data: {
+        schemaVersion: 2,
+        id: "showcase-ship",
+        name: "Ship views",
+        root: {
+          id: "root",
+          type: "container",
+          layout: { kind: "grid", columns: Array.from({ length: columns }, () => "1fr"), rows: Array.from({ length: Math.ceil(cells.length / columns) }, () => "1fr"), gap: "medium" },
+          children: cells.map((props, index) => ({ node: { id: `ship-${index}`, type: "widget", kind: "ship-schematic", props } })),
+        },
+      },
+    });
+    expect(response.status()).toBe(201);
+    expect((await request.post("/api/screens/showcase-ship/publish", { data: {} })).ok()).toBe(true);
+  };
+
+  test("every view and mode", async ({ page, request }) => {
+    await shipScreen(request, 2, [
+      { view: "top", mode: "tactical", shields: 62, armed: true, label: "Tactical" },
+      { view: "side", mode: "engineering", power: 90, label: "Engineering" },
+      { view: "front", mode: "damage", damaged: ["nacelles", "torpedoes"], offline: ["deflector"], label: "Damage control" },
+      { view: "turn", mode: "schematic", highlight: ["bridge"], label: "Norway class" },
+    ]);
+    await onScreen(page, request, "views", "showcase-ship", { width: 1920, height: 1080 });
+    for (const theme of ["hud", "crt"]) {
+      expect((await request.put("/api/show/theme", { data: { id: theme } })).ok()).toBe(true);
+      await onScreen(page, request, `views-${theme}`, "showcase-ship", { width: 1920, height: 1080 });
+    }
+  });
+
+  test("bow up in tall boxes", async ({ page, request }) => {
+    await shipScreen(request, 3, [
+      { view: "top", mode: "tactical", shields: 40, armed: true, label: "Tactical" },
+      { view: "top", mode: "engineering", label: "Engineering" },
+      { view: "top", mode: "damage", damaged: ["phasers"], offline: ["impulse"], label: "Damage control" },
+    ]);
+    await onScreen(page, request, "bow-up", "showcase-ship", { width: 1920, height: 1080 });
+  });
+
+  test("the turning view as it turns", async ({ page, request }) => {
+    expect((await request.put("/api/displays/test", { data: { screen: "schematic" } })).ok()).toBe(true);
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await page.goto("/d/test");
+    const turn = page.locator(".base-ship[data-view='turn']");
+    await expect(turn).toBeVisible();
+    await settle(page);
+    for (const frame of [0, 1, 2, 3]) {
+      await turn.screenshot({ path: out(`turn-${frame}`) });
+      await page.waitForTimeout(2500);
+    }
+  });
+});

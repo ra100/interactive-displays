@@ -75,7 +75,7 @@ test.describe("show tools", () => {
 
     await cues.getByRole("listitem", { name: "Hull breach" }).getByRole("button", { name: "Run" }).click();
     await expect(effect).toHaveAttribute("data-effect", "damaged");
-    await expect(corridor.getByText(/ship schematic/i).first()).toBeVisible();
+    await expect(corridor.getByText(/master systems display/i).first()).toBeVisible();
 
     await cues.getByRole("button", { name: "Back to top" }).click();
     await expect(cues.locator("#go-next")).toContainText("Top of scene");
