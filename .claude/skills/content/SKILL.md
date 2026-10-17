@@ -40,6 +40,10 @@ system must have) and `tags` (matched against placeholder intents) decide when i
 
 Keep buttons per stack small (the property test allows 8) and labels short; lint flags long labels.
 
+`ship-schematic` as an instrument follows the section: in `tactical` it binds shields and arms in an alert, in
+`engineering` it binds power, elsewhere it is a plain schematic; a system whose id is a ship system (`deflector`,
+`shuttlebay`…) is highlighted, and a state with the `damaged` effect turns it to damage control.
+
 ## Changing the generator
 
 - `generate.ts`: layout choice (`archetypeWeights`), chrome (title, nav or toolbar, status line, alert banner),

@@ -3,6 +3,66 @@
 What each phase of the v2 rebuild looks like. Screenshots are captured by `tests/e2e/showcase.spec.ts`
 against the real server and built app (`pnpm build && SHOWCASE=phase-N pnpm test:e2e showcase`).
 
+## Ship schematic: the Norway class from its model
+
+A new **ship schematic** element draws a real ship, traced from the Norway class Blender model: from above,
+the side or the front, or turning in three dimensions as a holographic lines plan. A mode says what the drawing
+is for. **Tactical** draws the shield bubble (it thins and turns amber, then red, as shields fall) and lights
+the phaser arrays and torpedo launcher when weapons are armed. **Engineering** shows the warp core breathing and
+power flowing along the conduits to the nacelles, impulse engines and deflector, faster with more power, with
+deck lines. **Damage control** blinks damaged systems and darkens offline ones. Systems the screen marks are
+picked out in every mode, and labels hang off leaders in bands above and below the ship. The drawing sweeps in
+once behind a scan line when the screen appears; in a box taller than wide the dorsal view stands bow up.
+`SHOWCASE=ship pnpm test:e2e showcase` captures these (4K shots at the show's 70% scale, 256 colours).
+
+**Master systems display.** The demo's ship schematic screen: the port profile with power distribution, the
+dorsal tactical view following the `shields` signal, the forward view with the deflector marked and the ship
+turning in the side panel. Red alert arms the weapons; the damaged state turns every view to damage control.
+
+| Master systems display | Red alert |
+|---|---|
+| ![Master systems display](ship/4k-msd.png) | ![Master systems display on red alert](ship/4k-msd-red-alert.png) |
+
+**Tactical.** The tactical screen plots the ship beside its weapon controls.
+
+| Tactical | Red alert |
+|---|---|
+| ![Tactical plot](ship/4k-tactical.png) | ![Tactical plot on red alert](ship/4k-tactical-red-alert.png) |
+
+**Every view and mode**, and the same in the other looks:
+
+| LCARS | Holo HUD | Terminal |
+|---|---|---|
+| ![Views in LCARS](ship/views.png) | ![Views in the HUD](ship/views-hud.png) | ![Views on the terminal](ship/views-crt.png) |
+
+**Bow up in tall boxes**, and the turning view a few seconds apart:
+
+![Dorsal views bow up](ship/bow-up.png)
+
+| | | | |
+|---|---|---|---|
+| ![](ship/turn-0.png) | ![](ship/turn-1.png) | ![](ship/turn-2.png) | ![](ship/turn-3.png) |
+
+**The other looks.** The master systems display in the Holo HUD (glowing glass) and on the terminal (vector
+strokes only):
+
+| Holo HUD | Terminal |
+|---|---|
+| ![Master systems display in the HUD](ship/4k-msd-hud.png) | ![Master systems display on the terminal](ship/4k-msd-crt.png) |
+
+### Under the hood
+
+- `tools/ships/` traces the model once, offline, with Blender as a Python module: Freestyle line art for each
+  view, outlines from the render's alpha, each system's outline, label anchor and whether the hull hides it,
+  windows, deck lines, and a lines plan cut through the solid that depth maps along three axes enclose. The
+  result is `packages/themes/src/ships/norway.json`, in metres, checked against a Zod schema when it loads.
+- The renderer is one SVG per view. Labels are sized from the text around them, spread so they never overlap,
+  and the least important are dropped when a band is full. The turning view projects about 1,700 points at 20
+  frames a second; displays that agree on the time agree on the angle.
+- Generated screens get it too: tactical ones follow the shields and arm in an alert, engineering ones follow
+  the core's power.
+- Adding a ship: see the `ships` skill (`.claude/skills/ships/SKILL.md`).
+
 ## Instruments and panels
 
 Eleven new elements for scans, graphs, tactical and navigation stations, and a nested **panel** layout so the

@@ -68,7 +68,7 @@ centimetres (see `docs/deviations/2026-10-16-physical-button-size.md`).
 | Lamp rows: small rounded lights blinking | TNG Ops and Engineering | `status-matrix` widget, drawn as pills in LCARS |
 | Segmented gauges with caps | TNG Engineering | `gauge` widget, segmented variant |
 | Readout tags: capped label with number, value beside it | Every era | `readout` widget |
-| Ship cutaway (Okudagram) | Every era | `image` widget with an asset (the demo's ship schematic) |
+| Ship cutaway (Okudagram), master systems display | Every era, TNG Engineering | `ship-schematic` widget (line art traced from a model; `image` for anything else) |
 | Alert banner | Every era | `alert-banner` widget |
 | Sections inside a frame: a sweep, top or bottom bar, bracket or rails with its own title and tone blocks | TNG Engineering, VOY Astrometrics, Lower Decks (RITOS) | `panel` layout, eight shapes |
 | Oscilloscope traces: sine, carrier, ECG | TNG Sickbay, Science | `waveform` widget |
@@ -76,6 +76,7 @@ centimetres (see `docs/deviations/2026-10-16-physical-button-size.md`).
 | Planet scan: globe with grid, scan line and survey sites | TNG Science, VOY Astrometrics | `globe` widget |
 | Scan in progress with percentage and result | Every era | `scan-progress` widget |
 | Shields by facing around a ship outline | TNG and VOY Tactical | `shield-status` widget |
+| Ship line art drawing itself, a turning wireframe | Titan.DS, TNG and VOY diagnostics | `ship-schematic` (sweeps in when it appears; `turn` view) |
 | Phaser banks and torpedo tubes | TNG Tactical, Defiant | `weapons` widget |
 | Targeting scanner: rings, brackets, lock, bearing and range | TNG Tactical | `target-lock` widget |
 | Heading as bearing and mark, tape or rose | TNG Conn | `heading` widget |
@@ -86,7 +87,7 @@ centimetres (see `docs/deviations/2026-10-16-physical-button-size.md`).
 ## Not drawn yet
 
 - A keypad for codes and authorisations.
-- Ship line art that draws itself stroke by stroke (Titan.DS), and a DNA helix.
+- A DNA helix.
 - Transporter pad and pattern buffer readouts.
 
 - Picard double elbows (two thin parallel sweeps) and the rounded-rectangle Picard panels.
