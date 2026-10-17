@@ -234,7 +234,8 @@
         }
       ],
       "instruments": [
-        "spectrum"
+        "spectrum",
+        "ship-schematic"
       ]
     }
   ],

@@ -180,7 +180,8 @@
         "Secondary conduits on standby"
       ],
       "instruments": [
-        "waveform"
+        "waveform",
+        "ship-schematic"
       ]
     },
     {
@@ -279,6 +280,9 @@
           "label": "SEAL BULKHEADS",
           "danger": true
         }
+      ],
+      "instruments": [
+        "ship-schematic"
       ]
     }
   ],

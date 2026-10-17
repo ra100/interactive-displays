@@ -1,3 +1,4 @@
+import { SHIP_SYSTEMS } from "../catalog/shipSchematic.ts";
 import type { Block, InstrumentWidget, Metric, MetricWidget, Part, System } from "../schema/content.ts";
 import type { ChildEntry, Node, When, WidgetNode } from "../schema/node.ts";
 import type { Binding } from "../schema/signal.ts";
@@ -122,6 +123,14 @@ const percentOf = (metric: Metric | undefined): { range: [number, number]; alert
 
 const word = (context: Context, random: Random, max = 24): string => random.pick(context.pack.vocab.words).toUpperCase().slice(0, max);
 
+// The ship schematic as each section sees it, and the views that suit it.
+const SHIP_MODES = { tactical: "tactical", engineering: "engineering" } as const;
+const SHIP_VIEWS = {
+  tactical: ["top", "top", "turn"],
+  engineering: ["side", "side", "turn"],
+  schematic: ["top", "side", "front", "turn"],
+} as const;
+
 // An instrument stands for the system as a whole. Its live parts follow the system's first reading where that
 // fits (a level in percent, a speed), and otherwise wander in believable ranges; alerts arm, lock and swing them.
 const instrumentWidget = (kind: InstrumentWidget, system: System, tone: Tone, context: Context, random: Random): WidgetNode => {
@@ -182,6 +191,22 @@ const instrumentWidget = (kind: InstrumentWidget, system: System, tone: Tone, co
       return widget(id, kind, { label, sites: random.int(2, 5), tone });
     case "scan-progress":
       return widget(id, kind, { label: `${label} SCAN`.slice(0, 40), seconds: random.int(8, 20), tone });
+    case "ship-schematic": {
+      // Tactical follows the shields and arms in an alert, engineering the power from the core; a system the
+      // ship marks (its shuttlebay, its deflector) is picked out; a damaged state turns to damage control.
+      const mode = context.recipe.id === "tactical" || context.recipe.id === "engineering" ? SHIP_MODES[context.recipe.id] : "schematic";
+      const highlight = SHIP_SYSTEMS.filter((each) => each === system.id);
+      const live = wandering(level.range, level.alert, context, random);
+      const bind = mode === "tactical" ? { shields: live } : mode === "engineering" ? { power: live } : undefined;
+      const hit = random.shuffle(SHIP_SYSTEMS).slice(0, 2);
+      const when: When = context.show.states.flatMap((state): When => {
+        if (state.effect === "damaged") return [{ state: state.id, props: { mode: "damage", damaged: hit } }];
+        if (state.effect === "alert" && mode === "tactical") return [{ state: state.id, props: { armed: true } }];
+        return [];
+      });
+      const props = { label, view: random.pick(SHIP_VIEWS[mode]), mode, ...(highlight.length > 0 ? { highlight } : {}), tone };
+      return widget(id, kind, props, { ...(bind ? { bind } : {}), ...(when.length > 0 ? { when } : {}) });
+    }
   }
 };
 

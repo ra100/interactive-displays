@@ -118,7 +118,8 @@
         }
       ],
       "instruments": [
-        "shield-status"
+        "shield-status",
+        "ship-schematic"
       ]
     },
     {
@@ -265,6 +266,9 @@
             }
           ]
         }
+      ],
+      "instruments": [
+        "ship-schematic"
       ]
     }
   ],

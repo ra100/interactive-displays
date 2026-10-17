@@ -182,6 +182,9 @@
         {
           "label": "TRACTOR BEAM"
         }
+      ],
+      "instruments": [
+        "ship-schematic"
       ]
     },
     {
