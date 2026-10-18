@@ -1,16 +1,12 @@
 {
-  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "$schema": "https://unpkg.com/knip@6/schema.json",
   "workspaces": {
     "packages/*": {},
     "packages/themes": {
-      "ignoreDependencies": [
-        "react",
-        "@fontsource/antonio"
-      ]
+      "ignoreDependencies": ["@fontsource/antonio"]
     }
   },
-  "ignore": [
-    "legacy/**"
-  ],
+  "ignore": ["legacy/**"],
+  "ignoreBinaries": ["ffmpeg"],
   "ignoreExportsUsedInFile": true
 }

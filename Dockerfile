@@ -2,12 +2,13 @@
 # One image, one process, one port: the server serves the built app, Socket.io and the API.
 # The server runs TypeScript directly (Node type stripping), so only the app needs a build step.
 
-ARG NODE_IMAGE=node:24-slim
+ARG NODE_IMAGE=node:26-slim
 
 FROM ${NODE_IMAGE} AS base
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
-RUN corepack enable
+# Node 25+ no longer ships corepack; keep this version in step with packageManager in package.json.
+RUN npm install --global pnpm@12.14.0
 WORKDIR /repo
 
 # Workspace manifests only, so dependency layers are cached until a package.json changes.

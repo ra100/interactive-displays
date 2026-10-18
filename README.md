@@ -46,7 +46,7 @@ docker compose up -d
 
 Data lives in the `displays-data` volume and survives restarts and upgrades.
 
-**From source** (Node ≥ 22.18, pnpm 9):
+**From source** (Node ≥ 26, pnpm 12):
 
 ```bash
 pnpm install
