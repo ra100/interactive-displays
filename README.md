@@ -6,10 +6,10 @@ the look comes from swappable theme packs: Star Trek LCARS, a holographic HUD an
 
 <p align="center">
   <a href="docs/showcase/video/showcase.mp4">
-    <img src="docs/showcase/video/teaser.webp" alt="A sped-up tour of the app: LCARS consoles, alerts, the ship schematic, the Holo HUD and Terminal looks, the operator console and the editor" width="720" />
+    <img src="docs/showcase/video/teaser.webp" alt="A sped-up tour of the app: LCARS consoles, alerts, the ship schematic, the Holo HUD and Terminal looks, the operator console, one button acting across three displays and the editor" width="720" />
   </a>
   <br />
-  <sub>The tour at 4× speed. <a href="docs/showcase/video/showcase.mp4"><b>Watch the full video</b></a> (3½ min, 1080p) ·
+  <sub>The tour at 4× speed. <a href="docs/showcase/video/showcase.mp4"><b>Watch the full video</b></a> (4 min, 1080p) ·
   <a href="docs/showcase/README.md"><b>Showcase</b></a> with screenshots of everything</sub>
 </p>
 
