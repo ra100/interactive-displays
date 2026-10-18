@@ -6,9 +6,10 @@ import { expect, type FrameLocator, type Page, test } from "@playwright/test";
 import { createManagedServer } from "./support/server.ts";
 
 // The showcase video: a four-minute tour of the consoles, show states, the ship schematic, the looks, the operator
-// console and the editor, recorded from the real app. A director page (support/director.html) holds the app in a
-// frame with a live display picture-in-picture, captions and fades; Chrome's screencast frames keep their real
-// times and ffmpeg turns them into a 30 fps H.264 video.
+// console, scripted interactions between displays and the editor, recorded from the real app. A director page
+// (support/director.html) holds the app in a frame with a live display picture-in-picture or three displays side by
+// side, captions and fades; Chrome's screencast frames keep their real times and ffmpeg turns them into a 30 fps
+// H.264 video.
 //   pnpm build && SHOWCASE=video pnpm test:e2e video
 // Needs ffmpeg with libx264 on the PATH. Writes docs/showcase/video/showcase.mp4.
 
@@ -170,7 +171,7 @@ test.describe("showcase video", () => {
     ] as const) {
       await cut(() => assign(screen));
       await caption("Consoles · LCARS", title, subtitle);
-      await sleep(4300);
+      await sleep(3800);
     }
 
     // Show states.
@@ -221,7 +222,7 @@ test.describe("showcase video", () => {
     ] as const) {
       await theme("lcars", variant);
       await caption("Looks", title, "The same screen, re-skinned live");
-      await sleep(2700);
+      await sleep(2400);
     }
     await director("accent", "#3fd8ff");
     await theme("hud");
@@ -272,11 +273,59 @@ test.describe("showcase video", () => {
     }
     await app.getByRole("button", { name: /Red alert/ }).click();
     await caption("Operator console", "One tap: red alert", "Or a state, a blackout, a value, a screen per display");
-    await director("prepare", "/builder");
+    await director("preloadSplit", [
+      ["/d/tactical-1", "Tactical 1 · pressed here"],
+      ["/d/viewscreen-1", "Viewscreen"],
+      ["/d/engineering-1", "Engineering 1"],
+    ]);
     await sleep(2500);
     await app.getByRole("button", { name: /^Normal$/i }).click();
     await sleep(1500);
+
+    // Scripted interactions: one button on Tactical plays out on the viewscreen and, a beat later, on engineering.
+    place = "split";
+    await cut(async () => {
+      await director("pip", "");
+      await director("stopwatch", "T + 0.0 s");
+      await director("split", true);
+    });
+    await caption("Scripted interactions", "One button, three displays", "Photon torpedoes on Tactical sets off a beat across the set");
+    await sleep(4000);
+    const torpedoes = page.frameLocator("#s1").getByRole("button", { name: /photon torpedoes/i });
+    const box = await torpedoes.boundingBox();
+    if (box) await director("tap", box.x + box.width / 2, box.y + box.height / 2);
+    await director("watchBeat");
+    await torpedoes.click();
+    await caption("Scripted interactions", "Replay on the viewscreen", "It uses the viewscreen's own Replay button: it flashes there, the feed starts again");
+    await expect(page.frameLocator("#s3").getByRole("button", { name: /back/i })).toBeVisible({ timeout: 4000 });
+    await caption("Scripted interactions", "1.5 s later: engineering", "Every display showing Main engineering sounds the alert and goes to the master systems display");
+    await director("prepare", "/builder/tactical");
+    await sleep(5000);
     place = "";
+    await cut(async () => {
+      await director("split", false);
+      await director("swap");
+    });
+    await api("PUT", "/api/displays/engineering-1", { screen: "engineering" });
+    await caption("Scripted interactions", "Set up in the editor", "The button's actions, in the inspector");
+    await app.getByRole("tree", { name: "Outline" }).getByRole("treeitem", { name: /Button · Photon torpedoes/ }).click();
+    const actions = app.getByRole("region", { name: "When used" });
+    await actions.getByRole("combobox", { name: "Control" }).scrollIntoViewIfNeeded();
+    await sleep(2000);
+    await director("hide");
+    await director("zoom", 1.55, 1920, 540);
+    await sleep(1000);
+    await caption("Scripted interactions", "Runs on", "This display, every other one, all of them, or the displays and screens you choose");
+    await sleep(4000);
+    await director("hide");
+    await actions.getByRole("combobox", { name: "Screen" }).scrollIntoViewIfNeeded();
+    await sleep(800);
+    await caption("Scripted interactions", "Wait (seconds)", "The alert and the screen change wait 1.5 s, so the beat plays out");
+    await director("prepare", "/builder");
+    await sleep(4000);
+    await director("hide");
+    await director("zoom", 1);
+    await sleep(1300);
 
     // The editor: change a widget, publish, generate.
     await cut(async () => {
