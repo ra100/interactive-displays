@@ -15,7 +15,8 @@ the look comes from swappable theme packs: Star Trek LCARS, a holographic HUD an
 
 **Status: v2 complete.** Three looks (LCARS in six eras, Holo HUD, green-screen Terminal), a screen editor with
 drag-and-drop layout, one-click generation from content packs, an operator console with cues, show states from
-yellow alert to a hull breach, a ship schematic traced from a 3D model, portrait displays, and AI editing over MCP.
+yellow alert to a hull breach, a ship schematic traced from a 3D model, controls that set off timed beats on other
+displays, portrait displays, and AI editing over MCP.
 See the [showcase](docs/showcase/README.md) for what each part looks like and
 [docs/ACCEPTANCE-TESTING.md](docs/ACCEPTANCE-TESTING.md) for how to try it. The design and roadmap are in
 [docs/plans/2026-10-14-feat-interactive-displays-v2-plan.md](docs/plans/2026-10-14-feat-interactive-displays-v2-plan.md);
@@ -29,6 +30,10 @@ the v1 code is archived in [legacy/](legacy/README.md).
 | Operator console | Screen editor |
 |---|---|
 | ![The operator console with cues and the Look panel](docs/showcase/phase-6/operator-cues-and-look.png) | ![The editor with a screen built by drag and drop](docs/showcase/layout-dnd/editor-built.png) |
+
+| One button on Tactical… | …replays the viewscreen and, 1.5 s later, moves Engineering |
+|---|---|
+| ![Tactical with the Photon torpedoes button](docs/showcase/interactions/1-tactical-before.png) | ![Engineering moved to the master systems display](docs/showcase/interactions/4-engineering-damage-view.png) |
 
 ## Run it
 
@@ -58,6 +63,9 @@ pnpm start            # http://localhost:3010/d
 - If the network drops or the server restarts, the display keeps its last screen and shows a small
   `RECONNECTING` badge until it is back.
 - Show states (normal, yellow alert, red alert, damaged, blackout in the demo) switch every display at once.
+- A control can act on other displays: navigate them, play a sound or video there, or press one of their controls,
+  optionally after a wait, so one tap sets off a beat across the set. The operator's display-buttons switch turns
+  this off.
 - `/d/<id>?theme=base` or `?variant=nemesis` previews another look on that display only; `/gallery` shows every
   frame, widget and decor piece of a theme.
 
