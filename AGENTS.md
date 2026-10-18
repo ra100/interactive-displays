@@ -131,7 +131,7 @@ and `zod`. The server imports `core`, `content`, `@interactive-displays/themes/m
 ## Commands
 
 ```bash
-pnpm install          # Node >= 22.18 (Node 24 in Docker/CI), pnpm 9
+pnpm install          # Node >= 26, pnpm 12
 pnpm dev              # server on :3010 (node --watch) + Vite on :5176 (proxies /api, /socket.io, /media)
 pnpm test             # unit + integration tests in every package (Vitest)
 pnpm build            # builds the app into packages/app/dist

@@ -82,8 +82,11 @@ const describeOne = (key: string, schema: JsonSchema, required: boolean): Field 
   }
 
   const variants = Array.isArray(schema["anyOf"]) ? schema["anyOf"].filter(isSchema) : [];
-  const variantTypes = new Set(variants.map((variant) => variant["type"]));
-  if (variants.length === 2 && variantTypes.has("string") && variantTypes.has("number")) {
+  // Zod writes a union of plain types as `type: ["number", "string"]`, older versions as `anyOf`.
+  const variantTypes = new Set(
+    Array.isArray(schema["type"]) ? schema["type"] : variants.map((variant) => variant["type"]),
+  );
+  if (variantTypes.size === 2 && variantTypes.has("string") && variantTypes.has("number")) {
     return {
       ...base,
       type: "value",

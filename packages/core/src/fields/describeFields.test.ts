@@ -71,6 +71,11 @@ describe("describeFields", () => {
     ]);
   });
 
+  it("describes a number-or-text value whose parts have limits", () => {
+    const fields = describeFields(z.object({ value: z.union([z.number().min(0), z.string().max(4)]) }));
+    expect(fields).toEqual([{ key: "value", label: "Value", required: true, type: "value" }]);
+  });
+
   it("falls back to JSON for nested values", () => {
     const fields = describeFields(
       z.object({ area: z.object({ col: z.number() }).optional(), deep: z.array(z.object({ a: z.number() })) }),
