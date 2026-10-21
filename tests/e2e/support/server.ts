@@ -24,7 +24,8 @@ const waitForHealth = async (url: string, timeoutMs = 15_000): Promise<void> => 
   throw new Error(`Server at ${url} did not become healthy`);
 };
 
-export const createManagedServer = (port: number, env: Record<string, string> = {}): ManagedServer => {
+// `nodeArgs` go to Node before the server's entry point (a module to load first, say).
+export const createManagedServer = (port: number, env: Record<string, string> = {}, nodeArgs: string[] = []): ManagedServer => {
   const url = `http://127.0.0.1:${port}`;
   const dataDir = mkdtempSync(path.join(tmpdir(), "displays-e2e-managed-"));
   let child: ChildProcess | undefined;
@@ -33,7 +34,7 @@ export const createManagedServer = (port: number, env: Record<string, string> = 
     url,
     dataDir,
     start: async () => {
-      child = spawn(process.execPath, ["packages/server/src/index.ts"], {
+      child = spawn(process.execPath, [...nodeArgs, "packages/server/src/index.ts"], {
         env: { ...process.env, PORT: String(port), HOST: "127.0.0.1", DATA_DIR: dataDir, LOG_LEVEL: "warn", ...env },
         stdio: "inherit",
       });
