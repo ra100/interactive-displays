@@ -66,6 +66,7 @@ export const slowMotion = async (page: Page, rate: number) => {
     // Records into `dir` at `fps`; stop() writes an ffmpeg concat list and returns its path.
     record: async (dir: string, fps: number) => {
       const kept: { name: string; tick: number }[] = [];
+      let received = 0;
       let stopped = false;
       const ticker = frameTicker<string>(fps, rate, (data, tick) => {
         const name = `frame-${String(kept.length).padStart(6, "0")}.jpg`;
@@ -75,7 +76,9 @@ export const slowMotion = async (page: Page, rate: number) => {
       cdp.on("Page.screencastFrame", ({ data, metadata, sessionId }) => {
         cdp.send("Page.screencastFrameAck", { sessionId }).catch(() => undefined);
         // Frames still in flight after stop() are dropped: their folder may already be gone.
-        if (!stopped) ticker.add(data, metadata.timestamp ?? 0);
+        if (stopped) return;
+        received += 1;
+        ticker.add(data, metadata.timestamp ?? 0);
       });
       await cdp.send("Page.startScreencast", { format: "jpeg", quality: 92, maxWidth: 1920, maxHeight: 1080, everyNthFrame: 1 });
       return {
@@ -85,7 +88,7 @@ export const slowMotion = async (page: Page, rate: number) => {
           ticker.flush();
           const list = path.join(dir, "frames.txt");
           writeFileSync(list, concatList(kept, fps));
-          console.log(`${kept.length} frames for ${((kept.at(-1)?.tick ?? 0) / fps).toFixed(1)} s of video`);
+          console.log(`${kept.length} of ${received} screencast frames for ${((kept.at(-1)?.tick ?? 0) / fps).toFixed(1)} s of video`);
           return list;
         },
       };
