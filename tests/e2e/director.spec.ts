@@ -143,10 +143,19 @@ test.describe("director page", () => {
     await swapping;
     await expect(page.locator("#title")).toHaveText("Second");
     await expect(caption).toHaveClass(/\bon\b/);
-    // With the picture: at once.
-    await director("caption", "Kicker", "Third", "", true);
+    // With the picture: at once, the caption never leaves.
+    await page.evaluate(() => {
+      const box = document.getElementById("caption");
+      if (box) {
+        new MutationObserver(() => {
+          if (!box.classList.contains("on")) box.dataset["dropped"] = "";
+        }).observe(box, { attributeFilter: ["class"] });
+      }
+    });
+    await director("caption", "Kicker", "Third", "", "", true);
     await expect(page.locator("#title")).toHaveText("Third");
     await expect(caption).toHaveClass(/\bon\b/);
+    await expect(caption).not.toHaveAttribute("data-dropped");
   });
 
   test("a dip takes the caption off and fades to black together", async ({ page }) => {
