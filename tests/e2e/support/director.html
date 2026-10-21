@@ -10,8 +10,10 @@
 @font-face { font-family: "Rajdhani"; font-weight: 400; src: url("/assets/__RAJDHANI400__") format("woff2"); }
 :root { --accent: #ff9c00; }
 html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #000; }
-iframe { position: absolute; border: 0; background: #000; }
-#main, #next { left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 1920px 300px; transition: transform 1.2s cubic-bezier(.4,0,.2,1); }
+/* Fixed, so a page that scrolls something into view (focus does) stops at its own frame: the picture never moves. */
+iframe { position: fixed; border: 0; background: #000; }
+/* The camera moves and scales the app from its top left corner, so a move is one transform: no jump between shots. */
+#main, #next { left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; transition: transform 1.6s cubic-bezier(.65,0,.35,1); }
 /* The next page loads out of sight while the current one plays, so a cut only has to swap them. */
 #next { visibility: hidden; }
 #pip {
@@ -26,13 +28,16 @@ iframe { position: absolute; border: 0; background: #000; }
   transition: opacity .5s ease;
 }
 #pip-tag.on { opacity: 1; }
+/* Near opaque, so the app's own text never shows through a caption. */
 #caption {
-  position: fixed; left: 56px; bottom: 56px; max-width: 1040px; padding: 18px 30px 20px 24px;
-  background: rgba(0,0,0,.84); border-left: 8px solid var(--accent); color: #fff;
+  position: fixed; left: 56px; bottom: 56px; max-width: 1040px; padding: 12px 30px 16px 24px;
+  background: rgba(0,0,0,.96); border-left: 8px solid var(--accent); color: #fff;
   opacity: 0; transform: translateY(18px); transition: opacity .45s ease, transform .45s ease;
+  will-change: opacity, transform;
 }
 #caption.on { opacity: 1; transform: none; }
 #caption.right { left: auto; right: 56px; bottom: auto; top: 96px; max-width: 900px; }
+#caption.corner { left: auto; right: 56px; }
 #kicker { font: 600 21px/1 "Rajdhani"; letter-spacing: .26em; color: var(--accent); text-transform: uppercase; }
 #title { margin-top: 10px; font: 700 54px/1.05 "Antonio"; letter-spacing: .03em; text-transform: uppercase; }
 #subtitle { margin-top: 8px; font: 400 27px/1.3 "Rajdhani"; color: #dde3ec; }
@@ -47,7 +52,8 @@ iframe { position: absolute; border: 0; background: #000; }
 #card p { margin: 0; max-width: 1400px; text-align: center; font: 400 38px/1.35 "Rajdhani"; color: #e8ecf2; }
 #card .bars { display: flex; gap: 12px; }
 #card .bars span { display: block; height: 22px; border-radius: 11px; }
-#fade { position: fixed; inset: 0; background: #000; opacity: 1; transition: opacity .35s ease; }
+/* Over everything, rings included. */
+#fade { position: fixed; inset: 0; z-index: 1; background: #000; opacity: 1; transition: opacity .35s ease-in-out; will-change: opacity; }
 /* Three displays side by side: the one pressed large on the left, the two it reaches on the right. */
 .split { opacity: 0; transition: opacity .5s ease; }
 .split.on { opacity: 1; }
@@ -110,6 +116,33 @@ iframe.split.on { pointer-events: auto; }
 <div id="fade"></div>
 <script>
 const $ = (id) => document.getElementById(id);
+const WIDTH = 1920;
+const HEIGHT = 1080;
+// Closer than this and the app's text turns soft.
+const MAX_ZOOM = 2.4;
+const clamp = (value, low, high) => Math.min(Math.max(value, low), high);
+// Where the camera points: the app moved by x, y and scaled from its top left corner.
+let view = { x: 0, y: 0, scale: 1 };
+// The shot that frames a box of the app (in the app's own pixels) in an area of the picture, as close as it fits,
+// never past the app's edges. No box: the whole app, fitted into the area when there is one (above a caption, say).
+const shot = (box, area, margin = 40) => {
+  if (!box && !area) return { x: 0, y: 0, scale: 1 };
+  if (!box) {
+    const scale = Math.min(area.width / WIDTH, area.height / HEIGHT, 1);
+    return { x: area.x + (area.width - scale * WIDTH) / 2, y: area.y + (area.height - scale * HEIGHT) / 2, scale };
+  }
+  area ??= { x: 0, y: 0, width: WIDTH, height: HEIGHT };
+  const scale = clamp(Math.min((area.width - 2 * margin) / box.width, (area.height - 2 * margin) / box.height), 1, MAX_ZOOM);
+  const x = area.x + area.width / 2 - scale * (box.x + box.width / 2);
+  const y = area.y + area.height / 2 - scale * (box.y + box.height / 2);
+  return { x: clamp(x, WIDTH - scale * WIDTH, 0), y: clamp(y, HEIGHT - scale * HEIGHT, 0), scale };
+};
+const aim = (frame, next, seconds) => {
+  view = next;
+  frame.style.transitionDuration = `${seconds}s`;
+  frame.style.transform = next.scale === 1 ? "" : `translate(${next.x}px, ${next.y}px) scale(${next.scale})`;
+};
+const nextFrame = (change) => new Promise((resolve) => requestAnimationFrame(() => { change(); resolve(); }));
 const load = (frame, src) => new Promise((resolve) => {
   frame.addEventListener("load", () => resolve(), { once: true });
   frame.src = src;
@@ -117,12 +150,14 @@ const load = (frame, src) => new Promise((resolve) => {
 window.director = {
   go: (src) => load($("main"), src),
   prepare: (src) => load($("next"), src),
+  // The next page takes the picture, seen whole.
   swap: () => {
     const shown = $("main");
     const waiting = $("next");
     shown.id = "next";
     waiting.id = "main";
-    shown.style.transform = "";
+    aim(shown, shot(null), 0);
+    aim(waiting, shot(null), 0);
     shown.src = "about:blank";
   },
   preloadPip: (src) => ($("pip").getAttribute("src") === src ? Promise.resolve() : load($("pip"), src)),
@@ -135,17 +170,32 @@ window.director = {
     if ($("pip").getAttribute("src") !== src) await load($("pip"), src);
     $("pip").classList.add("on"); $("pip-tag").classList.add("on");
   },
-  zoom: (scale, x = 960, y = 540) => {
-    $("main").style.transformOrigin = `${x}px ${y}px`;
-    $("main").style.transform = scale === 1 ? "" : `scale(${scale})`;
+  // Frames a box of the app in an area of the picture (the whole picture when left out) over `seconds`; no box
+  // shows the whole app, in the area or the whole picture. Resolves with the scale once the move has ended.
+  camera: (box, area, seconds = 1.6) => {
+    aim($("main"), shot(box ?? null, area ?? undefined), seconds);
+    return new Promise((resolve) => setTimeout(() => resolve(view.scale), seconds * 1000));
   },
-  fade: (on) => { $("fade").style.opacity = on ? "1" : "0"; },
+  // Rings a box of the app where it is in the picture now, wherever the camera points.
+  tapApp: (box) => window.director.tap(view.x + view.scale * (box.x + box.width / 2), view.y + view.scale * (box.y + box.height / 2)),
+  // Changes start with a frame, so a busy page cannot eat their first steps.
+  fade: (on) => nextFrame(() => { $("fade").style.opacity = on ? "1" : "0"; }),
+  // The caption goes and the picture fades to black together.
+  dip: () => nextFrame(() => { $("caption").classList.remove("on"); $("fade").style.opacity = "1"; }),
   accent: (colour) => document.documentElement.style.setProperty("--accent", colour),
-  caption: (kicker, title, subtitle = "", place = "") => {
+  // A caption replacing one on screen goes first and comes back with the new text, unless `instant` (when the
+  // picture changes at the same moment). Resolves once the new caption is up.
+  caption: async (kicker, title, subtitle = "", place = "", instant = false) => {
+    const box = $("caption");
+    if (box.classList.contains("on") && !instant) {
+      box.classList.remove("on");
+      await new Promise((resolve) => setTimeout(resolve, 450));
+    }
     $("kicker").textContent = kicker; $("title").textContent = title; $("subtitle").textContent = subtitle;
-    $("caption").classList.toggle("right", place === "right");
-    $("caption").classList.toggle("split-place", place === "split");
-    $("caption").classList.add("on");
+    box.classList.toggle("right", place === "right");
+    box.classList.toggle("corner", place === "corner");
+    box.classList.toggle("split-place", place === "split");
+    box.classList.add("on");
   },
   // Load three displays (with their tags) out of sight; split(true) shows them over the main frame.
   preloadSplit: (displays) => Promise.all(displays.map(([src, tag], index) => {
