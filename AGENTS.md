@@ -144,6 +144,8 @@ docker compose up -d  # production image with a persistent volume
 ```
 
 Showcase screenshots: `pnpm build && SHOWCASE=phase-N pnpm test:e2e showcase` writes `docs/showcase/phase-N/*.png`.
+The video tour: `pnpm build && SHOWCASE=video pnpm test:e2e video` (ffmpeg 5+ with libx264; records in slow motion,
+about 27 minutes; `SLOWMO=1` for a quick real-time draft) writes `docs/showcase/video/showcase.mp4`.
 In a container without a matching Playwright browser, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE`.
 
 ## Conventions
