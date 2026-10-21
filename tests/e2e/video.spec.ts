@@ -1,71 +1,51 @@
-import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { expect, type FrameLocator, type Page, test } from "@playwright/test";
+import { expect, type FrameLocator, type Locator, test } from "@playwright/test";
+import { type Box, directorOf, directorPage, union } from "./support/director.ts";
+import { encode, slowMotion } from "./support/recorder.ts";
 import { createManagedServer } from "./support/server.ts";
+import { warpTime } from "./support/slowmo.ts";
 
-// The showcase video: a four-minute tour of the consoles, show states, the ship schematic, the looks, the operator
+// The showcase video: a five-minute tour of the consoles, show states, the ship schematic, the looks, the operator
 // console, scripted interactions between displays and the editor, recorded from the real app. A director page
 // (support/director.html) holds the app in a frame with a live display picture-in-picture or three displays side by
-// side, captions and fades; Chrome's screencast frames keep their real times and ffmpeg turns them into a 30 fps
-// H.264 video.
+// side, captions, fades and a camera that frames what each beat is about; every press is ringed where it lands.
 //   pnpm build && SHOWCASE=video pnpm test:e2e video
-// Needs ffmpeg with libx264 on the PATH. Writes docs/showcase/video/showcase.mp4.
+// Needs ffmpeg 5 or later with libx264 on the PATH. Writes docs/showcase/video/showcase.mp4.
+//
+// It records in slow motion (SLOWMO=5: the server and every page run at a fifth of real time, see
+// support/slowmo.ts and support/recorder.ts) and plays the frames back at full speed, so a machine that draws a busy
+// screen at 12 frames a second still gives a steady 30. SLOWMO=1 records in real time, for a quick look.
 
 const OUT = path.join("docs", "showcase", "video", "showcase.mp4");
 const PORT = 3016;
+const FPS = 30;
+const SLOWMO = Number(process.env["SLOWMO"] ?? 5);
+const RATE = 1 / SLOWMO;
+// The moment the server's clock and the pages' agree on.
+const EPOCH = Date.now();
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+// Waits `ms` of the video's time.
+const wait = (ms: number) => sleep(ms * SLOWMO);
 
-// The director page with the app's own fonts, whose built file names carry a hash.
-const directorPage = (): string => {
-  const assets = readdirSync(path.join("packages", "app", "dist", "assets"));
-  const font = (prefix: string) => assets.find((name) => name.startsWith(prefix) && name.endsWith(".woff2")) ?? "";
-  return readFileSync(path.join("tests", "e2e", "support", "director.html"), "utf8")
-    .replace("__ANTONIO700__", font("antonio-latin-700-normal"))
-    .replace("__ANTONIO400__", font("antonio-latin-400-normal"))
-    .replace("__RAJDHANI600__", font("rajdhani-latin-600-normal"))
-    .replace("__RAJDHANI400__", font("rajdhani-latin-400-normal"));
-};
+// Long enough to read a caption: a second and a half, and a quarter of a second a word.
+const reading = (...texts: string[]) => 1500 + 250 * texts.join(" ").split(/\s+/).filter(Boolean).length;
 
-// Chrome's screencast frames, written as they come with their times; stop() writes an ffmpeg concat list that
-// gives each frame its real duration and returns its path.
-const screencast = async (page: Page, dir: string) => {
-  const cdp = await page.context().newCDPSession(page);
-  const frames: { name: string; time: number }[] = [];
-  let stopped = false;
-  cdp.on("Page.screencastFrame", ({ data, metadata, sessionId }) => {
-    // Frames still in flight after stop() are dropped: their folder may already be gone.
-    if (stopped) return;
-    const name = `frame-${String(frames.length).padStart(6, "0")}.jpg`;
-    writeFileSync(path.join(dir, name), Buffer.from(data, "base64"));
-    frames.push({ name, time: metadata.timestamp ?? 0 });
-    cdp.send("Page.screencastFrameAck", { sessionId }).catch(() => undefined);
-  });
-  await cdp.send("Page.startScreencast", { format: "jpeg", quality: 92, maxWidth: 1920, maxHeight: 1080, everyNthFrame: 1 });
-  return {
-    stop: async () => {
-      stopped = true;
-      await cdp.send("Page.stopScreencast");
-      await cdp.detach();
-      const lines = ["ffconcat version 1.0"];
-      frames.forEach((frame, index) => {
-        const next = frames[index + 1];
-        lines.push(`file ${frame.name}`, `duration ${(next ? next.time - frame.time : 0.5).toFixed(4)}`);
-      });
-      const last = frames.at(-1);
-      if (last) lines.push(`file ${last.name}`);
-      const list = path.join(dir, "frames.txt");
-      writeFileSync(list, `${lines.join("\n")}\n`);
-      return list;
-    },
-  };
-};
+// Where the camera frames things while the caption sits top right and the display plays in the corner.
+const LEFT_OF_CAPTION: Box = { x: 0, y: 0, width: 1060, height: 1080 };
+// Above a caption in the bottom left.
+const ABOVE_CAPTION: Box = { x: 0, y: 0, width: 1920, height: 860 };
+// The whole app above the caption, for screens whose every corner matters.
+const BAND: Box = { x: 0, y: 0, width: 1920, height: 835 };
 
 test.describe("showcase video", () => {
   test.skip(process.env["SHOWCASE"] !== "video", "set SHOWCASE=video to record the showcase video");
 
-  const server = createManagedServer(PORT);
+  const server = createManagedServer(PORT, { SLOWMO_RATE: String(RATE), SLOWMO_EPOCH: String(EPOCH) }, [
+    "--import",
+    "./tests/e2e/support/slowServer.ts",
+  ]);
 
   test.beforeAll(async () => {
     await server.start();
@@ -76,7 +56,7 @@ test.describe("showcase video", () => {
   });
 
   test("records the tour", async ({ page }) => {
-    test.setTimeout(15 * 60_000);
+    test.setTimeout((8 + 6 * SLOWMO) * 60_000);
     const api = async (method: string, route: string, body?: unknown) => {
       const response = await fetch(server.url + route, {
         method,
@@ -89,7 +69,7 @@ test.describe("showcase video", () => {
     const theme = (id: string, variant?: string) => api("PUT", "/api/show/theme", variant ? { id, variant } : { id });
     const assign = (screen: string) => api("PUT", "/api/displays/video", { screen });
     // The display in the corner is a display of its own, so it can load before it shows.
-    const assignPip = (screen: string) => api("PUT", "/api/displays/pip", { screen });
+    const assignPip = (screen: string) => api("PUT", "/api/displays/pip", { screen, name: "Tactical 2" });
     const shipScreen = async (id: string, name: string, columns: number, cells: Record<string, unknown>[]) => {
       await api("POST", "/api/screens", {
         schemaVersion: 2,
@@ -122,284 +102,486 @@ test.describe("showcase video", () => {
       { view: "top", mode: "engineering", label: "Engineering" },
       { view: "top", mode: "damage", damaged: ["phasers"], offline: ["impulse"], label: "Damage control" },
     ]);
-    await assign("schematic");
+    await assign("bridge");
 
+    // Slow motion: the pages' clocks and timers through an init script, their CSS animations and transitions
+    // through the DevTools protocol.
+    await page.context().addInitScript(warpTime, { rate: RATE, epoch: EPOCH });
+    const slow = await slowMotion(page, RATE);
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.route(`${server.url}/director.html`, (route) => route.fulfill({ contentType: "text/html", body: directorPage() }));
     await page.goto(`${server.url}/director.html`);
     await page.evaluate(() => document.fonts.ready);
-    const director = (name: string, ...args: unknown[]) =>
-      page.evaluate(
-        ([fn, values]) => (window as unknown as { director: Record<string, (...rest: unknown[]) => unknown> }).director[fn]?.(...values),
-        [name, args] as const,
-      );
+    const director = directorOf(page);
     const app: FrameLocator = page.frameLocator("#main");
+    // Long waits on the app run in slow motion too.
+    const soon = { timeout: 10_000 * SLOWMO };
+
     let place = "";
-    const caption = (kicker: string, title: string, subtitle = "") => director("caption", kicker, title, subtitle, place);
-    // Dip to black, change what is behind, come back.
-    const cut = async (change: () => Promise<unknown>) => {
-      await director("hide");
-      await director("fade", true);
-      await sleep(400);
-      await change();
-      await sleep(450);
-      await director("fade", false);
-      await sleep(350);
+    let readBy = 0;
+    // A caption replacing one on screen takes it off first, unless the picture changes with it (`instant`).
+    const caption = async (kicker: string, title: string, subtitle = "", instant = false) => {
+      await director("caption", kicker, title, subtitle, place, instant);
+      readBy = Date.now() + reading(title, subtitle) * SLOWMO;
     };
+    // Holds for `ms`, and at least until the caption has been read.
+    const hold = (ms = 0) => sleep(Math.max(ms * SLOWMO, readBy - Date.now()));
+    // Dip to black, change what is behind, wait until it is ready and come back.
+    const cut = async (change: () => Promise<unknown>, ready: () => Promise<unknown> = async () => undefined) => {
+      await hold();
+      await director("dip");
+      await wait(400);
+      await director("camera", null, null, 0);
+      await change();
+      await ready();
+      expect(await slow.playbackRate(), "animations still run in slow motion").toBeCloseTo(RATE);
+      await wait(450);
+      await director("fade", false);
+      await wait(350);
+    };
+    // The display in the main frame shows this screen (in this theme).
+    const showing = (screen: string, look?: string) =>
+      expect(app.locator(`[data-screen-id="${screen}"]${look ? `[data-theme="${look}"]` : ""}`)).toBeVisible(soon);
 
-    // Title, over the first screen, loaded before the recording starts.
+    // Where things are in the app, in its own pixels (the camera's moves do not change them).
+    const boxOf = async (...targets: Locator[]): Promise<Box> =>
+      union(
+        await Promise.all(
+          targets.map((target) =>
+            target.evaluate((element) => {
+              const rect = element.getBoundingClientRect();
+              return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+            }),
+          ),
+        ),
+      );
+    // Frames the targets in an area of the picture and waits for the move to end.
+    const focus = async (targets: Locator[], area?: Box, seconds = 1.6) => director("camera", await boxOf(...targets), area ?? null, seconds);
+    const wide = (seconds = 1.4) => director("camera", null, null, seconds);
+    // The whole app above the caption.
+    const band = (seconds = 0) => director("camera", null, BAND, seconds);
+    // A press: a ring where the control is on screen, then the click as it lands.
+    const press = async (control: Locator) => {
+      await director("tapApp", await boxOf(control));
+      await wait(200);
+      await control.click();
+    };
+    const choose = async (field: Locator, value: string | { label: string }) => {
+      await director("tapApp", await boxOf(field));
+      await wait(200);
+      await field.selectOption(value);
+    };
+    // Scrolls the panel around a target so it sits near the top, gently, over `ms` of the video's time.
+    const glide = (target: Locator, ms = 900) =>
+      target.evaluate(
+        (element, duration) =>
+          new Promise<void>((resolve) => {
+            let panel = element.parentElement;
+            while (panel && !(panel.scrollHeight > panel.clientHeight && /auto|scroll/.test(getComputedStyle(panel).overflowY))) {
+              panel = panel.parentElement;
+            }
+            if (!panel) return resolve();
+            const scroller = panel;
+            const from = scroller.scrollTop;
+            const to = from + element.getBoundingClientRect().top - scroller.getBoundingClientRect().top - 24;
+            const start = performance.now();
+            const step = () => {
+              const done = Math.min((performance.now() - start) / duration, 1);
+              const eased = done < 0.5 ? 4 * done ** 3 : 1 - (-2 * done + 2) ** 3 / 2;
+              scroller.scrollTop = from + (to - from) * eased;
+              if (done < 1) requestAnimationFrame(step);
+              else resolve();
+            };
+            requestAnimationFrame(step);
+          }),
+        ms,
+      );
+
+    // Title, over the first console, loaded and raised under the black before the recording starts.
     await director("go", "/d/video");
-    await sleep(2500);
-    const frames = await screencast(page, mkdtempSync(path.join(tmpdir(), "showcase-frames-")));
+    await showing("bridge");
+    // The other looks' fonts, so the first frame of a re-skin is not drawn in a stand-in.
+    await app
+      .locator("body")
+      .evaluate(() => Promise.all(["400 1em Rajdhani", "600 1em Rajdhani", "1em 'Share Tech Mono'", "1em VT323"].map((font) => document.fonts.load(font))));
     await director("card", "Interactive Displays", "Live sci-fi interfaces for a film set. One server drives every screen, in sync.");
+    await wait(2500);
+    const frames = await slow.record(mkdtempSync(path.join(tmpdir(), "showcase-frames-")), FPS);
     await director("fade", false);
-    await sleep(5500);
+    await wait(5500);
     await director("card", "");
-    await sleep(900);
+    await wait(900);
 
-    // Consoles.
+    // Consoles: the title dissolves into the first one.
     await director("accent", "#ff9c00");
-    for (const [screen, title, subtitle] of [
-      ["bridge", "Bridge operations", "Sidebar layout, readings that walk on their own"],
-      ["engineering", "Main engineering", "Warp core output follows a live show signal"],
-      ["tactical", "Tactical", "Weapons, contacts and the ship's tactical plot"],
-      ["weapons-control", "Weapons control", "Shields by facing, phaser banks and the targeting scanner"],
-      ["conn", "Helm control", "Heading, warp ladder and the plotted course"],
-      ["astrometrics", "Astrometrics", "Star chart, subspace spectrum and survey scans"],
-      ["sensors", "Long range sensors", "Waveforms, scans and contacts"],
-      ["operations", "Operations", "Transporters, computer core and shuttlebay"],
-    ] as const) {
-      await cut(() => assign(screen));
+    for (const [index, [screen, title, subtitle]] of (
+      [
+        ["bridge", "Bridge operations", "Sidebar layout, readings bound to the show's live signals"],
+        ["engineering", "Main engineering", "Warp core output follows a live show signal"],
+        ["tactical", "Tactical", "Weapons, contacts and the ship's tactical plot"],
+        ["weapons-control", "Weapons control", "Shields by facing, phaser banks and the targeting scanner"],
+        ["conn", "Helm control", "Heading, warp ladder and the plotted course"],
+        ["astrometrics", "Astrometrics", "Planetary survey, subspace carrier and spectral analysis"],
+        ["sensors", "Long range sensors", "Sweep, contacts and subspace noise"],
+        ["operations", "Operations", "Power, transporter buffer, deck relays and the sensor net"],
+      ] as const
+    ).entries()) {
+      if (index > 0) {
+        await cut(
+          () => assign(screen),
+          () => showing(screen),
+        );
+      }
       await caption("Consoles · LCARS", title, subtitle);
-      await sleep(3800);
+      await hold(4000);
     }
 
-    // Show states.
-    await cut(() => assign("tactical"));
+    // Show states, on Main engineering, whole above the caption: its banner, warp core and relays follow the state.
+    await cut(
+      async () => {
+        await assign("engineering");
+        await band();
+      },
+      () => showing("engineering"),
+    );
     await caption("Show states", "Normal", "The operator sets the state; every display follows within 100 ms");
-    await sleep(3000);
-    for (const [id, title, subtitle, hold] of [
-      ["yellow-alert", "Yellow alert", "Shields up, banners on every display", 3500],
-      ["red-alert", "Red alert", "Weapons arm, readings swing to their alert ranges", 4500],
+    await hold(3500);
+    for (const [id, title, subtitle, ms] of [
+      ["yellow-alert", "Yellow alert", "A banner and the alert colours on every display", 3500],
+      ["red-alert", "Red alert", "The warp core runs hot: readings swing to their alert ranges", 4500],
       ["damaged", "Hull breach", "Flicker, damage control and alarms", 4500],
-      ["normal", "All clear", "", 2500],
+      ["normal", "All clear", "", 3000],
     ] as const) {
+      // The old caption goes, the state changes, the new one comes.
+      await director("hide");
+      await wait(400);
       await state(id);
       await caption("Show states", title, subtitle);
-      await sleep(hold);
+      await hold(ms);
     }
 
-    // The ship schematic.
+    // The ship schematic, whole above the caption.
     await director("accent", "#9999ff");
-    await cut(() => assign("schematic"));
+    await cut(
+      async () => {
+        await assign("schematic");
+        await band();
+      },
+      () => showing("schematic"),
+    );
     await caption("Ship schematic", "Master systems display", "Line art traced from the Norway class Blender model");
-    await sleep(6500);
-    await cut(() => assign("ship-views"));
+    await hold(6500);
+    await cut(
+      async () => {
+        await assign("ship-views");
+        await band();
+      },
+      () => showing("ship-views"),
+    );
     await caption("Ship schematic", "Every view and mode", "Tactical, engineering, damage control and the turning lines plan");
-    await sleep(7000);
-    await cut(() => assign("ship-bow"));
+    await hold(7000);
+    await cut(
+      async () => {
+        await assign("ship-bow");
+        await band();
+      },
+      () => showing("ship-bow"),
+    );
     await caption("Ship schematic", "Bow up in tall boxes", "Labels sized to the text around them, never overlapping");
-    await sleep(4500);
-    await cut(() => assign("schematic"));
+    await hold(5000);
+    // Red alert, close on the tactical panel where the weapons are; then the whole display for the hull breach.
+    await cut(
+      async () => {
+        await assign("schematic");
+        await band();
+      },
+      () => showing("schematic"),
+    );
+    place = "right";
+    await focus([app.locator('[data-node-id="msd-dorsal"]')], LEFT_OF_CAPTION);
     await state("red-alert");
     await caption("Ship schematic", "Red alert", "Phasers and the torpedo launcher arm");
-    await sleep(4000);
+    await hold(4000);
+    await director("hide");
+    place = "";
+    await band(1.4);
     await state("damaged");
     await caption("Ship schematic", "Hull breach", "Every view turns to damage control");
-    await sleep(4000);
-    await state("normal");
+    await hold(4000);
 
-    // Looks: LCARS eras, then the other themes.
-    await cut(() => assign("weapons-control"));
+    // Looks: LCARS eras, then the other themes. A re-skin and its caption change together.
+    await cut(
+      async () => {
+        await state("normal");
+        await assign("weapons-control");
+      },
+      () => showing("weapons-control"),
+    );
     await director("accent", "#ff9c00");
-    for (const [variant, title] of [
-      [undefined, "LCARS · The Next Generation"],
-      ["ds9", "LCARS · Deep Space Nine"],
-      ["voyager", "LCARS · Voyager"],
-      ["nemesis", "LCARS · Nemesis"],
-      ["lower-decks", "LCARS · Lower Decks"],
-      ["picard", "LCARS · Picard"],
+    for (const [variant, title, subtitle] of [
+      [undefined, "LCARS · The Next Generation", "The same screen, re-skinned live"],
+      ["ds9", "LCARS · Deep Space Nine", ""],
+      ["voyager", "LCARS · Voyager", ""],
+      ["nemesis", "LCARS · Nemesis", ""],
+      ["lower-decks", "LCARS · Lower Decks", ""],
+      ["picard", "LCARS · Picard", ""],
     ] as const) {
       await theme("lcars", variant);
-      await caption("Looks", title, "The same screen, re-skinned live");
-      await sleep(2400);
+      await caption("Looks", title, subtitle, true);
+      await hold(3000);
     }
     await director("accent", "#3fd8ff");
     await theme("hud");
-    await caption("Looks", "Holo HUD", "Glass panels, hairlines and glow");
-    await sleep(3800);
+    await caption("Looks", "Holo HUD", "Glass panels, hairlines and glow", true);
+    await hold(4000);
     await theme("hud", "amber");
-    await caption("Looks", "Holo HUD · Amber visor");
-    await sleep(2800);
-    await cut(async () => {
-      await assign("schematic");
-      await theme("hud");
-    });
+    await caption("Looks", "Holo HUD · Amber visor", "", true);
+    await hold(3000);
+    await cut(
+      async () => {
+        await assign("schematic");
+        await theme("hud");
+        await band();
+      },
+      () => showing("schematic", "hud"),
+    );
     await caption("Looks", "Holo HUD", "The master systems display");
-    await sleep(3500);
+    await hold(4000);
     await director("accent", "#33ff66");
     await theme("crt");
-    await caption("Looks", "Terminal", "Green phosphor and vector strokes");
-    await sleep(3800);
-    await cut(async () => {
-      await assign("conn");
-      await theme("crt", "amber");
-    });
+    await caption("Looks", "Terminal", "Green phosphor and vector strokes", true);
+    await hold(4000);
+    await cut(
+      async () => {
+        await assign("conn");
+        await theme("crt", "amber");
+      },
+      () => showing("conn", "crt"),
+    );
     await caption("Looks", "Terminal · Amber phosphor");
     await assignPip("tactical");
     await director("prepare", "/operator");
     await director("preloadPip", "/d/pip");
-    await sleep(2400);
+    await hold(3000);
 
     // The operator console, with the display it drives in the corner.
     place = "right";
-    await cut(async () => {
-      await theme("lcars");
-      await director("accent", "#ff9c00");
-      await director("swap");
-      await director("pip", "/d/pip");
-    });
+    const cues = app.locator("section[aria-labelledby=cues-title]");
+    await cut(
+      async () => {
+        await theme("lcars");
+        // The first GO runs Contact: the top of the scene has run before the take.
+        await api("POST", "/api/cues/top/run");
+        // The displays of the next beat are smaller panels than the 90" default, so their buttons show at the
+        // size of the three frames side by side.
+        await api("PUT", "/api/displays/tactical-1", { inches: 30 });
+        await api("PUT", "/api/displays/viewscreen-1", { inches: 20 });
+        await api("PUT", "/api/displays/engineering-1", { inches: 20 });
+        await director("accent", "#ff9c00");
+        await director("swap");
+        await director("pip", "/d/pip");
+      },
+      () => expect(app.getByRole("button", { name: "GO", exact: true })).toBeEnabled(soon),
+    );
     await caption("Operator console", "Run the scene", "Cues set the state, live values and screens on every display at once");
-    await sleep(4000);
-    for (const [title, hold] of [
+    await hold(2500);
+    await focus([cues], LEFT_OF_CAPTION);
+    await hold();
+    for (const [title, ms] of [
       ["GO · Contact", 3800],
       ["GO · First hit", 4200],
       ["GO · Hull breach", 4200],
       ["GO · All clear", 3500],
     ] as const) {
-      await app.getByRole("button", { name: "GO", exact: true }).click();
+      await press(app.getByRole("button", { name: "GO", exact: true }));
       await caption("Operator console", title);
-      await sleep(hold);
+      await hold(ms);
     }
-    await app.getByRole("button", { name: /Red alert/ }).click();
+    // A little less close than the cue list: the state buttons and what is around them.
+    await director("hide");
+    await focus([app.locator("section[aria-labelledby=states-title]")], { x: 0, y: 0, width: 800, height: 1080 });
     await caption("Operator console", "One tap: red alert", "Or a state, a blackout, a value, a screen per display");
+    await wait(1200);
+    await press(app.getByRole("button", { name: /Red alert/ }));
     await director("preloadSplit", [
       ["/d/tactical-1", "Tactical 1 · pressed here"],
       ["/d/viewscreen-1", "Viewscreen"],
       ["/d/engineering-1", "Engineering 1"],
     ]);
-    await sleep(2500);
-    await app.getByRole("button", { name: /^Normal$/i }).click();
-    await sleep(1500);
+    await hold(3000);
+    await director("hide");
+    await press(app.getByRole("button", { name: /^Normal$/i }));
+    await hold(1500);
 
     // Scripted interactions: one button on Tactical plays out on the viewscreen and, a beat later, on engineering.
+    // The caption says what to watch before the press.
     place = "split";
     await cut(async () => {
       await director("pip", "");
       await director("stopwatch", "T + 0.0 s");
       await director("split", true);
     });
-    await caption("Scripted interactions", "One button, three displays", "Photon torpedoes on Tactical sets off a beat across the set");
-    await sleep(4000);
+    await caption(
+      "Scripted interactions",
+      "One button, three displays",
+      "Photon torpedoes on Tactical replays the viewscreen; 1.5 s later engineering sounds the alert and changes screen",
+    );
+    await hold();
     const torpedoes = page.frameLocator("#s1").getByRole("button", { name: /photon torpedoes/i });
     const box = await torpedoes.boundingBox();
     if (box) await director("tap", box.x + box.width / 2, box.y + box.height / 2);
     await director("watchBeat");
     await torpedoes.click();
-    await caption("Scripted interactions", "Replay on the viewscreen", "It uses the viewscreen's own Replay button: it flashes there, the feed starts again");
-    await expect(page.frameLocator("#s3").getByRole("button", { name: /back/i })).toBeVisible({ timeout: 4000 });
-    await caption("Scripted interactions", "1.5 s later: engineering", "Every display showing Main engineering sounds the alert and goes to the master systems display");
+    await expect(page.frameLocator("#s3").getByRole("button", { name: /back/i })).toBeVisible({ timeout: 4000 * SLOWMO });
     await director("prepare", "/builder/tactical");
-    await sleep(5000);
+    await hold(2000);
+
+    // How it is set up: the button's actions in the editor.
     place = "";
-    await cut(async () => {
-      await director("split", false);
-      await director("swap");
-    });
-    await api("PUT", "/api/displays/engineering-1", { screen: "engineering" });
+    const outline = app.getByRole("tree", { name: "Outline" });
+    await cut(
+      async () => {
+        await director("split", false);
+        await director("swap");
+        await api("PUT", "/api/displays/engineering-1", { screen: "engineering" });
+      },
+      () => expect(outline).toBeVisible(soon),
+    );
+    await press(outline.getByRole("treeitem", { name: /Button · Photon torpedoes/ }));
     await caption("Scripted interactions", "Set up in the editor", "The button's actions, in the inspector");
-    await app.getByRole("tree", { name: "Outline" }).getByRole("treeitem", { name: /Button · Photon torpedoes/ }).click();
-    const actions = app.getByRole("region", { name: "When used" });
-    await actions.getByRole("combobox", { name: "Control" }).scrollIntoViewIfNeeded();
-    await sleep(2000);
+    const actions = app.getByRole("region", { name: "When used" }).locator("li.action-item");
+    const trigger = actions.nth(1);
+    await expect(trigger.getByRole("combobox", { name: "Control" })).toBeVisible(soon);
+    await hold(1500);
+    await glide(trigger);
+    const triggerParts = [trigger.locator(".action-item__head"), trigger.getByRole("combobox", { name: "Runs on" }), trigger.locator(".tool-field__hint").first()];
     await director("hide");
-    await director("zoom", 1.55, 1920, 540);
-    await sleep(1000);
+    await focus(triggerParts, ABOVE_CAPTION);
     await caption("Scripted interactions", "Runs on", "This display, every other one, all of them, or the displays and screens you choose");
-    await sleep(4000);
+    await hold();
+    // Back out to scroll on: a long scroll in close-up is a blur.
+    const alarm = actions.nth(2);
+    const navigate = actions.nth(3);
     await director("hide");
-    await actions.getByRole("combobox", { name: "Screen" }).scrollIntoViewIfNeeded();
-    await sleep(800);
-    await caption("Scripted interactions", "Wait (seconds)", "The alert and the screen change wait 1.5 s, so the beat plays out");
+    await wide(1.2);
+    await glide(alarm.locator(".action-item__head"), 1400);
+    // Close on the alert's wait and the screen change under it, near enough to read.
+    await focus([alarm.locator(".action-wait"), navigate.locator(".action-item__head"), navigate.getByRole("combobox", { name: "Screen", exact: true })], ABOVE_CAPTION, 1.4);
+    await caption("Scripted interactions", "Wait (seconds)", "The alert on engineering waits 1.5 s, and so does the screen change after it");
     await director("prepare", "/builder");
-    await sleep(4000);
-    await director("hide");
-    await director("zoom", 1);
-    await sleep(1300);
+    await hold();
 
     // The editor: change a widget, publish, generate.
-    await cut(async () => {
-      await director("accent", "#9999ff");
-      await director("pip", "");
-      await director("swap");
-    });
+    place = "corner";
+    await cut(
+      async () => {
+        await director("accent", "#9999ff");
+        await director("swap");
+      },
+      () => expect(app.getByRole("button", { name: "Generate", exact: true })).toBeVisible(soon),
+    );
     await caption("Editor", "Screen library", "Every screen with a live thumbnail");
     await director("prepare", "/builder/tactical");
-    await sleep(2500);
-    await cut(() => director("swap"));
+    await hold(3000);
+    await cut(
+      async () => {
+        place = "";
+        await director("swap");
+      },
+      () => expect(outline).toBeVisible(soon),
+    );
     await caption("Editor", "Edit any screen", "Pick a widget in the outline or straight in the preview");
-    await sleep(2500);
-    const selection = app.getByRole("tabpanel", { name: "Selection" });
-    await app.getByRole("tree", { name: "Outline" }).getByRole("treeitem", { name: /Ship schematic/ }).click();
-    await sleep(1500);
+    await hold();
+    // The outline sits under the caption: it goes before the press.
     await director("hide");
-    await director("zoom", 1.55, 1920, 330);
+    await wait(450);
+    await press(outline.getByRole("treeitem", { name: /Ship schematic/ }));
+    const selection = app.getByRole("tabpanel", { name: "Selection" });
+    const schematic = app.getByRole("region", { name: "Preview" }).locator('[data-node-id="tac-ship"]').first();
+    await wait(800);
     await director("preloadPip", "/d/pip");
-    await sleep(1000);
+    await focus([schematic, selection.getByLabel("View", { exact: true }), selection.getByLabel("Mode", { exact: true })], ABOVE_CAPTION);
     await caption("Editor", "Change it in the inspector", "Every prop of every widget, from its schema");
+    await wait(1800);
     for (const [field, value] of [
       ["View", "side"],
       ["Mode", "engineering"],
       ["View", "turn"],
     ] as const) {
-      await selection.getByLabel(field, { exact: true }).selectOption(value);
-      await sleep(2600);
+      await choose(selection.getByLabel(field, { exact: true }), value);
+      await hold(2600);
     }
+    // Publish, with the display on set in the corner before the press, so the change is seen to reach it.
     await director("hide");
-    await director("zoom", 1);
-    await sleep(1300);
-    await app.getByRole("button", { name: "Publish", exact: true }).click();
-    await sleep(900);
-    await app.getByRole("dialog", { name: /Publish/ }).getByRole("button", { name: "Publish", exact: true }).click();
+    await wide();
+    await press(app.getByRole("button", { name: "Publish", exact: true }));
+    const publish = app.getByRole("dialog", { name: /Publish/ });
+    await expect(publish).toBeVisible(soon);
     await director("pip", "/d/pip");
+    await focus([publish, schematic], { x: 0, y: 0, width: 1100, height: 600 }, 1.2);
     await caption("Editor", "Publish", "The display on set picks it up at once");
+    await wait(1500);
+    await press(publish.getByRole("button", { name: "Publish", exact: true }));
     await director("prepare", "/builder");
-    await sleep(4000);
-    await cut(async () => {
-      await director("pip", "");
-      await director("swap");
-    });
+    await hold(4000);
+    await cut(
+      async () => {
+        await director("pip", "");
+        await director("swap");
+      },
+      () => expect(app.getByRole("button", { name: "Generate", exact: true })).toBeVisible(soon),
+    );
     await caption("Editor", "One-click generation", "A content pack recipe, a seed and the display's shape give a finished screen");
-    await app.getByRole("button", { name: "Generate", exact: true }).click();
+    await wait(1000);
+    await press(app.getByRole("button", { name: "Generate", exact: true }));
     const dialog = app.getByRole("dialog", { name: "Generate a screen" });
-    await sleep(1500);
-    await dialog.getByLabel("Section").selectOption({ label: "Tactical" });
+    await expect(dialog).toBeVisible(soon);
+    await focus([dialog], ABOVE_CAPTION, 1.2);
+    await hold(600);
+    await choose(dialog.getByLabel("Section"), { label: "Tactical" });
+    await wait(900);
+    await director("tapApp", await boxOf(dialog.getByRole("textbox", { name: "Seed" })));
     await dialog.getByRole("textbox", { name: "Seed" }).fill("4");
-    await sleep(1200);
-    await dialog.getByRole("button", { name: "Create and edit" }).click();
-    await sleep(4000);
-    await assign("schematic");
-    for (const round of [1, 2]) {
-      await app.getByRole("button", { name: "Regenerate", exact: true }).click();
-      await caption("Editor", "Regenerate", "A new layout around anything locked, one Undo away");
-      if (round === 2) await director("prepare", "/d/video");
-      await sleep(3000);
-    }
-
-    // Close.
-    await cut(() => director("swap"));
-    await director("card", "Interactive Displays", "LCARS · Holo HUD · Terminal · operator console · editor · one-click generation");
-    await sleep(6000);
+    await hold(1200);
+    // Creating opens the new screen in the editor, which loads first: the press, then the click under black.
+    const create = dialog.getByRole("button", { name: "Create and edit" });
+    await director("tapApp", await boxOf(create));
+    await wait(300);
     await director("fade", true);
-    await sleep(1200);
+    await wait(400);
+    await director("camera", null, null, 0);
+    await create.click();
+    const regenerate = app.getByRole("button", { name: "Regenerate", exact: true });
+    await expect(regenerate).toBeVisible(soon);
+    await wait(450);
+    await director("fade", false);
+    await wait(350);
+    await hold(3000);
+    await assign("schematic");
+    await director("hide");
+    await wait(450);
+    await press(regenerate);
+    await caption("Editor", "Regenerate", "A fresh layout from the same recipe, one Undo away");
+    await hold(3000);
+    await press(regenerate);
+    await director("prepare", "/d/video");
+    await hold(3000);
+
+    // Close: the card comes up under the black.
+    await cut(
+      async () => {
+        await director("swap");
+        await director("card", "Interactive Displays", "LCARS · Holo HUD · Terminal · operator console · editor · one-click generation");
+      },
+      () => wait(400),
+    );
+    await wait(5600);
+    await director("fade", true);
+    await wait(1200);
 
     const list = await frames.stop();
     mkdirSync(path.dirname(OUT), { recursive: true });
-    const encoded = spawnSync(
-      "ffmpeg",
-      ["-hide_banner", "-loglevel", "error", "-y", "-f", "concat", "-safe", "0", "-i", list, "-vf", "fps=30,format=yuv420p", "-c:v", "libx264", "-preset", "slow", "-crf", "26", "-tune", "animation", "-movflags", "+faststart", OUT],
-      { stdio: "inherit" },
-    );
+    const encoded = encode(list, OUT, FPS);
     rmSync(path.dirname(list), { recursive: true, force: true });
     expect(encoded.status).toBe(0);
   });
