@@ -171,7 +171,8 @@ test.describe("showcase video", () => {
       await wait(200);
       await field.selectOption(value);
     };
-    // Scrolls the panel around a target so it sits near the top, gently, over `ms` of the video's time.
+    // Scrolls the panel around a target so it sits near the top (or as far as the panel goes), gently, over `ms` of
+    // the video's time.
     const glide = (target: Locator, ms = 900) =>
       target.evaluate(
         (element, duration) =>
@@ -183,7 +184,8 @@ test.describe("showcase video", () => {
             if (!panel) return resolve();
             const scroller = panel;
             const from = scroller.scrollTop;
-            const to = from + element.getBoundingClientRect().top - scroller.getBoundingClientRect().top - 24;
+            const wanted = from + element.getBoundingClientRect().top - scroller.getBoundingClientRect().top - 24;
+            const to = Math.max(0, Math.min(scroller.scrollHeight - scroller.clientHeight, wanted));
             const start = performance.now();
             const step = () => {
               const done = Math.min((performance.now() - start) / duration, 1);
@@ -260,10 +262,10 @@ test.describe("showcase video", () => {
       await hold(ms);
     }
 
-    // The ship schematic, whole above the caption.
-    await director("accent", "#9999ff");
+    // The ship schematic, whole above the caption. Its colour changes under the black, not on the caption leaving.
     await cut(
       async () => {
+        await director("accent", "#9999ff");
         await assign("schematic");
         await band();
       },
@@ -393,6 +395,8 @@ test.describe("showcase video", () => {
       ["GO · Hull breach", 4200],
       ["GO · All clear", 3500],
     ] as const) {
+      // The cue list scrolls: bring the last cue in before it is next, so the viewer sees it marked and then run.
+      if (title === "GO · Hull breach") await glide(cues.getByRole("listitem", { name: "All clear" }), 700);
       await press(app.getByRole("button", { name: "GO", exact: true }));
       await caption("Operator console", title);
       await hold(ms);
