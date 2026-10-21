@@ -1,6 +1,9 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "workspaces": {
+    ".": {
+      "entry": ["tests/e2e/support/slowServer.ts"]
+    },
     "packages/*": {},
     "packages/themes": {
       "ignoreDependencies": ["@fontsource/antonio"]
