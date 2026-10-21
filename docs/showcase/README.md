@@ -7,27 +7,36 @@ against the real server and built app (`pnpm build && SHOWCASE=phase-N pnpm test
 
 <a href="video/showcase.mp4"><img src="video/teaser.webp" alt="The video tour at 4× speed" width="720" /></a>
 
-[**showcase.mp4**](video/showcase.mp4) (4 minutes, 1080p): the consoles of the demo show in LCARS, the show
+[**showcase.mp4**](video/showcase.mp4) (4:43, 1080p): the consoles of the demo show in LCARS, the show
 states from yellow alert to a hull breach, the ship schematic, every LCARS era and the Holo HUD and Terminal
 looks, the operator console running cues with a display live in the corner, one button on Tactical playing out
 on the viewscreen and engineering side by side (and its Runs on and Wait settings in the editor), and the editor
 changing a widget, publishing it and generating screens. Everything in it is the real app, recorded from a fresh demo show:
 
 ```bash
-pnpm build && SHOWCASE=video pnpm test:e2e video   # needs ffmpeg with libx264
+pnpm build && SHOWCASE=video pnpm test:e2e video   # needs ffmpeg 5 or later with libx264
 ```
 
 The looping preview above (`video/teaser.webp`, 4× speed) is cut from it:
 
 ```bash
-ffmpeg -ss 4 -t 235 -i docs/showcase/video/showcase.mp4 -vf "setpts=PTS/4,fps=10,scale=720:-1:flags=lanczos" \
+ffmpeg -ss 4 -t 269 -i docs/showcase/video/showcase.mp4 -vf "setpts=PTS/4,fps=10,scale=720:-1:flags=lanczos" \
   -c:v libwebp_anim -loop 0 -quality 55 -compression_level 6 docs/showcase/video/teaser.webp
 ```
 
-The recording (`tests/e2e/video.spec.ts`) runs its own server, drives the app through a director page
-(`tests/e2e/support/director.html`: the app in a frame, a live display picture-in-picture or three displays side
-by side, captions and fades) and
-encodes Chrome's screencast frames at their real times into a 30 fps H.264 video.
+The recording (`tests/e2e/video.spec.ts`) runs its own server and drives the app through a director page
+(`tests/e2e/support/director.html`): the app in a frame, a live display picture-in-picture or three displays side
+by side, captions held long enough to read, fades that wait for the next screen to be ready, a ring wherever a
+control is pressed, and a camera that frames the elements a beat is about (the cue list, the inspector's
+actions, a dialog) in one eased move, measured from the page rather than aimed at fixed spots.
+
+It records in **slow motion**: the server and every page run at a fifth of real time (clocks, timers and
+animation frames through `tests/e2e/support/slowmo.ts`, CSS animations through the DevTools protocol in
+`tests/e2e/support/recorder.ts`) and Chrome's screencast frames are played back at full speed, one per tick of the
+30 fps video. A busy screen that this machine draws at 12 frames a second still comes out at a steady 30, camera
+moves and fades keep their pace for the whole tour, and frames that arrive out of order never make the picture step
+back. The recording takes about 27 minutes; `SLOWMO=1` records in real time for a quick look (choppier on busy
+screens).
 
 ## Scripted interactions between displays
 
